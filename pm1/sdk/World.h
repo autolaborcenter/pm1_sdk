@@ -5,10 +5,12 @@
 #ifndef PM1_SDK_WORLD_H
 #define PM1_SDK_WORLD_H
 
-
-class World {
-
-};
-
+namespace pm1 {
+    namespace sdk {
+        class World {
+        
+        };
+    }
+}
 
 #endif //PM1_SDK_WORLD_H
