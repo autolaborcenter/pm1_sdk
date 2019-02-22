@@ -62,9 +62,9 @@
 ### 状态交互
 
 ```c++
-struct Odometry{
+typedef struct {
 	double x, y, yaw, vx, vy, w;
-}
+} Odometry;
 ```
 
 * `Odometry GetOdometry()`
