@@ -44,7 +44,8 @@ namespace mechdancer {
 		 *
 		 * @tparam T 类型通配符
 		 * @param data 数据
-		 */template<class T>
+		 */
+		template<class T>
 		inline void println(T data) {
 			std::cout << data << std::endl;
 		}
