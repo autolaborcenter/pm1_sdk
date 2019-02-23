@@ -2,8 +2,8 @@
 // Created by ydrml on 2019/2/23.
 //
 
-#ifndef PM1_SDK_TIMEEXTENSION_H
-#define PM1_SDK_TIMEEXTENSION_H
+#ifndef PM1_SDK_TIME_EXTENSION_H
+#define PM1_SDK_TIME_EXTENSION_H
 
 
 #include <chrono>
@@ -17,7 +17,7 @@ namespace mechdancer {
 		 * @param seconds 秒数
 		 * @return 对应的 std::chrono::duration
 		 */
-		inline auto SecondsDuration(double seconds)
+		inline auto seconds_duration(double seconds)
 		-> std::chrono::duration<double, std::ratio<1>> {
 			return std::chrono::duration<double, std::ratio<1>>(seconds);
 		}
@@ -27,7 +27,7 @@ namespace mechdancer {
 		 *
 		 * @return 当前时间
 		 */
-		inline auto Now()
+		inline auto now()
 		-> decltype(std::chrono::high_resolution_clock::now()) {
 			return std::chrono::high_resolution_clock::now();
 		}
@@ -40,14 +40,14 @@ namespace mechdancer {
 		 * @return 用[TimeUnit]表示的时间间隔
 		 */
 		template<class TimeUnit = std::chrono::duration<double, std::ratio<1>>>
-		inline auto MeasureTime(const std::function<void()> &function)
+		inline auto measure_time(const std::function<void()> &function)
 		-> TimeUnit {
-			const auto origin = Now();
+			const auto origin = now();
 			function();
-			return Now() - origin;
+			return now() - origin;
 		}
 	}
 }
 
 
-#endif //PM1_SDK_TIMEEXTENSION_H
+#endif //PM1_SDK_TIME_EXTENSION_H

@@ -20,7 +20,7 @@ namespace mechdancer {
 		 * @return 字符串
 		 */
 		template<class...T>
-		inline std::string joinToString(std::string splitter, T...items) {
+		inline std::string join_to_string(std::string splitter, T...items) {
 			std::stringstream builder;
 			
 			auto _   = {(builder << items << splitter, 0)...};

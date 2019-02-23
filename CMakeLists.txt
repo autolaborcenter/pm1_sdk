@@ -4,10 +4,10 @@ project(PM1_SDK)
 set(CMAKE_CXX_STANDARD 11)
 
 add_executable(PM1_SDK
-        pm1/Api.h
-        pm1/Api.cpp
+        pm1/api.h
+        pm1/api.cpp
 
-        pm1/Extensions.h
-        pm1/TimeExtensions.h
+        pm1/extensions.h
+        pm1/time_extensions.h
 
         main.cpp)

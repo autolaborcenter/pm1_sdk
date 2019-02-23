@@ -4,9 +4,9 @@
 
 #include <thread>
 #include <iostream>
-#include "pm1/Extensions.h"
-#include "pm1/TimeExtensions.h"
-#include "pm1/Api.h"
+#include "pm1/extensions.h"
+#include "pm1/time_extensions.h"
+#include "pm1/api.h"
 
 using namespace mechdancer::common;
 
@@ -15,10 +15,9 @@ inline void println(std::chrono::duration<_, __> duration) {
 	println(duration.count());
 }
 
-#define fun int
-
-fun main() {
-	println(joinToString("", 1, 2, 3, 4, 5));
-	println(joinToString(", ", 1, 2, 3, 4, 5));
-	println(joinToString("", '[', joinToString(", ", 1, 2, 3, 4, 5), ']'));
+int main() {
+	println(join_to_string("", 1, 2, 3, 4, 5));
+	println(join_to_string(", ", 1, 2, 3, 4, 5));
+	println(join_to_string("", '[', join_to_string(", ", 1, 2, 3, 4, 5), ']'));
+	return 0;
 }
