@@ -11,8 +11,6 @@
 
 namespace mechdancer {
 	namespace common {
-		using unit = std::ratio<1, 1>;
-		
 		/**
 		 * 转换为[duration]
 		 *
@@ -20,8 +18,8 @@ namespace mechdancer {
 		 * @return 对应的 std::chrono::duration
 		 */
 		inline auto SecondsDuration(double seconds)
-		-> std::chrono::duration<double, unit> {
-			return std::chrono::duration<double, unit>(seconds);
+		-> std::chrono::duration<double, std::ratio<1>> {
+			return std::chrono::duration<double, std::ratio<1>>(seconds);
 		}
 		
 		/**
@@ -41,7 +39,7 @@ namespace mechdancer {
 		 * @param function 待测代码块
 		 * @return 用[TimeUnit]表示的时间间隔
 		 */
-		template<class TimeUnit = std::chrono::duration<double, unit>>
+		template<class TimeUnit = std::chrono::duration<double, std::ratio<1>>>
 		inline auto MeasureTime(const std::function<void()> &function)
 		-> TimeUnit {
 			const auto origin = Now();

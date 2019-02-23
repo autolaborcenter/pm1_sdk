@@ -7,24 +7,23 @@
 #include <string>
 #include <stdexcept>
 #include <iostream>
-#include <chrono>
 #include <thread>
-#include <functional>
+#include "Extensions.h"
 #include "TimeExtensions.h"
 
 namespace pm1 {
 	namespace sdk {
-		using namespace std;
 		using namespace mechdancer::common;
 		
 		namespace {
+			// 循环的间隔
 			constexpr auto LOOP_DELAY = 0.05;
 			
 			// 记录暂停状态
 			volatile bool paused = false;
 			
 			// 阻塞并抑制输出
-			inline chrono::duration<double, unit> Inhibit() {
+			inline std::chrono::duration<double, std::ratio<1>> Inhibit() {
 				auto temp = Now();
 				while (paused) {
 					Drive(0, 0);
@@ -34,22 +33,22 @@ namespace pm1 {
 			}
 		}
 		
-		bool Initialize(string port) {
-			throw runtime_error("to do");
+		bool Initialize(std::string port) {
+			throw std::runtime_error("to do");
 		}
 		
 		bool Initialize() {
-			throw runtime_error("to do");
+			throw std::runtime_error("to do");
 		}
 		
 		void Shutdown() {
-			throw runtime_error("to do");
+			throw std::runtime_error("to do");
 		}
 		
 		void GoStraight(double speed, double distance) {
 			while (true) {
 				if (paused) Drive(0, 0);
-				else throw runtime_error("to do");
+				else throw std::runtime_error("to do");
 				
 				Delay(LOOP_DELAY);
 			}
@@ -59,7 +58,7 @@ namespace pm1 {
 			auto ending = Now() + SecondsDuration(time);
 			while (Now() < ending) {
 				if (paused) ending += Inhibit();
-				else throw runtime_error("to do");
+				else throw std::runtime_error("to do");
 				
 				Delay(LOOP_DELAY);
 			}
@@ -68,7 +67,7 @@ namespace pm1 {
 		void GoArc(double speed, double r, double rad) {
 			while (true) {
 				if (paused) Drive(0, 0);
-				else throw runtime_error("to do");
+				else throw std::runtime_error("to do");
 				
 				Delay(LOOP_DELAY);
 			}
@@ -78,7 +77,7 @@ namespace pm1 {
 			auto ending = Now() + SecondsDuration(time);
 			while (Now() < ending) {
 				if (paused) ending += Inhibit();
-				else throw runtime_error("to do");
+				else throw std::runtime_error("to do");
 				
 				Delay(LOOP_DELAY);
 			}
@@ -87,7 +86,7 @@ namespace pm1 {
 		void TurnAround(double speed, double rad) {
 			while (true) {
 				if (paused) Drive(0, 0);
-				else throw runtime_error("to do");
+				else throw std::runtime_error("to do");
 				
 				Delay(LOOP_DELAY);
 			}
@@ -97,7 +96,7 @@ namespace pm1 {
 			auto ending = Now() + SecondsDuration(time);
 			while (Now() < ending) {
 				if (paused) ending += Inhibit();
-				else throw runtime_error("to do");
+				else throw std::runtime_error("to do");
 				
 				Delay(LOOP_DELAY);
 			}
@@ -113,15 +112,15 @@ namespace pm1 {
 		}
 		
 		void Delay(double time) {
-			this_thread::sleep_for(chrono::nanoseconds((long long) (time * 1E9)));
+			std::this_thread::sleep_for(std::chrono::nanoseconds((long long) (time * 1E9)));
 		}
 		
 		Odometry GetOdometry() {
-			throw runtime_error("to do");
+			throw std::runtime_error("to do");
 		}
 		
 		void Drive(double v, double w) {
-			cout << "v = " << v << ", w = " << w << endl;
+			std::cout << "v = " << v << ", w = " << w << std::endl;
 		}
 	}
 }
