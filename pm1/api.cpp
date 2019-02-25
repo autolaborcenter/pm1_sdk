@@ -21,14 +21,14 @@ namespace autolabor {
 			
 			// 循环的间隔
 			inline void loop_delay() {
-				Delay(0.05);
+				delay(0.05);
 			}
 			
 			// 阻塞并抑制输出
 			std::chrono::duration<double, std::ratio<1>> inhibit() {
-				auto temp = now();
+				const auto temp = now();
 				while (paused) {
-					Drive(0, 0);
+					drive(0, 0);
 					loop_delay();
 				}
 				return now() - temp;
@@ -39,82 +39,82 @@ namespace autolabor {
 				auto ending = now() + seconds_duration(seconds);
 				while (now() < ending) {
 					if (paused) ending += inhibit();
-					else Drive(v, w);
+					else drive(v, w);
 					
 					loop_delay();
 				}
 			}
 		}
 		
-		bool Initialize(std::string port) {
+		bool initialize(std::string port) {
 			throw std::runtime_error("to do");
 		}
 		
-		bool Initialize() {
+		bool initialize() {
 			throw std::runtime_error("to do");
 		}
 		
-		void Shutdown() {
+		void shutdown() {
 			throw std::runtime_error("to do");
 		}
 		
-		void GoStraight(double speed, double distance) {
+		void go_straight(double speed, double distance) {
 			while (false) {
-				if (paused) Drive(0, 0);
-				else Drive(speed, speed);
+				if (paused) drive(0, 0);
+				else drive(speed, speed);
 				
 				loop_delay();
 			}
 		}
 		
-		void GoStraightTiming(double speed, double time) {
+		void go_straight_timing(double speed, double time) {
 			go_timing(speed, speed, time);
 		}
 		
-		void GoArc(double speed, double r, double rad) {
+		void go_arc(double speed, double r, double rad) {
 			while (false) {
-				if (paused) Drive(0, 0);
-				else Drive(speed, speed / r);
+				if (paused) drive(0, 0);
+				else drive(speed, speed / r);
 				
 				loop_delay();
 			}
 		}
 		
-		void GoArcTiming(double speed, double r, double time) {
+		void go_arc_timing(double speed, double r, double time) {
 			go_timing(speed, speed / r, time);
 		}
 		
-		void TurnAround(double speed, double rad) {
+		void turn_around(double speed, double rad) {
 			while (false) {
-				if (paused) Drive(0, 0);
-				else Drive(0, speed);
+				if (paused) drive(0, 0);
+				else drive(0, speed);
 				
 				loop_delay();
 			}
 		}
 		
-		void TurnAroundTiming(double speed, double time) {
+		void turn_around_timing(double speed, double time) {
 			go_timing(0, speed, time);
 		}
 		
-		void Pause() {
-			Drive(0, 0);
+		void pause() {
+			drive(0, 0);
 			paused = true;
 		}
 		
-		void Resume() {
+		void resume() {
 			paused = false;
 		}
 		
-		void Delay(double time) {
+		void delay(double time) {
 			std::this_thread::sleep_for(seconds_duration(time));
 		}
 		
-		Odometry GetOdometry() {
+		Odometry get_odometry() {
 			throw std::runtime_error("to do");
 		}
 		
-		void Drive(double v, double w) {
+		void drive(double v, double w) {
 			std::cout << "v = " << v << ", w = " << w << std::endl;
 		}
 	}

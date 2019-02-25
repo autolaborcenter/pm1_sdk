@@ -23,8 +23,8 @@ namespace mechdancer {
 		inline std::string join_to_string(std::string splitter, T...items) {
 			std::stringstream builder;
 			
-			auto _   = {(builder << items << splitter, 0)...};
-			auto str = builder.str();
+			const auto ___ = {(builder << items << splitter, 0)...};
+			const auto str = builder.str();
 			return str.substr(0, str.length() - splitter.length());
 		}
 		

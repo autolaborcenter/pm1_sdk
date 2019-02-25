@@ -4,7 +4,7 @@
 
 ## 连接控制
 
-* `bool Initialize(std::string port)`
+* `bool initialize(std::string port)`
 
   * 描述：初始化
 
@@ -12,13 +12,13 @@
 
   * 返回：是否成功
 
-* `bool Initialize()`
+* `bool initialize()`
 
   * 描述：自动选取串口并初始化
 
   * 返回：是否成功
 
-* `void Shutdown()`
+* `void shutdown()`
 
   * 描述：关闭
 
@@ -28,7 +28,7 @@
 
 * 走简单几何路径
 
-  * `void GoStraight(double speed, double distance)`
+  * `void go_straight(double speed, double distance)`
 
     * 描述：直走
 
@@ -36,7 +36,7 @@
 
     * 参数 `distance`：行驶距离（m，非负）
 
-  * `void GoStraightTiming(double speed, double time)`
+  * `void go_straight_timing(double speed, double time)`
 
     - 描述：直走
 
@@ -44,7 +44,7 @@
 
     - 参数 `time`：行驶时间（s，非负）
 
-  * `void GoArc(double speed, double r, double rad)`
+  * `void go_arc(double speed, double r, double rad)`
 
     * 描述：走圆弧
 
@@ -54,7 +54,7 @@
 
     * 参数 `rad`：行驶弧度（rad，非负）
 
-  * `void GoArcTiming(double speed, double r, double time)`
+  * `void go_arc_timing(double speed, double r, double time)`
 
     - 描述：走圆弧
 
@@ -64,7 +64,7 @@
 
     - 参数 `time`：行驶时间（s，非负）
 
-  * `void TurnAroundTiming(double speed, double rad)`
+  * `void turn_around(double speed, double rad)`
 
     * 描述：原地转
 
@@ -72,7 +72,7 @@
 
     * 参数 `rad`：弧度（rad，非负）
 
-  * `void TurnAround(double speed, double time)`
+  * `void turn_around_timing(double speed, double time)`
 
     * 描述：原地转
 
@@ -108,7 +108,7 @@ typedef struct {
 
   * 描述：获取里程计值
 
-* `void Drive(double v, double w)`
+* `void drive(double v, double w)`
 
   * 描述：控制机器人运行
 
