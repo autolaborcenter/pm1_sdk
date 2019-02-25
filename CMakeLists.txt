@@ -25,6 +25,9 @@ add_executable(PM1_SDK
         pm1/internal/serial/list_ports/list_ports_linux.cc
         pm1/internal/serial/list_ports/list_ports_osx.cc
 
+        pm1/internal/can_message.h
+        pm1/internal/can_message.cpp
+
         pm1/internal/chassis.hh
         pm1/internal/chassis.cc
 

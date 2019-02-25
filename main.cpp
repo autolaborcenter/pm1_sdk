@@ -13,12 +13,19 @@ void test_serial_port();
 #include "pm1/extensions.h"
 #include "pm1/time_extensions.h"
 #include "pm1/internal/chassis.hh"
+#include "pm1/internal/can_message.h"
 
 using namespace mechdancer::common;
 
 int main() {
-	autolabor::pm1::chassis chassis("com3");
-	chassis.test_serial();
+	auto temp = autolabor::pm1::can_message_info(104, 52);
+	std::cout << (int) temp.network() << std::endl
+	          << std::boolalpha << temp.data_field() << std::endl
+	          << (int) temp.property() << std::endl
+	          << (int) temp.node_type() << std::endl
+	          << (int) temp.node_index() << std::endl
+	          << (int) temp.bytes()[0] << std::endl
+	          << (int) temp.bytes()[1] << std::endl;
 }
 
 void test_string_print() {
@@ -32,16 +39,15 @@ void test_string_print() {
 void test_serial_port() {
 	try {
 		//enumerate_ports
-		auto devices_found = serial::list_ports();
-		auto iter          = devices_found.begin();
-		while (iter != devices_found.end()) {
-			serial::PortInfo device = *iter++;
-			
-			printf("(%s, %s, %s)\n", device.port.c_str(), device.description.c_str(),
-			       device.hardware_id.c_str());
+		for (const auto &it : serial::list_ports()) {
+			std::cout << "("
+			          << it.port.c_str() << ", "
+			          << it.description.c_str() << ", "
+			          << it.hardware_id.c_str() << ")"
+			          << std::endl;
 		}
 		// port, baudrate, timeout in milliseconds
-		serial::Serial my_serial("com3", 9600, serial::Timeout::simpleTimeout(1000));
+		serial::Serial  my_serial("com3", 9600, serial::Timeout::simpleTimeout(1000));
 		
 		std::cout << "Is the serial port open?"
 		          << (my_serial.isOpen() ? " Yes." : " No.")
@@ -68,7 +74,7 @@ void test_serial_port() {
 		}
 		
 		// Test the timeout at 250ms
-		my_serial.setTimeout(serial::Timeout::maxx(), 250, 0, 250, 0);
+		my_serial.setTimeout(serial::Timeout::max(), 250, 0, 250, 0);
 		count = 0;
 		std::cout << "Timeout == 250ms, asking for 1 more byte than written." << std::endl;
 		while (count < 10) {

@@ -45,8 +45,7 @@
 #include <stdexcept>
 #include "v8stdint.h"
 
-#define THROW(exceptionClass, message) throw exceptionClass(__FILE__, \
-__LINE__, (message) )
+#define THROW(exceptionClass, message) throw exceptionClass(__FILE__, __LINE__, (message))
 
 namespace serial {
 	
@@ -100,7 +99,7 @@ namespace serial {
 		# undef max
 		#endif
 		
-		static uint32_t maxx() { return std::numeric_limits<uint32_t>::max(); }
+		static uint32_t max() { return std::numeric_limits<uint32_t>::max(); }
 		
 		/*!
 		 * Convenience function to generate Timeout structs using a
@@ -112,7 +111,7 @@ namespace serial {
 		 * \return Timeout struct that represents this simple timeout provided.
 		 */
 		static Timeout simpleTimeout(uint32_t timeout) {
-			return Timeout(maxx(), timeout, 0, timeout, 0);
+			return Timeout(max(), timeout, 0, timeout, 0);
 		}
 		
 		/*! Number of milliseconds between bytes received to timeout on. */

@@ -7,6 +7,7 @@
 
 
 #include <iostream>
+#include <thread>
 #include "serial/serial.h"
 #include "../extensions.h"
 
@@ -16,13 +17,12 @@ namespace autolabor {
 		/**
 		 * 底盘
 		 */
-		class chassis {
+		class chassis final {
 		public:
-			/** 构造时获取资源 */
-			explicit chassis(const std::string &port)
-					: port(port, 9600, serial::Timeout::simpleTimeout(1000)) {}
+			/** 绑定特定串口 */
+			explicit chassis(const std::string &port_name);
 			
-			/** 析构时释放资源 */
+			/** 析构 */
 			~chassis();
 			
 			/** 不可复制 */
@@ -31,28 +31,24 @@ namespace autolabor {
 			/** 不可移动 */
 			chassis(chassis &&others) = delete;
 			
-			void test_serial() {
-				std::cout << "serial open:"
-				          << std::boolalpha << port.isOpen()
-				          << std::endl;
-				
-				std::cout << "Timeout == 1000ms, asking for 1 more byte than written." << std::endl;
-				for (int i = 0; i < 10; ++i) {
-					const auto test_string = mechdancer::common::join_to_string("", "test", i);
-					size_t     bytes_wrote = port.write(test_string);
-					
-					std::string result = port.read(test_string.length() + 1);
-					
-					std::cout << "Iteration: " << i
-					          << ", Bytes written: " << bytes_wrote
-					          << ", Bytes read: " << result.length()
-					          << ", String read: " << result
-					          << std::endl;
-				}
-			}
+			/** 测试串口 */
+			void test_serial();
+			
+			/** 获取编码器值 */
+			// std::pair<double, double> getRecorder();
 		
 		private:
-			serial::Serial port;
+			/**
+			 * 串口引用
+			 */
+			std::shared_ptr<serial::Serial> port;
+			
+			/**
+			 * 读取一个字节
+			 * @param byte 读出的字节
+			 * @return 是否成功读取
+			 */
+			bool readByte(unsigned char &byte);
 		};
 	}
 }
