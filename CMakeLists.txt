@@ -21,6 +21,10 @@ add_executable(PM1_SDK
         pm1/internal/serial/unix.h
         pm1/internal/serial/unix.cc
 
+        pm1/internal/serial/list_ports/list_ports_win.cc
+        pm1/internal/serial/list_ports/list_ports_linux.cc
+        pm1/internal/serial/list_ports/list_ports_osx.cc
+
         pm1/internal/chassis.h
         pm1/internal/chassis.cpp
 

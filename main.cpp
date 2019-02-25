@@ -51,9 +51,22 @@ inline void println(std::chrono::duration<_, __> duration) {
 //	return 0;
 //}
 
+void enumerate_ports() {
+	vector<serial::PortInfo> devices_found = serial::list_ports();
+	
+	vector<serial::PortInfo>::iterator iter = devices_found.begin();
+	
+	while (iter != devices_found.end()) {
+		serial::PortInfo device = *iter++;
+		
+		printf("(%s, %s, %s)\n", device.port.c_str(), device.description.c_str(),
+		       device.hardware_id.c_str());
+	}
+}
+
 int main(int argc, char **argv) {
 	try {
-		//enumerate_ports();
+		enumerate_ports();
 		// port, baudrate, timeout in milliseconds
 		serial::Serial my_serial("com3", 9600, serial::Timeout::simpleTimeout(1000));
 		

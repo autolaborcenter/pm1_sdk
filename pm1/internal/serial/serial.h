@@ -780,8 +780,8 @@ namespace serial {
 	 *
 	 * \return vector of serial::PortInfo.
 	 */
-	// std::vector<PortInfo>
-	// list_ports();
+	std::vector<PortInfo>
+	list_ports();
 	
 } // namespace serial
 
