@@ -10,7 +10,7 @@
 #include <thread>
 #include "extensions.h"
 #include "time_extensions.h"
-#include "internal/chassis.h"
+#include "internal/chassis.hh"
 
 namespace {
 	using namespace autolabor::pm1;
