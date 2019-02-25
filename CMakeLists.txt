@@ -10,4 +10,4 @@ add_executable(PM1_SDK
         pm1/extensions.h
         pm1/time_extensions.h
 
-        main.cpp)
+        main.cpp pm1/internal/chassis.cpp pm1/internal/chassis.h)

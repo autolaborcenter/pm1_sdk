@@ -7,6 +7,7 @@
 #include "pm1/extensions.h"
 #include "pm1/time_extensions.h"
 #include "pm1/api.h"
+#include "pm1/internal/chassis.h"
 
 using namespace mechdancer::common;
 
@@ -19,5 +20,11 @@ int main() {
 	println(join_to_string("", 1, 2, 3, 4, 5));
 	println(join_to_string(", ", 1, 2, 3, 4, 5));
 	println(join_to_string("", '[', join_to_string(", ", 1, 2, 3, 4, 5), ']'));
+	
+	println(measure_time([] { autolabor::pm1::delay(1); }));
+	
+	const auto chassis = autolabor::pm1::chassis::instance();
+	std::cout << chassis << std::endl;
+	
 	return 0;
 }
