@@ -18,14 +18,22 @@ void test_serial_port();
 using namespace mechdancer::common;
 
 int main() {
-	auto temp = autolabor::pm1::can_message_info(104, 52);
-	std::cout << (int) temp.network() << std::endl
-	          << std::boolalpha << temp.data_field() << std::endl
-	          << (int) temp.property() << std::endl
-	          << (int) temp.node_type() << std::endl
-	          << (int) temp.node_index() << std::endl
-	          << (int) temp.bytes()[0] << std::endl
-	          << (int) temp.bytes()[1] << std::endl;
+	//	auto temp = autolabor::pm1::can_message_info(104, 52);
+	//	std::cout << (int) temp.network() << std::endl
+	//	          << std::boolalpha << temp.data_field() << std::endl
+	//	          << (int) temp.property() << std::endl
+	//	          << (int) temp.node_type() << std::endl
+	//	          << (int) temp.node_index() << std::endl
+	//	          << (int) temp.bytes()[0] << std::endl
+	//	          << (int) temp.bytes()[1] << std::endl;
+	
+	std::cout << sizeof(autolabor::pm1::can_pack_no_data) << std::endl;
+	std::cout << sizeof(autolabor::pm1::can_pack_with_data) << std::endl;
+	
+	autolabor::pm1::union_no_data temp{};
+	temp.bytes[0] = 100;
+	std::cout << (int) temp.data.head << std::endl;
+	std::cout << (int) temp.data.crc << std::endl;
 }
 
 void test_string_print() {

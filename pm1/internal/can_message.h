@@ -9,11 +9,6 @@
 
 namespace autolabor {
 	namespace pm1 {
-		union buffer16 {
-			uint8_t  bytes[2];
-			uint16_t data;
-		};
-		
 		/** CAN 包信息 */
 		struct can_message_info {
 		public:
@@ -34,48 +29,54 @@ namespace autolabor {
 			
 			/** 节点序号 */
 			uint8_t node_index() const;
-			
-			/** 读出字节 */
-			std::array<uint8_t, 2> bytes() const;
 		
 		private:
 			/** 数据存储 */
-			const buffer16 data;
+			const uint16_t data;
 		};
 		
-		/** CAN 包头 */
-		struct can_message_head {
-			uint8_t          head;
-			can_message_info info;
-			uint8_t          msg_type;
-		};
-		
-		/** CAN 包（无数据域） */
-		struct can_message {
-			can_message_head head;
-			uint8_t          reserved;
+		/** 无数据域 CAN 包 */
+		struct can_pack_no_data {
+			uint8_t head;
+			uint8_t info0;
+			uint8_t info1;
+			uint8_t type;
+			uint8_t reserve;
+			uint8_t crc;
 			
-			/**
-			 * 循环冗余校验
-			 * @param sum 校验和
-			 * @return 是否通过
-			 */
-			bool crc_check(uint8_t sum);
+			can_message_info info() const;
 		};
 		
-		/** CAN 包（有数据域） */
-		struct can_message_with_data {
-			can_message_head       head;
-			uint8_t                frame_id;
-			std::array<uint8_t, 8> data;
+		/** 有数据域 CAN 包 */
+		struct can_pack_with_data {
+			uint8_t head;
+			uint8_t info0;
+			uint8_t info1;
+			uint8_t type;
+			uint8_t frame_id;
+			uint8_t data[8];
+			uint8_t crc;
 			
-			/**
-			 * 循环冗余校验
-			 * @param sum 校验和
-			 * @return 是否通过
-			 */
-			bool crc_check(uint8_t sum);
+			can_message_info info() const;
 		};
+		
+		/** 无数据域 CAN 包转换器 */
+		union union_no_data {
+			uint8_t          bytes[6];
+			can_pack_no_data data;
+		};
+		
+		/** 有数据域 CAN 包转换器 */
+		union union_with_data {
+			uint8_t            bytes[14];
+			can_pack_with_data data;
+		};
+		
+		/** 循环冗余校验 */
+		template<uint8_t length>
+		bool crc_check(const uint8_t *bytes) {
+		
+		}
 	}
 }
 
