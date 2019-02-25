@@ -10,4 +10,18 @@ add_executable(PM1_SDK
         pm1/extensions.h
         pm1/time_extensions.h
 
-        main.cpp pm1/internal/chassis.cpp pm1/internal/chassis.h)
+        pm1/internal/serial/v8stdint.h
+
+        pm1/internal/serial/serial.h
+        pm1/internal/serial/serial.cc
+
+        pm1/internal/serial/win.h
+        pm1/internal/serial/win.cc
+
+        pm1/internal/serial/unix.h
+        pm1/internal/serial/unix.cc
+
+        pm1/internal/chassis.h
+        pm1/internal/chassis.cpp
+
+        main.cpp)
