@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include <thread>
 
 namespace mechdancer {
 	namespace common {
@@ -26,6 +27,15 @@ namespace mechdancer {
 			const auto ___ = {(builder << items << splitter, 0)...};
 			const auto str = builder.str();
 			return str.substr(0, str.length() - splitter.length());
+		}
+		
+		/**
+		 * 线程睡眠
+		 *
+		 * @param ms 时间（毫秒）
+		 */
+		inline void sleep(uint32_t ms) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 		}
 		
 		/**

@@ -25,7 +25,7 @@ namespace autolabor {
 			/** 结果结构体 */
 			struct result {
 				/** 结果类型 */
-				result_type result_type;
+				result_type type;
 				/** 二选一 */
 				union {
 					can_pack_no_data   signal;
@@ -42,8 +42,8 @@ namespace autolabor {
 			parser(parser &&others) = delete;
 			
 			/** 逐字节解析 */
-			result parse(uint8_t byte);
-		
+			result operator()(uint8_t byte);
+			
 		private:
 			enum class state_type : uint8_t {
 				origin,
@@ -59,9 +59,13 @@ namespace autolabor {
 				state_type state();
 			};
 			
-			union_no_data   sgn_buffer{0xfe};
-			union_with_data msg_buffer{0xfe};
-			state_t         state{0};
+			union {
+				uint8_t bytes[sizeof(can_pack_with_data)];
+				
+				union_no_data   sgn_buffer;
+				union_with_data msg_buffer;
+			};
+			state_t state{0};
 		};
 	}
 }

@@ -10,6 +10,7 @@
 #include <thread>
 #include "serial/serial.h"
 #include "../extensions.h"
+#include "parser.hh"
 
 namespace autolabor {
 	namespace pm1 {
@@ -29,22 +30,13 @@ namespace autolabor {
 			
 			/** 不可移动 */
 			chassis(chassis &&others) = delete;
-			
-			/** 测试串口 */
-			void test_serial();
-			
+		
 		private:
-			/**
-			 * 串口引用
-			 */
+			/** 串口引用 */
 			std::shared_ptr<serial::Serial> port;
 			
-			/**
-			 * 读取一个字节
-			 * @param byte 读出的字节
-			 * @return 是否成功读取
-			 */
-			bool readByte(unsigned char &byte);
+			/** 解析器 */
+			parser parser;
 		};
 	}
 }

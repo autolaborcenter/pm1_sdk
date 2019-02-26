@@ -7,30 +7,32 @@
 
 using namespace autolabor::pm1;
 
-parser::result parser::parse(uint8_t byte) {
+parser::result parser::operator()(uint8_t byte) {
+	// 保存当前状态
 	auto last = state.state();
 	switch (last) {
 		case state_type::origin:
+			// 初始状态，等待起始位
 			if (byte == 0xfe) state.value++;
 			break;
 		case state_type::determine:
-			state.value = byte & (1u << 5u)
-			              ? (msg_buffer.bytes[1] = byte, 6)
-			              : (sgn_buffer.bytes[1] = byte, 2);
+			// 判断有无数据域，调整状态
+			bytes[1] = byte;
+			state.value = byte & (1u << 5u) ? 6 : 2;
 			break;
 		case state_type::signal: {
-			sgn_buffer.bytes[state.value++] = byte;
-			if (state.state() == last
-			    || !(state.value = 0, crc_check(sgn_buffer)))
+			// 保存数据字节
+			bytes[state.value++] = byte;
+			if (state.state() == last || !(state.value = 0, crc_check(sgn_buffer)))
 				break;
 			result result{parser::result_type::signal};
 			result.signal = sgn_buffer.data;
 			return result;
 		}
 		case state_type::message: {
-			msg_buffer.bytes[state.value++ - 4] = byte;
-			if (state.state() == last
-			    || !(state.value = 0, crc_check(msg_buffer)))
+			// 保存数据字节
+			bytes[state.value++ - 4] = byte;
+			if (state.state() == last || !(state.value = 0, crc_check(msg_buffer)))
 				break;
 			result result{parser::result_type::message};
 			result.message = msg_buffer.data;

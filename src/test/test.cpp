@@ -154,8 +154,9 @@ public:
 template<class t, class union_t = typename choose<t>::union_t>
 void display(t msg) {
 	auto info = msg.info();
-	std::cout << std::hex << std::boolalpha
+	std::cout << std::hex
 	          << "network:\t0x" << (int) info.network() << std::endl
+	          << std::boolalpha
 	          << "data_field:\t" << info.data_field() << std::endl
 	          << std::dec
 	          << "property:\t" << (int) info.property() << std::endl
@@ -189,8 +190,8 @@ void test::test_parse() {
 	
 	parser    parser;
 	for (auto b : space.bytes) {
-		auto temp = parser.parse(b);
-		switch (temp.result_type) {
+		auto temp = parser(b);
+		switch (temp.type) {
 			case parser::result_type::nothing:
 				break;
 			case parser::result_type::signal:
