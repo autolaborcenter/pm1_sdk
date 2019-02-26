@@ -2,6 +2,7 @@
 // Created by ydrml on 2019/2/26.
 //
 
+#include <iostream>
 #include "parser.hh"
 
 using namespace autolabor::pm1;
@@ -13,7 +14,9 @@ parser::result parser::parse(uint8_t byte) {
 			if (byte == 0xfe) state.value++;
 			break;
 		case state_type::determine:
-			state.value = byte & (1u << 5u) ? 2 : 6;
+			state.value = byte & (1u << 5u)
+			              ? (msg_buffer.bytes[1] = byte, 6)
+			              : (sgn_buffer.bytes[1] = byte, 2);
 			break;
 		case state_type::signal: {
 			sgn_buffer.bytes[state.value++] = byte;

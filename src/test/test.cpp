@@ -10,6 +10,7 @@
 #include "../main/pm1/internal/serial/serial.h"
 #include "../main/pm1/internal/can_message.h"
 #include "../main/pm1/internal/can_define.h"
+#include "../main/pm1/internal/parser.hh"
 
 using namespace mechdancer::common;
 using namespace autolabor::pm1;
@@ -135,65 +136,71 @@ void test::test_crc_check() {
 	          << (0xf1 == temp2.bytes[sizeof(temp2) - 1]) << std::endl;
 }
 
+template<class t>
+class choose {};
+
+template<>
+class choose<can_pack_no_data> {
+public:
+	using union_t = union_no_data;
+};
+
+template<>
+class choose<can_pack_with_data> {
+public:
+	using union_t = union_with_data;
+};
+
+template<class t, class union_t = typename choose<t>::union_t>
+void display(t msg) {
+	auto info = msg.info();
+	std::cout << std::hex << std::boolalpha
+	          << "network:\t0x" << (int) info.network() << std::endl
+	          << "data_field:\t" << info.data_field() << std::endl
+	          << std::dec
+	          << "property:\t" << (int) info.property() << std::endl
+	          << std::hex
+	          << "node_type:\t0x" << (int) info.node_type() << std::endl
+	          << std::dec
+	          << "node_index:\t" << (int) info.node_index() << std::endl
+	          << std::hex
+	          << "msg_type:\t0x" << (int) msg.type << std::endl;
+	union_t temp{};
+	temp.data = msg;
+	std::cout << "crc_check:\t" << crc_check(temp) << std::endl
+	          << "can pack:\t[ ";
+	for (int b:temp.bytes) {
+		if (b < 0x10)std::cout << '0';
+		std::cout << b << " ";
+	}
+	std::cout << "]" << std::endl;
+}
+
 void test::test_pack() {
-	auto msg1 = pack<ecu<0>::current_speed_tx>();
-	auto msg2 = pack<ecu<1>::target_speed>({1, 2, 3, 4, 5, 6, 7, 8});
-	// region
-	{
-		auto info = msg1.info();
-		std::cout << std::hex << std::boolalpha
-		          << "network:\t0x" << (int) info.network() << std::endl
-		          << "data_field:\t" << info.data_field() << std::endl
-		          << "property:\t0x" << (int) info.property() << std::endl
-		          << "node_type:\t0x" << (int) info.node_type() << std::endl
-		          << "node_index:\t0x" << (int) info.node_index() << std::endl
-		          << "msg_type:\t0x" << (int) msg1.type << std::endl
-		          << "can pack:\t";
-		union_no_data temp{};
-		temp.data = msg1;
-		std::cout << "[ ";
-		for (int b:temp.bytes)
-			std::cout << std::hex << "0x" << b << " ";
-		std::cout << "]" << std::endl;
-	}
-	std::cout << std::endl;
-	{
-		auto info = msg2.info();
-		std::cout << std::hex << std::boolalpha
-		          << "network:\t0x" << (int) info.network() << std::endl
-		          << "data_field:\t" << info.data_field() << std::endl
-		          << "property:\t0x" << (int) info.property() << std::endl
-		          << "node_type:\t0x" << (int) info.node_type() << std::endl
-		          << "node_index:\t0x" << (int) info.node_index() << std::endl
-		          << "msg_type:\t0x" << (int) msg2.type << std::endl
-		          << "can pack:\t";
-		union_with_data temp{};
-		temp.data = msg2;
-		std::cout << "[ ";
-		for (int b:temp.bytes)
-			std::cout << std::hex << "0x" << b << " ";
-		std::cout << "]";
-	}
-	// endregion
+	display(pack<ecu<0>::current_speed_tx>());
+	display(pack<ecu<1>::target_speed>({1, 2, 3, 4, 5, 6, 7, 8}));
 }
 
 void test::test_parse() {
-	auto msg1 = pack<tcu<>::current_position_tx>();
-	{
-		auto info = msg1.info();
-		std::cout << std::hex << std::boolalpha
-		          << "network:\t0x" << (int) info.network() << std::endl
-		          << "data_field:\t" << info.data_field() << std::endl
-		          << "property:\t0x" << (int) info.property() << std::endl
-		          << "node_type:\t0x" << (int) info.node_type() << std::endl
-		          << "node_index:\t0x" << (int) info.node_index() << std::endl
-		          << "msg_type:\t0x" << (int) msg1.type << std::endl
-		          << "can pack:\t";
-		union_no_data temp{};
-		temp.data = msg1;
-		std::cout << "[ ";
-		for (int b:temp.bytes)
-			std::cout << std::hex << "0x" << b << " ";
-		std::cout << "]" << std::endl;
+	auto msg = pack<tcu<>::current_position_tx>();
+	
+	choose<decltype(msg)>::union_t space{};
+	space.data = msg;
+	
+	parser    parser;
+	for (auto b : space.bytes) {
+		auto temp = parser.parse(b);
+		switch (temp.result_type) {
+			case parser::result_type::nothing:
+				break;
+			case parser::result_type::signal:
+				std::cout << "received: -------------------" << std::endl;
+				display(temp.signal);
+				break;
+			case parser::result_type::message:
+				std::cout << "received: -------------------" << std::endl;
+				display(temp.message);
+				break;
+		}
 	}
 }
