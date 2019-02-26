@@ -92,7 +92,7 @@ namespace autolabor {
 			using current_speed_rx    = can_pack_info<msg, 0, 0, type_id, node_index, 0x5>;
 		};
 		
-		/** 填充包信息 */
+		/** 打包（无数据域） */
 		template<class info_t>
 		inline typename info_t::data_t pack(uint8_t reserve = 0) {
 			using type = typename info_t::data_t;
@@ -105,7 +105,7 @@ namespace autolabor {
 			return msg.data;
 		}
 		
-		/** 填充包信息 */
+		/** 打包（有数据域） */
 		template<class info_t>
 		inline typename info_t::data_t pack(std::array<uint8_t, 8> &&data, uint8_t frame_id = 0) {
 			using type = typename info_t::data_t;
