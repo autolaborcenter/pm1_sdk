@@ -31,7 +31,7 @@ add_executable(PM1_SDK
         src/main/pm1/internal/chassis.hh
         src/main/pm1/internal/chassis.cc
 
-        src/test/Tests.h
-        src/test/Tests.cpp
+        src/test/test.h
+        src/test/test.cpp
 
         main.cpp src/main/pm1/internal/can_define.h)

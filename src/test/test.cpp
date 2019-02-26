@@ -2,7 +2,7 @@
 // Created by ydrml on 2019/2/26.
 //
 
-#include "Tests.h"
+#include "test.h"
 
 #include "../main/pm1/api.h"
 #include "../main/pm1/extensions.h"
@@ -133,19 +133,6 @@ void test::test_crc_check() {
 	std::cout << std::boolalpha
 	          << (0xfe == temp2.bytes[0]) << std::endl
 	          << (0xf1 == temp2.bytes[sizeof(temp2) - 1]) << std::endl;
-}
-
-void test::test_info_fill() {
-	union_with_data msg{};
-	fill_info<ecu<0>::target_speed>(msg);
-	reformat(msg);
-	auto info = msg.data.info();
-	std::cout << "network:\t0x" << std::hex << (int) info.network() << std::endl
-	          << "data_field:\t" << std::boolalpha << info.data_field() << std::endl
-	          << "property:\t0x" << std::hex << (int) info.property() << std::endl
-	          << "node_type:\t0x" << std::hex << (int) info.node_type() << std::endl
-	          << "node_index:\t0x" << std::hex << (int) info.node_index() << std::endl
-	          << "msg_type:\t0x" << std::hex << (int) msg.data.type << std::endl;
 }
 
 void test::test_pack() {

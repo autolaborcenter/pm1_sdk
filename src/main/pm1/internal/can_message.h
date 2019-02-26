@@ -27,7 +27,7 @@ namespace {
 			116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53
 	};
 	
-	/** 计算某个长度的遮盖 */
+	/** 计算某个长度的位遮盖 */
 	constexpr uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
 	
 	/**

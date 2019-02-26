@@ -8,7 +8,6 @@
 #include "can_message.h"
 
 #include <array>
-#include <cstring>
 
 namespace {
 	using sgn = autolabor::pm1::can_pack_no_data;   // 信号，无数据
@@ -19,11 +18,13 @@ namespace autolabor {
 	namespace pm1 {
 		/**
 		 * CAN 包信息定义
+		 *
 		 * @tparam _data_t     使用的数据结构
 		 * @tparam _network    网络号
 		 * @tparam _property   优先级
 		 * @tparam _node_type  节点类型
 		 * @tparam _node_index 节点序号
+		 * @tparam _type       消息类型
 		 */
 		template<class _data_t,
 				uint8_t _network,
@@ -49,6 +50,14 @@ namespace autolabor {
 			constexpr static auto node_type  = _node_type;
 			constexpr static auto node_index = _node_index;
 			constexpr static auto type       = _type;
+			
+			constexpr static uint8_t bytes[]{
+					static_cast<uint8_t>((network << 6)
+					                     | (data_field ? (1 << 5) : 0)
+					                     | (property << 2)
+					                     | (node_type >> 4)),
+					static_cast<uint8_t>((node_type << 4) | node_index),
+					type};
 		};
 		
 		/** 动力控制器包信息协议 */
@@ -85,25 +94,12 @@ namespace autolabor {
 		
 		/** 填充包信息 */
 		template<class info_t>
-		inline void fill_info(msg_union<typename info_t::data_t> &msg) {
-			msg_union<uint16_t> info{};
-			info.data |= info_t::network << 14;
-			info.data |= info_t::data_field ? (1 << 13) : 0;
-			info.data |= info_t::property << 10;
-			info.data |= info_t::node_type << 4;
-			info.data |= info_t::node_index;
-			msg.data.info0 = info.bytes[1];
-			msg.data.info1 = info.bytes[0];
-			msg.data.type  = info_t::type;
-		}
-		
-		/** 填充包信息 */
-		template<class info_t>
 		inline typename info_t::data_t pack(uint8_t reserve = 0) {
 			using type = typename info_t::data_t;
 			static_assert(std::is_same<type, sgn>::value, "cannot build a signal pack with message info");
+			
 			msg_union<type> msg{};
-			fill_info<info_t>(msg);
+			std::memcpy(msg.bytes + 1, info_t::bytes, 3);
 			msg.data.reserve = reserve;
 			reformat(msg);
 			return msg.data;
@@ -114,10 +110,11 @@ namespace autolabor {
 		inline typename info_t::data_t pack(std::array<uint8_t, 8> &&data, uint8_t frame_id = 0) {
 			using type = typename info_t::data_t;
 			static_assert(std::is_same<type, msg>::value, "cannot build a message pack with signal info");
+			
 			msg_union<type> msg{};
-			fill_info<info_t>(msg);
-			msg.data.frame_id = frame_id;
+			std::memcpy(msg.bytes + 1, info_t::bytes, 3);
 			std::memcpy(msg.data.data, data.data(), 8);
+			msg.data.frame_id = frame_id;
 			reformat(msg);
 			return msg.data;
 		}

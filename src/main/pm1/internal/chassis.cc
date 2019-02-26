@@ -51,6 +51,6 @@ bool autolabor::pm1::chassis::readByte(unsigned char &byte) {
 	std::lock_guard<std::mutex> lock(mutex);
 	// 尝试读取
 	try { temp = port->read(1); }
-	catch (std::exception &e) { return false; }
+	catch (std::exception &) { return false; }
 	return temp.empty() ? false : (byte = temp[0], true);
 }
