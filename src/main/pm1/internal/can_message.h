@@ -124,24 +124,7 @@ namespace autolabor {
 			msg.bytes[last_index] = crc_calculate(msg);
 		}
 		
-		/** 填充包信息 */
-		template<class t>
-		void fill_info(msg_union<t> &msg,
-		               uint8_t network,
-		               bool data_field,
-		               uint8_t property,
-		               uint8_t node_type,
-		               uint8_t node_index
-		) {
-			msg_union<uint16_t> info{};
-			info.data |= network << 14;
-			info.data |= data_field ? 0b00100000 : 0;
-			info.data |= property << 10;
-			info.data |= node_type << 4;
-			info.data |= node_index;
-			msg.data.info0 = info.bytes[1];
-			msg.data.info1 = info.bytes[0];
-		}
+		
 	}
 }
 

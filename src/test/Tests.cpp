@@ -9,6 +9,7 @@
 #include "../main/pm1/time_extensions.h"
 #include "../main/pm1/internal/serial/serial.h"
 #include "../main/pm1/internal/can_message.h"
+#include "../main/pm1/internal/can_define.h"
 
 using namespace mechdancer::common;
 using namespace autolabor::pm1;
@@ -135,15 +136,14 @@ void test::test_crc_check() {
 }
 
 void test::test_info_fill() {
-	union_no_data temp1{};
-	fill_info(temp1, 1, false, 2, 3, 4);
-	temp1.data.type    = 5;
-	temp1.data.reserve = 6;
+	union_with_data temp1{};
+	fill_info<ecu::target_speed>(temp1);
+	temp1.data.type = 5;
 	reformat(temp1);
 	auto info = temp1.data.info();
-	std::cout << "network:\t" << (int) info.network() << std::endl
+	std::cout << "network:\t0x" << std::hex << (int) info.network() << std::endl
 	          << "data_field:\t" << std::boolalpha << info.data_field() << std::endl
-	          << "property:\t" << (int) info.property() << std::endl
-	          << "node_type:\t" << (int) info.node_type() << std::endl
-	          << "node_index:\t" << (int) info.node_index() << std::endl;
+	          << "property:\t0x" << std::hex << (int) info.property() << std::endl
+	          << "node_type:\t0x" << std::hex << (int) info.node_type() << std::endl
+	          << "node_index:\t0x" << std::hex << (int) info.node_index() << std::endl;
 }
