@@ -7,5 +7,5 @@
 using namespace autolabor::pm1::test;
 
 int main() {
-	test_crc_check();
+	test_info_fill();
 }

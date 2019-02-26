@@ -27,16 +27,8 @@ namespace {
 			116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53
 	};
 	
-	/** 循环冗余计算 */
-	template<class union_t, int last_index = sizeof(union_t) - 1>
-	uint8_t crc_calculate(const union_t &msg) {
-		uint8_t checksum = 0;
-		
-		for (auto i = 1; i < last_index; ++i)
-			checksum = CRC8Table[checksum ^ msg.bytes[i]];
-		
-		return checksum;
-	}
+	/** 计算某个长度的遮盖 */
+	constexpr uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
 	
 	/**
 	 * 转换器
@@ -47,6 +39,17 @@ namespace {
 		uint8_t bytes[sizeof(t)];
 		t       data;
 	};
+	
+	/** 循环冗余计算 */
+	template<class t, int last_index = sizeof(t) - 1>
+	uint8_t crc_calculate(const msg_union<t> &msg) {
+		uint8_t checksum = 0;
+		
+		for (auto i = 1; i < last_index; ++i)
+			checksum = CRC8Table[checksum ^ msg.bytes[i]];
+		
+		return checksum;
+	}
 }
 
 namespace autolabor {
@@ -109,16 +112,35 @@ namespace autolabor {
 		using union_with_data = msg_union<can_pack_with_data>;
 		
 		/** 循环冗余校验 */
-		template<class union_t, int last_index = sizeof(union_t) - 1>
-		bool crc_check(const union_t &msg) {
+		template<class t, int last_index = sizeof(t) - 1>
+		bool crc_check(const msg_union<t> &msg) {
 			return msg.bytes[last_index] == crc_calculate(msg);
 		}
 		
 		/** 填充校验和 */
-		template<class union_t, int last_index = sizeof(union_t) - 1>
-		void reformat(union_t &msg) {
+		template<class t, int last_index = sizeof(t) - 1>
+		void reformat(msg_union<t> &msg) {
 			msg.bytes[0]          = 0xfe;
 			msg.bytes[last_index] = crc_calculate(msg);
+		}
+		
+		/** 填充包信息 */
+		template<class t>
+		void fill_info(msg_union<t> &msg,
+		               uint8_t network,
+		               bool data_field,
+		               uint8_t property,
+		               uint8_t node_type,
+		               uint8_t node_index
+		) {
+			msg_union<uint16_t> info{};
+			info.data |= network << 14;
+			info.data |= data_field ? 0b00100000 : 0;
+			info.data |= property << 10;
+			info.data |= node_type << 4;
+			info.data |= node_index;
+			msg.data.info0 = info.bytes[1];
+			msg.data.info1 = info.bytes[0];
 		}
 	}
 }

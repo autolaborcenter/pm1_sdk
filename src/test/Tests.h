@@ -14,6 +14,8 @@ namespace autolabor {
 			void test_serial_port();
 			
 			void test_crc_check();
+			
+			void test_info_fill();
 		}
 	}
 }

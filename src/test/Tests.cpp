@@ -11,16 +11,17 @@
 #include "../main/pm1/internal/can_message.h"
 
 using namespace mechdancer::common;
+using namespace autolabor::pm1;
 
-void autolabor::pm1::test::test_string_print() {
+void test::test_string_print() {
 	println(join_to_string("", 1, 2, 3, 4, 5));
 	println(join_to_string(", ", 1, 2, 3, 4, 5));
 	println(join_to_string("", '[', join_to_string(", ", 1, 2, 3, 4, 5), ']'));
 	
-	println(measure_time([] { autolabor::pm1::delay(1); }).count());
+	println(measure_time([] { delay(1); }).count());
 }
 
-void autolabor::pm1::test::test_serial_port() {
+void test::test_serial_port() {
 	try {
 		//enumerate_ports
 		for (const auto &it : serial::list_ports()) {
@@ -113,22 +114,36 @@ void autolabor::pm1::test::test_serial_port() {
 	}
 }
 
-void autolabor::pm1::test::test_crc_check() {
-	std::cout << sizeof(autolabor::pm1::can_pack_no_data) << std::endl;
-	std::cout << sizeof(autolabor::pm1::can_pack_with_data) << std::endl;
+void test::test_crc_check() {
+	std::cout << sizeof(can_pack_no_data) << std::endl;
+	std::cout << sizeof(can_pack_with_data) << std::endl;
 	
-	autolabor::pm1::union_no_data
+	union_no_data
 			temp1{0xfe, 0x31, 0x32, 0x33, 0x34, 0xf1};
 	
 	std::cout << std::boolalpha
-	          << autolabor::pm1::crc_check(temp1) << std::endl;
+	          << crc_check(temp1) << std::endl;
 	
-	autolabor::pm1::union_no_data
+	union_no_data
 			temp2{0x00, 0x31, 0x32, 0x33, 0x34, 0x00};
 	
-	autolabor::pm1::reformat(temp2);
+	reformat(temp2);
 	
 	std::cout << std::boolalpha
 	          << (0xfe == temp2.bytes[0]) << std::endl
 	          << (0xf1 == temp2.bytes[sizeof(temp2) - 1]) << std::endl;
+}
+
+void test::test_info_fill() {
+	union_no_data temp1{};
+	fill_info(temp1, 1, false, 2, 3, 4);
+	temp1.data.type    = 5;
+	temp1.data.reserve = 6;
+	reformat(temp1);
+	auto info = temp1.data.info();
+	std::cout << "network:\t" << (int) info.network() << std::endl
+	          << "data_field:\t" << std::boolalpha << info.data_field() << std::endl
+	          << "property:\t" << (int) info.property() << std::endl
+	          << "node_type:\t" << (int) info.node_type() << std::endl
+	          << "node_index:\t" << (int) info.node_index() << std::endl;
 }
