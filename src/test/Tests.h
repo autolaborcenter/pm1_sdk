@@ -16,6 +16,8 @@ namespace autolabor {
 			void test_crc_check();
 			
 			void test_info_fill();
+			
+			void test_pack();
 		}
 	}
 }

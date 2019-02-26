@@ -33,9 +33,6 @@ namespace autolabor {
 			/** 测试串口 */
 			void test_serial();
 			
-			/** 获取编码器值 */
-			// std::pair<double, double> getRecorder();
-		
 		private:
 			/**
 			 * 串口引用

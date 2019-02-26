@@ -50,7 +50,7 @@ namespace autolabor {
 		 * 走圆弧
 		 *
 		 * @param speed 线速度（m/s）
-		 * @param r     转弯半径（m）
+		 * @param r     转弯半径（m，非负）
 		 * @param rad   行驶时间（s，非负）
 		 */
 		void go_arc(double speed, double r, double rad);
@@ -59,7 +59,7 @@ namespace autolabor {
 		 * 走圆弧
 		 *
 		 * @param speed 线速度（m/s）
-		 * @param r     转弯半径（m）
+		 * @param r     转弯半径（m，非负）
 		 * @param time  行驶时间（s，非负）
 		 */
 		void go_arc_timing(double speed, double r, double time);

@@ -113,18 +113,16 @@ namespace autolabor {
 		
 		/** 循环冗余校验 */
 		template<class t, int last_index = sizeof(t) - 1>
-		bool crc_check(const msg_union<t> &msg) {
+		inline bool crc_check(const msg_union<t> &msg) {
 			return msg.bytes[last_index] == crc_calculate(msg);
 		}
 		
 		/** 填充校验和 */
 		template<class t, int last_index = sizeof(t) - 1>
-		void reformat(msg_union<t> &msg) {
+		inline void reformat(msg_union<t> &msg) {
 			msg.bytes[0]          = 0xfe;
 			msg.bytes[last_index] = crc_calculate(msg);
 		}
-		
-		
 	}
 }
 

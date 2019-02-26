@@ -136,14 +136,56 @@ void test::test_crc_check() {
 }
 
 void test::test_info_fill() {
-	union_with_data temp1{};
-	fill_info<ecu::target_speed>(temp1);
-	temp1.data.type = 5;
-	reformat(temp1);
-	auto info = temp1.data.info();
+	union_with_data msg{};
+	fill_info<ecu<0>::target_speed>(msg);
+	reformat(msg);
+	auto info = msg.data.info();
 	std::cout << "network:\t0x" << std::hex << (int) info.network() << std::endl
 	          << "data_field:\t" << std::boolalpha << info.data_field() << std::endl
 	          << "property:\t0x" << std::hex << (int) info.property() << std::endl
 	          << "node_type:\t0x" << std::hex << (int) info.node_type() << std::endl
-	          << "node_index:\t0x" << std::hex << (int) info.node_index() << std::endl;
+	          << "node_index:\t0x" << std::hex << (int) info.node_index() << std::endl
+	          << "msg_type:\t0x" << std::hex << (int) msg.data.type << std::endl;
+}
+
+void test::test_pack() {
+	auto msg1 = pack<ecu<0>::current_speed_tx>();
+	auto msg2 = pack<ecu<1>::target_speed>({1, 2, 3, 4, 5, 6, 7, 8});
+	// region
+	{
+		auto info = msg1.info();
+		std::cout << std::hex << std::boolalpha
+		          << "network:\t0x" << (int) info.network() << std::endl
+		          << "data_field:\t" << info.data_field() << std::endl
+		          << "property:\t0x" << (int) info.property() << std::endl
+		          << "node_type:\t0x" << (int) info.node_type() << std::endl
+		          << "node_index:\t0x" << (int) info.node_index() << std::endl
+		          << "msg_type:\t0x" << (int) msg1.type << std::endl
+		          << "can pack:\t";
+		union_no_data temp{};
+		temp.data = msg1;
+		std::cout << "[ ";
+		for (int b:temp.bytes)
+			std::cout << std::hex << "0x" << b << " ";
+		std::cout << "]" << std::endl;
+	}
+	std::cout << std::endl;
+	{
+		auto info = msg2.info();
+		std::cout << std::hex << std::boolalpha
+		          << "network:\t0x" << (int) info.network() << std::endl
+		          << "data_field:\t" << info.data_field() << std::endl
+		          << "property:\t0x" << (int) info.property() << std::endl
+		          << "node_type:\t0x" << (int) info.node_type() << std::endl
+		          << "node_index:\t0x" << (int) info.node_index() << std::endl
+		          << "msg_type:\t0x" << (int) msg2.type << std::endl
+		          << "can pack:\t";
+		union_with_data temp{};
+		temp.data = msg2;
+		std::cout << "[ ";
+		for (int b:temp.bytes)
+			std::cout << std::hex << "0x" << b << " ";
+		std::cout << "]";
+	}
+	// endregion
 }
