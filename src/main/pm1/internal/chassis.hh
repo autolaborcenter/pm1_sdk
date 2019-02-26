@@ -10,7 +10,6 @@
 #include <thread>
 #include "serial/serial.h"
 #include "../extensions.h"
-#include "parser.hh"
 
 namespace autolabor {
 	namespace pm1 {
@@ -34,9 +33,6 @@ namespace autolabor {
 		private:
 			/** 串口引用 */
 			std::shared_ptr<serial::Serial> port;
-			
-			/** 解析器 */
-			parser parser;
 		};
 	}
 }

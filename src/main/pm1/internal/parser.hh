@@ -28,8 +28,8 @@ namespace autolabor {
 				result_type type;
 				/** 二选一 */
 				union {
-					can_pack_no_data   signal;
-					can_pack_with_data message;
+					union_no_data   signal;
+					union_with_data message;
 				};
 			};
 			
@@ -43,7 +43,7 @@ namespace autolabor {
 			
 			/** 逐字节解析 */
 			result operator()(uint8_t byte);
-			
+		
 		private:
 			enum class state_type : uint8_t {
 				origin,

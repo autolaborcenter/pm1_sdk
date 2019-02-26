@@ -123,6 +123,32 @@ namespace autolabor {
 			msg.bytes[0]          = 0xfe;
 			msg.bytes[last_index] = crc_calculate(msg);
 		}
+		
+		template<class t>
+		std::string to_string(msg_union<t> msg) {
+			std::stringstream builder;
+			auto              info = msg.data.info();
+			builder << std::hex
+			        << "network:\t0x" << (int) info.network() << std::endl
+			        << std::boolalpha
+			        << "data_field:\t" << info.data_field() << std::endl
+			        << std::dec
+			        << "property:\t" << (int) info.property() << std::endl
+			        << std::hex
+			        << "node_type:\t0x" << (int) info.node_type() << std::endl
+			        << std::dec
+			        << "node_index:\t" << (int) info.node_index() << std::endl
+			        << std::hex
+			        << "msg_type:\t0x" << (int) msg.data.type << std::endl
+			        << "crc_check:\t" << crc_check(msg) << std::endl
+			        << "can pack:\t[ ";
+			for (int b:msg.bytes) {
+				if (b < 0x10) builder << '0';
+				builder << b << " ";
+			}
+			builder << "]" << std::endl;
+			return builder.str();
+		}
 	}
 }
 

@@ -26,7 +26,7 @@ parser::result parser::operator()(uint8_t byte) {
 			if (state.state() == last || !(state.value = 0, crc_check(sgn_buffer)))
 				break;
 			result result{parser::result_type::signal};
-			result.signal = sgn_buffer.data;
+			result.signal = sgn_buffer;
 			return result;
 		}
 		case state_type::message: {
@@ -35,7 +35,7 @@ parser::result parser::operator()(uint8_t byte) {
 			if (state.state() == last || !(state.value = 0, crc_check(msg_buffer)))
 				break;
 			result result{parser::result_type::message};
-			result.message = msg_buffer.data;
+			result.message = msg_buffer;
 			return result;
 		}
 		case state_type::ending:

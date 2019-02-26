@@ -10,8 +10,8 @@
 #include <array>
 
 namespace {
-	using sgn = autolabor::pm1::can_pack_no_data;   // 信号，无数据
-	using msg = autolabor::pm1::can_pack_with_data; // 消息，有数据
+	using sgn = autolabor::pm1::union_no_data;   // 信号，无数据
+	using msg = autolabor::pm1::union_with_data; // 消息，有数据
 }
 
 namespace autolabor {
@@ -55,11 +55,11 @@ namespace autolabor {
 			constexpr static auto type       = _type;
 			
 			constexpr static uint8_t bytes[]{
-					static_cast<uint8_t>((network << 6)
-					                     | (data_field ? (1 << 5) : 0)
-					                     | (property << 2)
-					                     | (node_type >> 4)),
-					static_cast<uint8_t>((node_type << 4) | node_index),
+					static_cast<uint8_t>((network << 6u)
+					                     | (data_field ? (1u << 5u) : 0)
+					                     | (property << 2u)
+					                     | (node_type >> 4u)),
+					static_cast<uint8_t>((node_type << 4u) | node_index),
 					type};
 		};
 		
@@ -74,6 +74,7 @@ namespace autolabor {
 			using current_speed_tx    = can_pack_info<sgn, 0, 0, type_id, node_index, 0x5>;
 			using current_speed_rx    = can_pack_info<msg, 0, 0, type_id, node_index, 0x5>;
 			// 当前编码器读数
+			// FIXME 去掉这一行将导致编译错误
 			using current_position_tx = can_pack_info<sgn, 0, 0, type_id, node_index, 0x6>;
 			using current_position_rx = can_pack_info<msg, 0, 0, type_id, node_index, 0x6>;
 			// 超时时间
@@ -101,11 +102,11 @@ namespace autolabor {
 			using type = typename info_t::data_t;
 			static_assert(std::is_same<type, sgn>::value, "cannot build a signal pack with message info");
 			
-			msg_union<type> msg{};
+			type msg{};
 			std::memcpy(msg.bytes + 1, info_t::bytes, 3);
 			msg.data.reserve = reserve;
 			reformat(msg);
-			return msg.data;
+			return msg;
 		}
 		
 		/** 打包（有数据域） */
@@ -114,12 +115,12 @@ namespace autolabor {
 			using type = typename info_t::data_t;
 			static_assert(std::is_same<type, msg>::value, "cannot build a message pack with signal info");
 			
-			msg_union<type> msg{};
+			type msg{};
 			std::memcpy(msg.bytes + 1, info_t::bytes, 3);
 			std::memcpy(msg.data.data, data.data(), 8);
 			msg.data.frame_id = frame_id;
 			reformat(msg);
-			return msg.data;
+			return msg;
 		}
 	}
 }
