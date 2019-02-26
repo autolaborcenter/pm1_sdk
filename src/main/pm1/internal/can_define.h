@@ -16,6 +16,9 @@ namespace {
 
 namespace autolabor {
 	namespace pm1 {
+		constexpr uint8_t any_type  = 0x3f,
+		                  any_index = 0x0f;
+		
 		/**
 		 * CAN 包信息定义
 		 *
@@ -39,10 +42,10 @@ namespace autolabor {
 			static_assert(std::is_same<_data_t, msg>::value
 			              || std::is_same<_data_t, sgn>::value,
 			              "struct must be a can pack type");
-			static_assert(_network <= 0x11, "network in 2 bits");
-			static_assert(_property <= 0x111, "property in 3 bits");
-			static_assert(_node_type <= 0x111111, "node type in 6 bits");
-			static_assert(_node_index <= 0x1111, "node index in 4 bits");
+			static_assert(_network <= mask(2), "network in 2 bits");
+			static_assert(_property <= mask(3), "property in 3 bits");
+			static_assert(_node_type <= mask(6), "node type in 6 bits");
+			static_assert(_node_index <= mask(4), "node index in 4 bits");
 			
 			constexpr static auto network    = _network;
 			constexpr static auto data_field = std::is_same<_data_t, msg>::value;
@@ -61,7 +64,7 @@ namespace autolabor {
 		};
 		
 		/** 动力控制器包信息协议 */
-		template<uint8_t node_index>
+		template<uint8_t node_index = any_index>
 		class ecu {
 		public:
 			constexpr static uint8_t type_id = 0x11;
@@ -78,7 +81,7 @@ namespace autolabor {
 		};
 		
 		/** 动力控制器包信息协议 */
-		template<uint8_t node_index>
+		template<uint8_t node_index = any_index>
 		class tcu {
 		public:
 			constexpr static uint8_t type_id = 0x12;

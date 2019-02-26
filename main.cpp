@@ -9,11 +9,5 @@
 using namespace autolabor::pm1::test;
 
 int main() {
-	std::cout << std::endl
-	          << std::endl
-	          << mechdancer::common::measure_time([] {
-		          for (auto i = 0; i < 100; ++i)
-			          test_pack();
-	          }).count()
-	          << std::endl;
+	test_parse();
 }

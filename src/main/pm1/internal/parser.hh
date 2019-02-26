@@ -9,14 +9,24 @@
 
 namespace autolabor {
 	namespace pm1 {
+		/** 解析器 */
 		class parser {
 		public:
+			/** 结果类型 */
 			enum class result_type : uint8_t {
-				nothing, signal, message
+				/** 无（不完整或校验失败） */
+						nothing,
+				/** 信号 */
+						signal,
+				/** 消息 */
+						message
 			};
 			
+			/** 结果结构体 */
 			struct result {
-				result_type data_field;
+				/** 结果类型 */
+				result_type result_type;
+				/** 二选一 */
 				union {
 					can_pack_no_data   signal;
 					can_pack_with_data message;
@@ -25,10 +35,13 @@ namespace autolabor {
 			
 			parser() = default;
 			
+			/** 禁止复制 */
 			parser(const parser &others) = delete;
 			
+			/** 禁止移动 */
 			parser(parser &&others) = delete;
 			
+			/** 逐字节解析 */
 			result parse(uint8_t byte);
 		
 		private:

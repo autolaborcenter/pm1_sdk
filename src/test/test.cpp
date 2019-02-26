@@ -176,3 +176,24 @@ void test::test_pack() {
 	}
 	// endregion
 }
+
+void test::test_parse() {
+	auto msg1 = pack<tcu<>::current_position_tx>();
+	{
+		auto info = msg1.info();
+		std::cout << std::hex << std::boolalpha
+		          << "network:\t0x" << (int) info.network() << std::endl
+		          << "data_field:\t" << info.data_field() << std::endl
+		          << "property:\t0x" << (int) info.property() << std::endl
+		          << "node_type:\t0x" << (int) info.node_type() << std::endl
+		          << "node_index:\t0x" << (int) info.node_index() << std::endl
+		          << "msg_type:\t0x" << (int) msg1.type << std::endl
+		          << "can pack:\t";
+		union_no_data temp{};
+		temp.data = msg1;
+		std::cout << "[ ";
+		for (int b:temp.bytes)
+			std::cout << std::hex << "0x" << b << " ";
+		std::cout << "]" << std::endl;
+	}
+}
