@@ -6,6 +6,8 @@ void test_string_print();
 
 void test_serial_port();
 
+void test_crc_check();
+
 #include <iostream>
 #include "pm1/api.h"
 #include "pm1/internal/serial/serial.h"
@@ -18,22 +20,7 @@ void test_serial_port();
 using namespace mechdancer::common;
 
 int main() {
-	//	auto temp = autolabor::pm1::can_message_info(104, 52);
-	//	std::cout << (int) temp.network() << std::endl
-	//	          << std::boolalpha << temp.data_field() << std::endl
-	//	          << (int) temp.property() << std::endl
-	//	          << (int) temp.node_type() << std::endl
-	//	          << (int) temp.node_index() << std::endl
-	//	          << (int) temp.bytes()[0] << std::endl
-	//	          << (int) temp.bytes()[1] << std::endl;
-	
-	std::cout << sizeof(autolabor::pm1::can_pack_no_data) << std::endl;
-	std::cout << sizeof(autolabor::pm1::can_pack_with_data) << std::endl;
-	
-	autolabor::pm1::union_no_data temp{};
-	temp.bytes[0] = 100;
-	std::cout << (int) temp.data.head << std::endl;
-	std::cout << (int) temp.data.crc << std::endl;
+	test_crc_check();
 }
 
 void test_string_print() {
@@ -135,4 +122,24 @@ void test_serial_port() {
 	} catch (std::exception &e) {
 		std::cerr << "Unhandled Exception: " << e.what() << std::endl;
 	}
+}
+
+void test_crc_check() {
+	std::cout << sizeof(autolabor::pm1::can_pack_no_data) << std::endl;
+	std::cout << sizeof(autolabor::pm1::can_pack_with_data) << std::endl;
+	
+	autolabor::pm1::union_no_data
+			temp1{0xfe, 0x31, 0x32, 0x33, 0x34, 0xf1};
+	
+	std::cout << std::boolalpha
+	          << autolabor::pm1::crc_check(temp1) << std::endl;
+	
+	autolabor::pm1::union_no_data
+			temp2{0x00, 0x31, 0x32, 0x33, 0x34, 0x00};
+	
+	autolabor::pm1::reformat(temp2);
+	
+	std::cout << std::boolalpha
+	          << (0xfe == temp2.bytes[0]) << std::endl
+	          << (0xf1 == temp2.bytes[sizeof(temp2) - 1]) << std::endl;
 }
