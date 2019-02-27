@@ -9,10 +9,11 @@
 #include <thread>
 #include "serial/serial.h"
 #include "../extensions.h"
+#include "can/can_define.h"
 
 namespace autolabor {
 	namespace pm1 {
-		constexpr uint8_t period   = 90;
+		constexpr uint8_t period = 90;
 		
 		struct motor_info {
 			double speed;

@@ -49,11 +49,11 @@ inline int first_int(const uint8_t *bytes) {
 }
 
 inline short first_short(const uint8_t *bytes) {
-	return msg_union<short>{bytes[2], bytes[1]}.data;
+	return msg_union<short>{bytes[1], bytes[0]}.data;
 }
 
 chassis::chassis(const std::string &port_name)
-		: port(new serial::Serial(port_name, 9600, my_timeout)) {
+		: port(new serial::Serial(port_name, 115200, my_timeout)) {
 	// 启动接收线程
 	std::thread([this] {
 		auto        port_ptr = port;
@@ -77,12 +77,12 @@ chassis::chassis(const std::string &port_name)
 			}
 			
 			// 处理
-			if (buffer.empty() && port_ptr->isOpen())
+			if (buffer.empty() && port_ptr->isOpen()) {
 				loop_sleep();
-			else {
+			} else {
 				auto result = parser(*buffer.begin());
 				if (result.type != parser::result_type::message) {
-					loop_sleep();
+					// loop_sleep();
 					continue;
 				}
 				
@@ -147,7 +147,7 @@ void chassis::right(double target) const {
 
 void chassis::rudder(double target) const {
 	msg_union<short> buffer{};
-	buffer.data = static_cast<short> (target / mechanical::wheel_k);
+	buffer.data = static_cast<short> (target / mechanical::rudder_k);
 	write(port, pack<tcu0_target>({buffer.bytes[1],
 	                               buffer.bytes[0]}));
 }

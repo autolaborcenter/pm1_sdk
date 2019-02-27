@@ -40,10 +40,9 @@ inline void wait_or_drive(double v, double w) {
 		                     ? w > 0 ? -mechanical::pi / 2 : +mechanical::pi / 2
 		                     : std::atan(w * mechanical::length / v);
 		
-		if (std::abs(ptr->rudder().position - target_rudder) > mechanical::pi / 36)
+		if (std::abs(ptr->rudder().position - target_rudder) > mechanical::pi / 36) {
 			set(0, 0, target_rudder);
-		
-		else {
+		} else {
 			auto diff = mechanical::width / 2 * w;
 			set(v - diff, v + diff, target_rudder);
 		}
@@ -105,7 +104,7 @@ void autolabor::pm1::shutdown() {
 void autolabor::pm1::go_straight(double speed, double distance) {
 	const auto o = wheels::average();
 	while (std::abs(wheels::average() - o) < distance) {
-		wait_or_drive(speed, speed);
+		wait_or_drive(speed, 0);
 		loop_delay();
 	}
 }
