@@ -4,24 +4,15 @@
 
 #include "test.h"
 
-#include "../main/pm1/api.h"
-#include "../main/pm1/extensions.h"
+#include <iostream>
 #include "../main/pm1/time_extensions.h"
 #include "../main/pm1/internal/serial/serial.h"
-#include "../main/pm1/internal/can_message.h"
-#include "../main/pm1/internal/can_define.h"
-#include "../main/pm1/internal/parser.hh"
+#include "../main/pm1/internal/can/can_message.h"
+#include "../main/pm1/internal/can/can_define.h"
+#include "../main/pm1/internal/can/parser.hh"
 
 using namespace mechdancer::common;
 using namespace autolabor::pm1;
-
-void test::test_string_print() {
-	println(join_to_string("", 1, 2, 3, 4, 5));
-	println(join_to_string(", ", 1, 2, 3, 4, 5));
-	println(join_to_string("", '[', join_to_string(", ", 1, 2, 3, 4, 5), ']'));
-	
-	println(measure_time([] { delay(1); }).count());
-}
 
 void test::test_serial_port() {
 	try {

@@ -2,9 +2,8 @@
 // Created by ydrml on 2019/2/25.
 //
 
-#ifndef PM1_SDK_PM1_H
-#define PM1_SDK_PM1_H
-
+#ifndef PM1_SDK_CHASSIS_H
+#define PM1_SDK_CHASSIS_H
 
 #include <iostream>
 #include <thread>
@@ -14,9 +13,6 @@
 namespace autolabor {
 	namespace pm1 {
 		constexpr uint8_t period   = 90;
-		constexpr double  pi       = 3.141592653589793238462643383279502884l;
-		constexpr double  wheel_k  = 2 * pi / 32000;
-		constexpr double  rudder_k = 2 * pi / 16384;
 		
 		struct motor_info {
 			double speed;
@@ -61,4 +57,4 @@ namespace autolabor {
 }
 
 
-#endif //PM1_SDK_PM1_H
+#endif //PM1_SDK_CHASSIS_H

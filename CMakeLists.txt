@@ -25,13 +25,13 @@ add_executable(pm1_sdk
         src/main/pm1/internal/serial/list_ports/list_ports_linux.cc
         src/main/pm1/internal/serial/list_ports/list_ports_osx.cc
         # --------------------------
-        src/main/pm1/internal/can_message.h
-        src/main/pm1/internal/can_message.cpp
+        src/main/pm1/internal/can/can_message.h
+        src/main/pm1/internal/can/can_message.cpp
 
-        src/main/pm1/internal/can_define.h
+        src/main/pm1/internal/can/can_define.h
 
-        src/main/pm1/internal/parser.hh
-        src/main/pm1/internal/parser.cc
+        src/main/pm1/internal/can/parser.hh
+        src/main/pm1/internal/can/parser.cc
 
         src/main/pm1/internal/chassis.hh
         src/main/pm1/internal/chassis.cc
@@ -39,4 +39,4 @@ add_executable(pm1_sdk
         src/test/test.h
         src/test/test.cpp
         # --------------------------
-        main.cpp)
+        main.cpp src/main/pm1/internal/chassis/pm1.h)

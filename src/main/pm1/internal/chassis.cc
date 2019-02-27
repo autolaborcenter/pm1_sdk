@@ -4,9 +4,9 @@
 
 #include "chassis.hh"
 #include "../time_extensions.h"
-#include "can_define.h"
-#include "parser.hh"
-#include <cmath>
+#include "can/can_define.h"
+#include "can/parser.hh"
+#include "chassis/pm1.h"
 
 using namespace autolabor::pm1;
 
@@ -90,22 +90,22 @@ chassis::chassis(const std::string &port_name)
 				const auto bytes = msg.data.data;
 				
 				if (ecu0_speed::match(msg))
-					_left.speed = first_int(bytes) * wheel_k;
+					_left.speed = first_int(bytes) * mechanical::wheel_k;
 				
 				else if (ecu0_position::match(msg))
-					_left.position = first_int(bytes) * wheel_k;
+					_left.position = first_int(bytes) * mechanical::wheel_k;
 				
 				else if (ecu1_speed::match(msg))
-					_right.speed = first_int(bytes) * wheel_k;
+					_right.speed = first_int(bytes) * mechanical::wheel_k;
 				
 				else if (ecu1_position::match(msg))
-					_right.position = first_int(bytes) * wheel_k;
+					_right.position = first_int(bytes) * mechanical::wheel_k;
 				
 				else if (tcu0_speed::match(msg))
-					_rudder.speed = first_short(bytes) * rudder_k;
+					_rudder.speed = first_short(bytes) * mechanical::rudder_k;
 				
 				else if (tcu0_position::match(msg))
-					_rudder.position = first_short(bytes) * rudder_k;
+					_rudder.position = first_short(bytes) * mechanical::rudder_k;
 			}
 		}
 	}).detach();
@@ -129,7 +129,7 @@ motor_info chassis::rudder() const {
 
 void chassis::left(double target) const {
 	msg_union<int> buffer{};
-	buffer.data = static_cast<int> (target / wheel_k);
+	buffer.data = static_cast<int> (target / mechanical::wheel_k);
 	write(port, pack<ecu0_target>({buffer.bytes[3],
 	                               buffer.bytes[2],
 	                               buffer.bytes[1],
@@ -138,7 +138,7 @@ void chassis::left(double target) const {
 
 void chassis::right(double target) const {
 	msg_union<int> buffer{};
-	buffer.data = static_cast<int> (target / wheel_k);
+	buffer.data = static_cast<int> (target / mechanical::wheel_k);
 	write(port, pack<ecu1_target>({buffer.bytes[3],
 	                               buffer.bytes[2],
 	                               buffer.bytes[1],
@@ -147,7 +147,7 @@ void chassis::right(double target) const {
 
 void chassis::rudder(double target) const {
 	msg_union<short> buffer{};
-	buffer.data = static_cast<short> (target / wheel_k);
+	buffer.data = static_cast<short> (target / mechanical::wheel_k);
 	write(port, pack<tcu0_target>({buffer.bytes[1],
 	                               buffer.bytes[0]}));
 }
