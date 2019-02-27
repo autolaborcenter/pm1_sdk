@@ -5,7 +5,6 @@
 #ifndef PM1_SDK_TESTS_H
 #define PM1_SDK_TESTS_H
 
-
 namespace autolabor {
 	namespace pm1 {
 		namespace test {

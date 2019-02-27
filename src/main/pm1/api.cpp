@@ -45,14 +45,15 @@ inline double difference_encoders() {
 }
 
 /** 阻塞等待后轮转动 */
-void wait_or(double target, const std::function<void()> &block) {
+inline void wait_or(double target_rudder_position,
+                    const std::function<void()> &block) {
 	if (paused) {
 		chassis_ptr->left(0);
 		chassis_ptr->right(0);
-	} else if (std::abs(chassis_ptr->rudder().position - target) > 0.01) {
+	} else if (std::abs(chassis_ptr->rudder().position - target_rudder_position) > 0.01) {
 		chassis_ptr->left(0);
 		chassis_ptr->right(0);
-		chassis_ptr->rudder(target);
+		chassis_ptr->rudder(target_rudder_position);
 	} else block();
 }
 
@@ -70,6 +71,7 @@ void go_timing(double v, double w, double seconds) {
 bool autolabor::pm1::initialize(const std::string &port) {
 	try {
 		chassis_ptr = std::make_shared<chassis>(port);
+		std::cout << "chassis initialized on " << port << std::endl;
 	} catch (const std::exception &e) {
 		chassis_ptr = nullptr;
 		std::cerr << "initialize failed, because: " << e.what() << std::endl;

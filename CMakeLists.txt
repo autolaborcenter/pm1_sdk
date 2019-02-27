@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.13.4)
-project(PM1_SDK)
+project(pm1_sdk)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(PM1_SDK
+add_executable(pm1_sdk
         #--------------------------
         src/main/pm1/api.h
         src/main/pm1/api.cpp
