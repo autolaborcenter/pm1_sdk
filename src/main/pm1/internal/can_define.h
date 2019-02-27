@@ -61,6 +61,12 @@ namespace autolabor {
 					                     | (node_type >> 4u)),
 					static_cast<uint8_t>((node_type << 4u) | node_index),
 					type};
+			
+			inline static bool match(const data_t &msg) {
+				return msg.info().node_type() == node_type
+				       && msg.info().node_index() == node_index
+				       && msg.type == type;
+			}
 		};
 		
 		/** 动力控制器包信息协议 */
