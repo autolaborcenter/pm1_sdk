@@ -63,9 +63,10 @@ namespace autolabor {
 					type};
 			
 			inline static bool match(const data_t &msg) {
-				return msg.info().node_type() == node_type
-				       && msg.info().node_index() == node_index
-				       && msg.type == type;
+				const auto info = msg.data.info();
+				return info.node_type() == node_type
+				       && info.node_index() == node_index
+				       && msg.data.type == type;
 			}
 		};
 		
