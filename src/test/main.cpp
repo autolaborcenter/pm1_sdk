@@ -8,7 +8,9 @@
 using namespace autolabor::pm1;
 
 int main() {
-	auto temp = initialize("com4");
-	if (!temp) std::cerr << temp.error_info << std::endl;
-	else go_arc(1, 1, 1);
+	auto result = initialize("com4");
+	if (!result) std::cerr << result.error_info << std::endl;
+	else {
+		go_straight_timing(1, 10000);
+	}
 }

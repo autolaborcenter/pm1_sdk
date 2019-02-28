@@ -103,8 +103,10 @@ chassis::chassis(const std::string &port_name)
 				else if (tcu0_speed::match(msg))
 					_rudder.speed = first_short(bytes) * mechanical::rudder_k;
 				
-				else if (tcu0_position::match(msg))
+				else if (tcu0_position::match(msg)) {
 					_rudder.position = first_short(bytes) * mechanical::rudder_k;
+					std::cout << "tcu0 = " << _rudder.position << std::endl;
+				}
 			}
 		}
 	}).detach();

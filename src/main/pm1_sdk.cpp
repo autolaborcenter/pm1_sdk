@@ -52,8 +52,8 @@ namespace wheels {
 namespace block {
 	/** 直接设置控制量 */
 	inline void set(double l, double r, double rudder) {
-		ptr->left(l);
-		ptr->right(r);
+		ptr->left(l / mechanical::radius);
+		ptr->right(r / mechanical::radius);
 		ptr->rudder(rudder);
 	}
 	
@@ -123,7 +123,7 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 }
 
 result autolabor::pm1::go_straight_timing(double speed, double time) {
-	return run([speed, time] { block::go_timing(speed, speed, time); }, [] {});
+	return run([speed, time] { block::go_timing(speed, 0, time); }, [] {});
 	
 }
 
