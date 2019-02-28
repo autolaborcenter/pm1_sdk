@@ -8,7 +8,6 @@
 #include <iostream>
 #include <thread>
 #include "serial/serial.h"
-#include "../extensions.h"
 #include "can/can_define.h"
 
 namespace autolabor {

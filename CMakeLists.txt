@@ -3,12 +3,11 @@ project(pm1_sdk)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(pm1_sdk
+add_library(pm1_sdk SHARED
         #--------------------------
         src/main/pm1/api.h
         src/main/pm1/api.cpp
 
-        src/main/pm1/extensions.h
         src/main/pm1/time_extensions.h
         # --------------------------
         src/main/pm1/internal/serial/v8stdint.h
@@ -39,4 +38,8 @@ add_executable(pm1_sdk
         src/test/test.h
         src/test/test.cpp
         # --------------------------
-        main.cpp src/main/pm1/internal/chassis/pm1.h)
+        src/main/pm1/internal/chassis/pm1.h)
+
+add_executable(pm1_sdk_test src/test/main.cpp)
+link_directories(${PROJECT_SOURCE_DIR})
+target_link_libraries(pm1_sdk_test pm1_sdk)

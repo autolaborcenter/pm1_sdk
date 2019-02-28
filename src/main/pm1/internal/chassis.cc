@@ -41,7 +41,7 @@ inline void ask_state(serial_ref port) {
 }
 
 inline void loop_sleep() {
-	mechdancer::common::sleep(period / 2);
+	std::this_thread::sleep_for(std::chrono::milliseconds(period / 2));
 }
 
 inline int first_int(const uint8_t *bytes) {

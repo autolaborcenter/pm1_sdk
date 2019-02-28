@@ -2,7 +2,7 @@
 // Created by ydrml on 2019/2/22.
 //
 
-#include "src/main/pm1/api.h"
+#include "../main/pm1/api.h"
 
 using namespace autolabor::pm1;
 
