@@ -82,7 +82,7 @@ struct result {
 
     * 参数 `time`：时间（s，非负）
 
-* 控制
+* 过程控制
 
   * `result pause()`
     * 描述：暂停执行阻塞控制
@@ -99,9 +99,8 @@ struct result {
 ### 状态交互
 
 ```c++
-typedef struct {
-	double x, y, yaw, vx, vy, w;
-} Odometry;
+/** 轮速里程计数据结构 */
+struct Odometry { double x, y, yaw, vx, vy, w; };
 ```
 
 * `Odometry GetOdometry()`
