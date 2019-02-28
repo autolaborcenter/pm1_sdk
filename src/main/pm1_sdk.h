@@ -107,9 +107,7 @@ namespace autolabor {
 		 */
 		void delay(double time);
 		
-		/**
-		 * 里程计数据结构体
-		 */
+		/** 轮速里程计数据结构 */
 		struct Odometry { double x, y, yaw, vx, vy, w; };
 		
 		/**

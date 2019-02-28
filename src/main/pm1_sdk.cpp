@@ -27,8 +27,10 @@ volatile bool paused = false;
 // 循环的间隔
 inline void loop_delay() { delay(0.05); }
 
+/** 检查并执行 */
 inline result run(const std::function<void()> &code,
-                  const std::function<void()> &recover) {
+                  const std::function<void()> &recover = [] {}) {
+	if (!ptr) return {"chassis have not been initialized!"};
 	try { code(); }
 	catch (std::exception &e) {
 		recover();
@@ -95,8 +97,6 @@ namespace block {
 			loop_delay();
 		}
 	}
-	
-	
 }
 
 result autolabor::pm1::initialize(const std::string &port) {
@@ -119,12 +119,11 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 			block::wait_or_drive(speed, 0);
 			loop_delay();
 		}
-	}, [] {});
+	});
 }
 
 result autolabor::pm1::go_straight_timing(double speed, double time) {
-	return run([speed, time] { block::go_timing(speed, 0, time); }, [] {});
-	
+	return run([speed, time] { block::go_timing(speed, 0, time); });
 }
 
 result autolabor::pm1::go_arc(double speed, double r, double rad) {
@@ -134,11 +133,11 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 			block::wait_or_drive(speed, speed / r);
 			loop_delay();
 		}
-	}, [] {});
+	});
 }
 
 result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
-	return run([speed, r, time] { block::go_timing(speed, speed / r, time); }, [] {});
+	return run([speed, r, time] { block::go_timing(speed, speed / r, time); });
 }
 
 result autolabor::pm1::turn_around(double speed, double rad) {
@@ -148,22 +147,22 @@ result autolabor::pm1::turn_around(double speed, double rad) {
 			block::wait_or_drive(0, speed);
 			loop_delay();
 		}
-	}, [] {});
+	});
 }
 
 result autolabor::pm1::turn_around_timing(double speed, double time) {
-	return run([speed, time] { block::go_timing(0, speed, time); }, [] {});
+	return run([speed, time] { block::go_timing(0, speed, time); });
 }
 
 result autolabor::pm1::pause() {
 	return run([] {
 		block::wait_or_drive(0, 0);
 		paused = true;
-	}, [] {});
+	});
 }
 
 result autolabor::pm1::resume() {
-	return paused = false, result{};
+	return run([] { paused = false; });
 }
 
 void autolabor::pm1::delay(double time) {

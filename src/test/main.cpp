@@ -8,9 +8,6 @@
 using namespace autolabor::pm1;
 
 int main() {
-	auto result = initialize("com4");
-	if (!result) std::cerr << result.error_info << std::endl;
-	else {
-		go_straight_timing(1, 10000);
-	}
+	auto success = go_straight(1, 10000);
+	if (!success) std::cerr << success.error_info << std::endl;
 }
