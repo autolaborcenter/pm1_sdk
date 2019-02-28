@@ -31,11 +31,7 @@ inline void loop_delay() { delay(0.05); }
 inline result run(const std::function<void()> &code,
                   const std::function<void()> &recover = [] {}) {
 	if (!ptr) return {"chassis have not been initialized!"};
-	try { code(); }
-	catch (std::exception &e) {
-		recover();
-		return {e.what()};
-	}
+	try { code(); } catch (std::exception &e) { return {e.what()}; }
 	return {};
 }
 
@@ -100,8 +96,12 @@ namespace block {
 }
 
 result autolabor::pm1::initialize(const std::string &port) {
-	return run([&port] { ptr = std::make_shared<chassis>(port); },
-	           [] { ptr = nullptr; });
+	try { ptr = std::make_shared<chassis>(port); }
+	catch (std::exception &e) {
+		ptr = nullptr;
+		return {e.what()};
+	}
+	return {};
 }
 
 result autolabor::pm1::initialize() {
