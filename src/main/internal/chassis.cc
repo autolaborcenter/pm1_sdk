@@ -115,18 +115,22 @@ chassis::~chassis() {
 }
 
 motor_info chassis::left() const {
+	if (!this) throw std::exception("another thread has deleted this chassis");
 	return _left;
 }
 
 motor_info chassis::right() const {
+	if (!this) throw std::exception("another thread has deleted this chassis");
 	return _right;
 }
 
 motor_info chassis::rudder() const {
+	if (!this) throw std::exception("another thread has deleted this chassis");
 	return _rudder;
 }
 
 void chassis::left(double target) const {
+	if (!this) throw std::exception("another thread has deleted this chassis");
 	msg_union<int> buffer{};
 	buffer.data = static_cast<int> (target / mechanical::wheel_k);
 	write(port, pack<ecu0_target>({buffer.bytes[3],
@@ -136,6 +140,7 @@ void chassis::left(double target) const {
 }
 
 void chassis::right(double target) const {
+	if (!this) throw std::exception("another thread has deleted this chassis");
 	msg_union<int> buffer{};
 	buffer.data = static_cast<int> (target / mechanical::wheel_k);
 	write(port, pack<ecu1_target>({buffer.bytes[3],
@@ -145,6 +150,7 @@ void chassis::right(double target) const {
 }
 
 void chassis::rudder(double target) const {
+	if (!this) throw std::exception("another thread has deleted this chassis");
 	msg_union<short> buffer{};
 	buffer.data = static_cast<short> (target / mechanical::rudder_k);
 	write(port, pack<tcu0_target>({buffer.bytes[1],
