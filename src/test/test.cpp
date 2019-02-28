@@ -5,11 +5,11 @@
 #include "test.h"
 
 #include <iostream>
-#include "../main/pm1/time_extensions.h"
-#include "../main/pm1/internal/serial/serial.h"
-#include "../main/pm1/internal/can/can_message.h"
-#include "../main/pm1/internal/can/can_define.h"
-#include "../main/pm1/internal/can/parser.hh"
+#include "../main/internal/time_extensions.h"
+#include "../main/internal/serial/serial.h"
+#include "../main/internal/can/can_message.h"
+#include "../main/internal/can/can_define.h"
+#include "../main/internal/can/parser.hh"
 
 using namespace mechdancer::common;
 using namespace autolabor::pm1;

@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <thread>
-#include "time_extensions.h"
+#include "internal/time_extensions.h"
 #include "internal/chassis.hh"
 #include "internal/chassis/pm1.h"
 
