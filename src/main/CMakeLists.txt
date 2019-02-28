@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13.4)
 
 set(CMAKE_CXX_STANDARD 11)
 
+add_subdirectory(internal/can)
 add_library(pm1_sdk
         # --------------------------
         pm1_sdk.h
@@ -35,3 +36,4 @@ add_library(pm1_sdk
         internal/chassis.cc
         # --------------------------
         internal/mechanical.h)
+target_link_libraries(pm1_sdk can_msg)
