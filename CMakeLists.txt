@@ -3,10 +3,10 @@ project(pm1_sdk)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_library(pm1_sdk SHARED
-        #--------------------------
-        src/main/pm1/api.h
-        src/main/pm1/api.cpp
+set(library_files
+        # --------------------------
+        src/main/pm1/pm1_sdk.h
+        src/main/pm1/pm1_sdk.cpp
 
         src/main/pm1/time_extensions.h
         # --------------------------
@@ -40,6 +40,10 @@ add_library(pm1_sdk SHARED
         # --------------------------
         src/main/pm1/internal/chassis/pm1.h)
 
+# for lib
+add_library(pm1_sdk STATIC ${library_files})
+# for dll
+# add_library(pm1_sdk SHARED ${library_files})
+
 add_executable(pm1_sdk_test src/test/main.cpp)
-link_directories(${PROJECT_SOURCE_DIR})
 target_link_libraries(pm1_sdk_test pm1_sdk)
