@@ -7,28 +7,38 @@
 
 
 #include <string>
+#include <memory>
 
 namespace autolabor {
 	namespace pm1 {
+		/** 表示全局指令执行的结果 */
+		struct result {
+			/** 错误信息 */
+			const std::string error_info;
+			
+			/** 判断结果是否是成功的 */
+			explicit operator bool() const;
+		};
+		
 		/**
 		 * 初始化
 		 *
 		 * @param port 串口名字
 		 * @returns 是否成功
 		 */
-		bool initialize(const std::string &port);
+		result initialize(const std::string &port);
 		
 		/**
 		 * 自动选取串口并初始化
 		 *
 		 * @return 是否成功
 		 */
-		bool initialize();
+		result initialize();
 		
 		/**
 		 * 关闭
 		 */
-		void shutdown();
+		result shutdown();
 		
 		/**
 		 * 走直线
@@ -36,7 +46,7 @@ namespace autolabor {
 		 * @param speed    线速度（m/s）
 		 * @param distance 行驶距离（m，非负）
 		 */
-		void go_straight(double speed, double distance);
+		result go_straight(double speed, double distance);
 		
 		/**
 		 * 走直线
@@ -44,7 +54,7 @@ namespace autolabor {
 		 * @param speed 线速度（m/s）
 		 * @param time  行驶时间（s，非负）
 		 */
-		void go_straight_timing(double speed, double time);
+		result go_straight_timing(double speed, double time);
 		
 		/**
 		 * 走圆弧
@@ -53,7 +63,7 @@ namespace autolabor {
 		 * @param r     转弯半径（m，非负）
 		 * @param rad   行驶时间（s，非负）
 		 */
-		void go_arc(double speed, double r, double rad);
+		result go_arc(double speed, double r, double rad);
 		
 		/**
 		 * 走圆弧
@@ -62,7 +72,7 @@ namespace autolabor {
 		 * @param r     转弯半径（m，非负）
 		 * @param time  行驶时间（s，非负）
 		 */
-		void go_arc_timing(double speed, double r, double time);
+		result go_arc_timing(double speed, double r, double time);
 		
 		/**
 		 * 原地转
@@ -70,7 +80,7 @@ namespace autolabor {
 		 * @param speed 角速度（rad/s）
 		 * @param rad   弧度（rad，非负）
 		 */
-		void turn_around(double speed, double rad);
+		result turn_around(double speed, double rad);
 		
 		/**
 		 * 原地转
@@ -78,17 +88,17 @@ namespace autolabor {
 		 * @param speed 角速度（rad/s）
 		 * @param time  时间（s，非负）
 		 */
-		void turn_around_timing(double speed, double time);
+		result turn_around_timing(double speed, double time);
 		
 		/**
 		 * 暂停执行阻塞控制
 		 */
-		void pause();
+		result pause();
 		
 		/**
 		 * 恢复执行阻塞控制
 		 */
-		void resume();
+		result resume();
 		
 		/**
 		 * 延时
@@ -115,7 +125,7 @@ namespace autolabor {
 		 * @param v 线速度（m/s）
 		 * @param w 角速度（rad/s）
 		 */
-		void drive(double v, double w);
+		result drive(double v, double w);
 	}
 }
 

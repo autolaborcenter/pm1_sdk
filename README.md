@@ -2,24 +2,32 @@
 
 * 命名空间 `autolabor::pm1`
 
+```c++
+/** 表示全局指令执行的结果 */
+struct result {
+	/** 错误信息 */
+	const std::string error_info;
+
+    /** 判断结果是否是成功的 */
+	explicit operator bool() const;
+};
+```
+
 ## 连接控制
 
-* `bool initialize(std::string port)`
-
+* `result initialize(std::string port)`
   * 描述：初始化
 
   * 参数 `port`：串口名
 
   * 返回：是否成功
 
-* `bool initialize()`
-
+* `result initialize()`
   * 描述：自动选取串口并初始化
 
   * 返回：是否成功
 
-* `void shutdown()`
-
+* `result shutdown()`
   * 描述：关闭
 
 ## 行为交互
@@ -28,24 +36,21 @@
 
 * 走简单几何路径
 
-  * `void go_straight(double speed, double distance)`
-
+  * `result go_straight(double speed, double distance)`
     * 描述：直走
 
     * 参数 `speed`：线速度（m/s）
 
     * 参数 `distance`：行驶距离（m，非负）
 
-  * `void go_straight_timing(double speed, double time)`
-
+  * `result go_straight_timing(double speed, double time)`
     - 描述：直走
 
     - 参数 `speed`：线速度（m/s）
 
     - 参数 `time`：行驶时间（s，非负）
 
-  * `void go_arc(double speed, double r, double rad)`
-
+  * `result go_arc(double speed, double r, double rad)`
     * 描述：走圆弧
 
     * 参数 `speed`：线速度（m/s）
@@ -54,8 +59,7 @@
 
     * 参数 `rad`：行驶弧度（rad，非负）
 
-  * `void go_arc_timing(double speed, double r, double time)`
-
+  * `result go_arc_timing(double speed, double r, double time)`
     - 描述：走圆弧
 
     - 参数 `speed`：线速度（m/s）
@@ -64,16 +68,14 @@
 
     - 参数 `time`：行驶时间（s，非负）
 
-  * `void turn_around(double speed, double rad)`
-
+  * `result turn_around(double speed, double rad)`
     * 描述：原地转
 
     * 参数 `speed`：角速度（rad/s）
 
     * 参数 `rad`：弧度（rad，非负）
 
-  * `void turn_around_timing(double speed, double time)`
-
+  * `result turn_around_timing(double speed, double time)`
     * 描述：原地转
 
     * 参数 `speed`：角速度（rad/s）
@@ -82,12 +84,10 @@
 
 * 控制
 
-  * `void pause()`
-
+  * `result pause()`
     * 描述：暂停执行阻塞控制
 
-  * `void resume()`
-
+  * `result resume()`
     * 描述：恢复执行阻塞控制
 
   * `void delay(double time)`
@@ -108,7 +108,7 @@ typedef struct {
 
   * 描述：获取里程计值
 
-* `void drive(double v, double w)`
+* `result drive(double v, double w)`
 
   * 描述：控制机器人运行
 
