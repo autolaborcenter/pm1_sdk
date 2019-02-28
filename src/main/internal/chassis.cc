@@ -73,7 +73,8 @@ chassis::chassis(const std::string &port_name)
 			const auto now = mechdancer::common::now();
 			if (now - time > std::chrono::milliseconds(period)) {
 				time = now;
-				ask_state(port_ptr);
+				try { ask_state(port_ptr); }
+				catch (std::exception &) {}
 			}
 			
 			// 处理
@@ -81,10 +82,8 @@ chassis::chassis(const std::string &port_name)
 				loop_sleep();
 			} else {
 				auto result = parser(*buffer.begin());
-				if (result.type != parser::result_type::message) {
-					// loop_sleep();
+				if (result.type != parser::result_type::message)
 					continue;
-				}
 				
 				const auto msg   = result.message;
 				const auto bytes = msg.data.data;
