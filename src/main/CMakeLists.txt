@@ -34,4 +34,4 @@ add_library(pm1_sdk
         internal/chassis.hh
         internal/chassis.cc
         # --------------------------
-        internal/chassis/pm1.h)
+        internal/mechanical.h)

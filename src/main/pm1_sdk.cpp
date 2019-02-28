@@ -10,7 +10,7 @@
 #include <thread>
 #include "internal/time_extensions.h"
 #include "internal/chassis.hh"
-#include "internal/chassis/pm1.h"
+#include "internal/mechanical.h"
 
 using namespace autolabor::pm1;
 using namespace mechdancer::common;
