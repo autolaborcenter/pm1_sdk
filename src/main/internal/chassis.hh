@@ -15,8 +15,8 @@ namespace autolabor {
 		constexpr uint8_t period = 90;
 		
 		struct motor_info {
-			double speed;
-			double position;
+			double speed;    // 角速度（rad/s）
+			double position; // 位置（rad）
 		};
 		
 		/** 底盘 */
@@ -54,8 +54,8 @@ namespace autolabor {
 			motor_info _left{}, _right{}, _rudder{};
 			
 			/** 电机指令 */
-			mutable msg_union<int>   target_left, target_right;
-			mutable msg_union<short> target_rudder;
+			mutable msg_union<int>   target_left{0}, target_right{0};
+			mutable msg_union<short> target_rudder{0};
 		};
 	}
 }

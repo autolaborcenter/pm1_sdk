@@ -116,10 +116,12 @@ result autolabor::pm1::initialize(const std::string &port) {
 		_ptr = nullptr;
 		return {e.what()};
 	}
+	delay(.2);
 	return {};
 }
 
 result autolabor::pm1::initialize() {
+	delay(.2);
 	return {"to do"};
 }
 
@@ -131,9 +133,11 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 	return run([speed, distance] {
 		const auto o = wheels::average();
 		while (std::abs(wheels::average() - o) < distance) {
+			std::cout << std::abs(wheels::average() - o) << std::endl;
 			block::wait_or_drive(speed, 0);
 			loop_delay();
 		}
+		std::cout << std::abs(wheels::average() - o) << std::endl;
 	});
 }
 

@@ -55,7 +55,7 @@ inline t get_first(const uint8_t *bytes) {
 }
 
 inline serial::Timeout my_timeout() {
-	return serial::Timeout(serial::Timeout::max(), period / 4, 0, 0, 0);
+	return serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0);
 }
 
 chassis::chassis(const std::string &port_name)
@@ -68,6 +68,8 @@ chassis::chassis(const std::string &port_name)
 		
 		// 设置超时时间：200 ms
 		write(port_ptr, pack<ecu<>::timeout>({2, 0}));
+		// 询问初始状态
+		ask_state(port_ptr);
 		
 		auto time    = mechdancer::common::now();
 		auto tik_tok = true;
