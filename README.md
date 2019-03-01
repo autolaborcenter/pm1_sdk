@@ -6,7 +6,7 @@
 
 ## 开始使用
 
-* 从 [`release`](releases) 下载库文件
+* 从 [`release`](https://github.com/autolaborcenter/pm1_sdk/releases) 下载库文件
 * 或从[这里](https://github.com/autolaborcenter/pm1_driver_ros)下载 ROS 驱动
 
 ## API 参考
