@@ -44,12 +44,12 @@ inline result run(const std::function<void()> &code,
 namespace wheels {
 	/** 获取编码器均值 */
 	inline double average() {
-		return mechanical::radius * .5 * (ptr()->left().position + ptr()->right().position);
+		return mechanical::radius * .5 * (ptr()->left() + ptr()->right());
 	}
 	
 	/** 获取编码器差 */
 	inline double difference() {
-		return mechanical::radius * std::abs(ptr()->left().position - ptr()->right().position);
+		return mechanical::radius * std::abs(ptr()->left() - ptr()->right());
 	}
 }
 
@@ -93,13 +93,13 @@ namespace block {
 	/** 阻塞等待后轮转动 */
 	inline void wait_or_drive(double v, double w) {
 		if ((v == 0 && w == 0) || paused)
-			set(0, 0, ptr()->rudder().position);
+			set(0, 0, ptr()->rudder());
 		else {
 			auto target_rudder = v == 0
 			                     ? w > 0 ? -mechanical::pi / 2 : +mechanical::pi / 2
 			                     : std::atan(w * mechanical::length / v);
 			
-			if (std::abs(ptr()->rudder().position - target_rudder) > mechanical::pi / 36) {
+			if (std::abs(ptr()->rudder() - target_rudder) > mechanical::pi / 36) {
 				set(0, 0, target_rudder);
 			} else {
 				auto diff = mechanical::width / 2 * w;

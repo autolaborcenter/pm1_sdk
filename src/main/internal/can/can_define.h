@@ -58,11 +58,11 @@ namespace autolabor {
 			constexpr static auto type       = _type;
 			
 			constexpr static uint8_t bytes[]{
-					static_cast<uint8_t>((network << 6u)
-					                     | (data_field ? (1u << 5u) : 0)
-					                     | (property << 2u)
-					                     | (node_type >> 4u)),
-					static_cast<uint8_t>((node_type << 4u) | node_index),
+					static_cast<uint8_t>(network << 6u)
+					| (data_field ? (1u << 5u) : 0u)
+					| (property << 2u)
+					| (node_type >> 4u),
+					static_cast<uint8_t>(node_type << 4u) | node_index,
 					type};
 			
 			inline static bool match(const data_t &msg) {

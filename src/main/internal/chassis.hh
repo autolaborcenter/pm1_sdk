@@ -12,13 +12,6 @@
 
 namespace autolabor {
 	namespace pm1 {
-		constexpr uint8_t period = 90;
-		
-		struct motor_info {
-			double speed;    // 角速度（rad/s）
-			double position; // 位置（rad）
-		};
-		
 		/** 底盘 */
 		class chassis final {
 		public:
@@ -34,11 +27,11 @@ namespace autolabor {
 			/** 不可移动 */
 			chassis(chassis &&) = delete;
 			
-			motor_info left() const;
+			double left() const;
 			
-			motor_info right() const;
+			double right() const;
 			
-			motor_info rudder() const;
+			double rudder() const;
 			
 			void left(double) const;
 			
@@ -51,10 +44,13 @@ namespace autolabor {
 			std::shared_ptr<serial::Serial> port;
 			
 			/** 电机数据 */
-			motor_info _left{}, _right{}, _rudder{};
+			double _left   = 0,
+			       _right  = 0,
+			       _rudder = 0;
 			
 			/** 电机指令 */
-			mutable msg_union<int>   target_left{0}, target_right{0};
+			mutable msg_union<int>   target_left{0},
+			                         target_right{0};
 			mutable msg_union<short> target_rudder{0};
 			
 			/** 判断是否接受过数据 */

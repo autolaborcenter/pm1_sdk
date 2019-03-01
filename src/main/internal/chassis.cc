@@ -34,10 +34,11 @@ inline void write(serial_ref port, const msg_union<t> &msg) {
 
 /** 询问底盘状态 */
 inline void ask_state(serial_ref port) {
-	write(port, pack<ecu<>::current_speed_tx>());
 	write(port, pack<ecu<>::current_position_tx>());
-	write(port, pack<tcu<>::current_speed_tx>());
 	write(port, pack<tcu<>::current_position_tx>());
+	
+	write(port, pack<ecu<>::current_speed_tx>());
+	write(port, pack<tcu<>::current_speed_tx>());
 }
 
 /**
@@ -54,52 +55,49 @@ inline t get_first(const uint8_t *bytes) {
 	return temp.data;
 }
 
-inline serial::Timeout my_timeout() {
-	return serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0);
+void calculate_odometry() {
+
 }
 
 chassis::chassis(const std::string &port_name)
-		: port(new serial::Serial(port_name, 115200, my_timeout())),
+		: port(new serial::Serial(port_name, 115200,
+		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
 		  received(false) {
-	// 启动接收线程
-	std::thread([this] {
-		auto        port_ptr = port;
+	auto port_ptr = port;
+	
+	// 设置超时时间：200 ms
+	write(port_ptr, pack<ecu<>::timeout>({2, 0}));
+	
+	// 定时询问前轮
+	std::thread([port_ptr] {
+		auto time = mechdancer::common::now();
+		while (port_ptr->isOpen()) {
+			time += std::chrono::milliseconds(100);
+			write(port_ptr, pack<ecu<>::current_position_tx>());
+			write(port_ptr, pack<ecu<>::current_speed_tx>());
+			std::this_thread::sleep_until(time);
+		}
+	}).detach();
+	
+	// 定时询问后轮
+	std::thread([port_ptr] {
+		auto time = mechdancer::common::now();
+		while (port_ptr->isOpen()) {
+			time += std::chrono::milliseconds(100);
+			write(port_ptr, pack<tcu<0>::current_position_tx>());
+			write(port_ptr, pack<tcu<0>::current_speed_tx>());
+			std::this_thread::sleep_until(time);
+		}
+	}).detach();
+	
+	// 接收
+	std::thread([port_ptr, this] {
 		std::string buffer;
 		parser      parser;
-		
-		// 设置超时时间：200 ms
-		write(port_ptr, pack<ecu<>::timeout>({2, 0}));
-		// 询问初始状态
-		ask_state(port_ptr);
-		
-		auto time    = mechdancer::common::now();
-		auto tik_tok = true;
+		auto        left_ready  = false,
+		            right_ready = false;
 		
 		while (port_ptr->isOpen()) {
-			// 发送
-			const auto now = mechdancer::common::now();
-			if (now - time > std::chrono::milliseconds(period / 2)) {
-				time         = now;
-				if ((tik_tok = !tik_tok)) {
-					// 半个周期，询问状态
-					try { ask_state(port_ptr); }
-					catch (std::exception &) {}
-				} else if (received) {
-					// 另外半个周期，发送指令，计算里程计
-					write(port_ptr, pack<ecu0_target>({target_left.bytes[3],
-					                                   target_left.bytes[2],
-					                                   target_left.bytes[1],
-					                                   target_left.bytes[0]}));
-					write(port_ptr, pack<ecu1_target>({target_right.bytes[3],
-					                                   target_right.bytes[2],
-					                                   target_right.bytes[1],
-					                                   target_right.bytes[0]}));
-					write(port_ptr, pack<tcu0_target>({target_rudder.bytes[1],
-					                                   target_rudder.bytes[0]}));
-					
-				}
-			}
-			
 			// 接收
 			try { buffer = port_ptr->read(); }
 			catch (std::exception &) { buffer = ""; }
@@ -115,24 +113,33 @@ chassis::chassis(const std::string &port_name)
 			const auto msg   = result.message;
 			const auto bytes = msg.data.data;
 			
-			if (ecu0_speed::match(msg))
-				_left.speed = get_first<int>(bytes) * mechanical::wheel_k;
-			
-			else if (ecu0_position::match(msg))
-				_left.position = get_first<int>(bytes) * mechanical::wheel_k;
-			
-			else if (ecu1_speed::match(msg))
-				_right.speed = get_first<int>(bytes) * mechanical::wheel_k;
-			
-			else if (ecu1_position::match(msg))
-				_right.position = get_first<int>(bytes) * mechanical::wheel_k;
-			
-			else if (tcu0_speed::match(msg))
-				_rudder.speed = get_first<short>(bytes) * mechanical::rudder_k;
-			
-			else if (tcu0_position::match(msg)) {
-				received = true;
-				_rudder.position = get_first<short>(bytes) * mechanical::rudder_k;
+			if (ecu0_position::match(msg)) {
+				_left = get_first<int>(bytes) * mechanical::wheel_k;
+				if (right_ready) {
+					right_ready = false;
+					calculate_odometry();
+				} else
+					left_ready = true;
+			} else if (ecu1_position::match(msg)) {
+				_right = get_first<int>(bytes) * mechanical::wheel_k;
+				if (left_ready) {
+					left_ready = false;
+					calculate_odometry();
+				} else
+					right_ready = true;
+			} else if (tcu0_position::match(msg)) {
+				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
+				
+				write(port_ptr, pack<ecu0_target>({target_left.bytes[3],
+				                                   target_left.bytes[2],
+				                                   target_left.bytes[1],
+				                                   target_left.bytes[0]}));
+				write(port_ptr, pack<ecu1_target>({target_right.bytes[3],
+				                                   target_right.bytes[2],
+				                                   target_right.bytes[1],
+				                                   target_right.bytes[0]}));
+				write(port_ptr, pack<tcu0_target>({target_rudder.bytes[1],
+				                                   target_rudder.bytes[0]}));
 			}
 		}
 	}).detach();
@@ -142,15 +149,15 @@ chassis::~chassis() {
 	port->close();
 }
 
-motor_info chassis::left() const {
+double chassis::left() const {
 	return _left;
 }
 
-motor_info chassis::right() const {
+double chassis::right() const {
 	return _right;
 }
 
-motor_info chassis::rudder() const {
+double chassis::rudder() const {
 	return _rudder;
 }
 
