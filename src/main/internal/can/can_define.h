@@ -81,7 +81,6 @@ namespace autolabor {
 			using current_speed_tx    = can_pack_info<sgn, 0, 0, type_id, node_index, 0x5>;
 			using current_speed_rx    = can_pack_info<msg, 0, 0, type_id, node_index, 0x5>;
 			// 当前编码器读数
-			// FIXME 去掉这一行将导致编译错误
 			using current_position_tx = can_pack_info<sgn, 0, 0, type_id, node_index, 0x6>;
 			using current_position_rx = can_pack_info<msg, 0, 0, type_id, node_index, 0x6>;
 			// 超时时间

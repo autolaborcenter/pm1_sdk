@@ -3,6 +3,8 @@
 //
 
 #include "chassis.hh"
+
+#include <algorithm>
 #include "time_extensions.h"
 #include "can/can_define.h"
 #include "can/parser.hh"
@@ -40,16 +42,23 @@ inline void ask_state(serial_ref port) {
 	write(port, pack<tcu<>::current_position_tx>());
 }
 
+/** 循环周期 */
 inline void loop_sleep() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(period / 2));
 }
 
-inline int first_int(const uint8_t *bytes) {
-	return msg_union<int>{bytes[3], bytes[2], bytes[1], bytes[0]}.data;
-}
-
-inline short first_short(const uint8_t *bytes) {
-	return msg_union<short>{bytes[1], bytes[0]}.data;
+/**
+ * 获取存储区中大端存储的第一个数据
+ *
+ * @tparam t    数据类型
+ * @param bytes 存储区指针起点
+ * @return      数据
+ */
+template<class t>
+inline t get_first(const uint8_t *bytes) {
+	msg_union<t> temp{};
+	std::reverse_copy(bytes, bytes + sizeof(t), temp.bytes);
+	return temp.data;
 }
 
 chassis::chassis(const std::string &port_name)
@@ -89,22 +98,22 @@ chassis::chassis(const std::string &port_name)
 				const auto bytes = msg.data.data;
 				
 				if (ecu0_speed::match(msg))
-					_left.speed = first_int(bytes) * mechanical::wheel_k;
+					_left.speed = get_first<int>(bytes) * mechanical::wheel_k;
 				
 				else if (ecu0_position::match(msg))
-					_left.position = first_int(bytes) * mechanical::wheel_k;
+					_left.position = get_first<int>(bytes) * mechanical::wheel_k;
 				
 				else if (ecu1_speed::match(msg))
-					_right.speed = first_int(bytes) * mechanical::wheel_k;
+					_right.speed = get_first<int>(bytes) * mechanical::wheel_k;
 				
 				else if (ecu1_position::match(msg))
-					_right.position = first_int(bytes) * mechanical::wheel_k;
+					_right.position = get_first<int>(bytes) * mechanical::wheel_k;
 				
 				else if (tcu0_speed::match(msg))
-					_rudder.speed = first_short(bytes) * mechanical::rudder_k;
+					_rudder.speed = get_first<short>(bytes) * mechanical::rudder_k;
 				
 				else if (tcu0_position::match(msg))
-					_rudder.position = first_short(bytes) * mechanical::rudder_k;
+					_rudder.position = get_first<short>(bytes) * mechanical::rudder_k;
 			}
 		}
 	}).detach();
@@ -115,22 +124,18 @@ chassis::~chassis() {
 }
 
 motor_info chassis::left() const {
-	if (!this) throw std::exception("another thread has deleted this chassis");
 	return _left;
 }
 
 motor_info chassis::right() const {
-	if (!this) throw std::exception("another thread has deleted this chassis");
 	return _right;
 }
 
 motor_info chassis::rudder() const {
-	if (!this) throw std::exception("another thread has deleted this chassis");
 	return _rudder;
 }
 
 void chassis::left(double target) const {
-	if (!this) throw std::exception("another thread has deleted this chassis");
 	msg_union<int> buffer{};
 	buffer.data = static_cast<int> (target / mechanical::wheel_k);
 	write(port, pack<ecu0_target>({buffer.bytes[3],
@@ -140,7 +145,6 @@ void chassis::left(double target) const {
 }
 
 void chassis::right(double target) const {
-	if (!this) throw std::exception("another thread has deleted this chassis");
 	msg_union<int> buffer{};
 	buffer.data = static_cast<int> (target / mechanical::wheel_k);
 	write(port, pack<ecu1_target>({buffer.bytes[3],
@@ -150,7 +154,6 @@ void chassis::right(double target) const {
 }
 
 void chassis::rudder(double target) const {
-	if (!this) throw std::exception("another thread has deleted this chassis");
 	msg_union<short> buffer{};
 	buffer.data = static_cast<short> (target / mechanical::rudder_k);
 	write(port, pack<tcu0_target>({buffer.bytes[1],

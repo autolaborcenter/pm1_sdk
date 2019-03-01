@@ -9,6 +9,10 @@
 using namespace autolabor::pm1;
 
 int main() {
+	for (const auto &name: serial_ports()) {
+		std::cout << name << std::endl;
+	}
+	
 	initialize("com3");
 	std::thread([] {
 		std::this_thread::sleep_for(std::chrono::seconds(1));

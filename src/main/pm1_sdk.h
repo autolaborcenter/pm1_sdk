@@ -7,6 +7,7 @@
 
 
 #include <string>
+#include <vector>
 #include <memory>
 
 namespace autolabor {
@@ -19,6 +20,11 @@ namespace autolabor {
 			/** 判断结果是否是成功的 */
 			explicit operator bool() const;
 		};
+		
+		/**
+		 * @return 全部串口的名字列表
+		 */
+		std::vector<std::string> serial_ports();
 		
 		/**
 		 * 初始化
