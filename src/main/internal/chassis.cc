@@ -59,7 +59,8 @@ inline serial::Timeout my_timeout() {
 }
 
 chassis::chassis(const std::string &port_name)
-		: port(new serial::Serial(port_name, 115200, my_timeout())) {
+		: port(new serial::Serial(port_name, 115200, my_timeout())),
+		  received(false) {
 	// 启动接收线程
 	std::thread([this] {
 		auto        port_ptr = port;
@@ -83,7 +84,7 @@ chassis::chassis(const std::string &port_name)
 					// 半个周期，询问状态
 					try { ask_state(port_ptr); }
 					catch (std::exception &) {}
-				} else {
+				} else if (received) {
 					// 另外半个周期，发送指令，计算里程计
 					write(port, pack<ecu0_target>({target_left.bytes[3],
 					                               target_left.bytes[2],
@@ -95,6 +96,7 @@ chassis::chassis(const std::string &port_name)
 					                               target_right.bytes[0]}));
 					write(port, pack<tcu0_target>({target_rudder.bytes[1],
 					                               target_rudder.bytes[0]}));
+					
 				}
 			}
 			
@@ -127,8 +129,10 @@ chassis::chassis(const std::string &port_name)
 			else if (tcu0_speed::match(msg))
 				_rudder.speed = get_first<short>(bytes) * mechanical::rudder_k;
 			
-			else if (tcu0_position::match(msg))
+			else if (tcu0_position::match(msg)) {
+				received = true;
 				_rudder.position = get_first<short>(bytes) * mechanical::rudder_k;
+			}
 		}
 	}).detach();
 }

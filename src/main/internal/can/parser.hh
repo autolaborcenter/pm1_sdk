@@ -60,7 +60,7 @@ namespace autolabor {
 			};
 			
 			union {
-				uint8_t bytes[sizeof(can_pack_with_data)];
+				uint8_t bytes[sizeof(can_pack_with_data)]{0xfe};
 				
 				union_no_data   sgn_buffer;
 				union_with_data msg_buffer;

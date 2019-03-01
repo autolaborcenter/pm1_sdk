@@ -22,9 +22,10 @@ using seconds = std::chrono::duration<double, std::ratio<1>>;
 std::shared_ptr<chassis> _ptr;
 
 /** 空安全检查 */
-inline const std::shared_ptr<chassis> &ptr() {
-	if (!_ptr) throw std::exception("chassis has not been initialized!");
-	return _ptr;
+inline std::shared_ptr<chassis> ptr() {
+	auto copy = _ptr;
+	if (!copy) throw std::exception("chassis has not been initialized!");
+	return copy;
 }
 
 /** 记录暂停状态 */
@@ -53,9 +54,11 @@ namespace wheels {
 }
 
 namespace block {
-	/** 减速距离 */
+	/** 开始减速距离 */
 	constexpr auto slow_down_begin = 1.0;
-	constexpr auto slow_down_end   = .1;
+	
+	/** 减到最小距离 */
+	constexpr auto slow_down_end = .1;
 	
 	/** 最小线速度 */
 	constexpr auto min_speed = 0.1;

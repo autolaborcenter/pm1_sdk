@@ -16,6 +16,9 @@ namespace {
 
 namespace autolabor {
 	namespace pm1 {
+		/**
+		 * 广播地址常量
+		 */
 		constexpr uint8_t any_type  = 0x3f,
 		                  any_index = 0x0f;
 		

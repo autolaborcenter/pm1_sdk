@@ -56,6 +56,9 @@ namespace autolabor {
 			/** 电机指令 */
 			mutable msg_union<int>   target_left{0}, target_right{0};
 			mutable msg_union<short> target_rudder{0};
+			
+			/** 判断是否接受过数据 */
+			bool received;
 		};
 	}
 }
