@@ -32,15 +32,6 @@ inline void write(serial_ref port, const msg_union<t> &msg) {
 	port->write(msg.bytes, sizeof(t));
 }
 
-/** 询问底盘状态 */
-inline void ask_state(serial_ref port) {
-	write(port, pack<ecu<>::current_position_tx>());
-	write(port, pack<tcu<>::current_position_tx>());
-	
-	write(port, pack<ecu<>::current_speed_tx>());
-	write(port, pack<tcu<>::current_speed_tx>());
-}
-
 /**
  * 获取存储区中大端存储的第一个数据
  *
@@ -73,8 +64,9 @@ chassis::chassis(const std::string &port_name)
 		auto time = mechdancer::common::now();
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
-			write(port_ptr, pack<ecu<>::current_position_tx>());
-			write(port_ptr, pack<ecu<>::current_speed_tx>());
+			try {
+				write(port_ptr, pack<ecu<>::current_position_tx>());
+			} catch (std::exception &e) {}
 			std::this_thread::sleep_until(time);
 		}
 	}).detach();
@@ -84,8 +76,9 @@ chassis::chassis(const std::string &port_name)
 		auto time = mechdancer::common::now();
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
-			write(port_ptr, pack<tcu<0>::current_position_tx>());
-			write(port_ptr, pack<tcu<0>::current_speed_tx>());
+			try {
+				write(port_ptr, pack<tcu<0>::current_position_tx>());
+			} catch (std::exception &e) {}
 			std::this_thread::sleep_until(time);
 		}
 	}).detach();
