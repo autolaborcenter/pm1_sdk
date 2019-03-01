@@ -54,7 +54,8 @@ namespace wheels {
 
 namespace block {
 	/** 减速距离 */
-	constexpr auto slow_down_distance = .3;
+	constexpr auto slow_down_begin = 1.0;
+	constexpr auto slow_down_end   = .1;
 	
 	/** 最小线速度 */
 	constexpr auto min_speed = 0.1;
@@ -63,12 +64,20 @@ namespace block {
 	constexpr auto max_speed = 2.0;
 	
 	/** 求与目标特定距离时的最大速度 */
-	double max_speed_when(double distance_difference) {
-		constexpr static auto k = (max_speed - min_speed) / slow_down_distance;
+	inline double max_speed_when(double distance_difference) {
+		constexpr static auto k = (max_speed - min_speed) / (slow_down_begin - slow_down_end);
 		
-		return distance_difference > slow_down_distance
+		return distance_difference > slow_down_begin
 		       ? max_speed
-		       : k * distance_difference + min_speed;
+		       : distance_difference < slow_down_end
+		         ? min_speed
+		         : k * (distance_difference - slow_down_end) + min_speed;
+	}
+	
+	/** 求目标速度下实际应有的速度 */
+	inline double actual_speed(double target, double distance_difference) {
+		auto actual = std::min(std::abs(target), max_speed_when(distance_difference));
+		return target > 0 ? actual : -actual;
 	}
 	
 	/** 直接设置控制量 */
@@ -152,17 +161,15 @@ result autolabor::pm1::shutdown() {
 }
 
 result autolabor::pm1::go_straight(double speed, double distance) {
-	if (speed == 0 && distance != 0) throw std::exception("this action will never complete");
+	if (speed == 0 && distance != 0) return {"this action will never complete"};
 	return run([speed, distance] {
-		const auto o                   = wheels::average();
-		auto       distance_difference = std::abs(wheels::average() - o);
-		while (distance_difference < distance) {
-			std::cout << std::abs(wheels::average() - o) << std::endl;
-			auto actual_speed = std::min(std::abs(speed), block::max_speed_when(distance_difference));
-			block::wait_or_drive(speed > 0 ? actual_speed : -actual_speed, 0);
+		const auto o = wheels::average();
+		double     distance_difference;
+		
+		while ((distance_difference = distance - std::abs(wheels::average() - o)) > 0) {
+			block::wait_or_drive(block::actual_speed(speed, distance_difference), 0);
 			loop_delay();
 		}
-		std::cout << std::abs(wheels::average() - o) << std::endl;
 	});
 }
 
@@ -171,11 +178,15 @@ result autolabor::pm1::go_straight_timing(double speed, double time) {
 }
 
 result autolabor::pm1::go_arc(double speed, double r, double rad) {
-	if (speed == 0 && rad != 0) throw std::exception("this action will never complete");
+	if (speed == 0 && rad != 0) return {"this action will never complete"};
 	return run([speed, r, rad] {
 		const auto o = wheels::average();
-		while (std::abs(wheels::average() - o) < r * rad) {
-			block::wait_or_drive(speed, speed / r);
+		const auto d = std::abs(r * rad);
+		double     distance_difference;
+		
+		while ((distance_difference = d - std::abs(wheels::average() - o)) > 0) {
+			auto actual_speed = block::actual_speed(speed, distance_difference);
+			block::wait_or_drive(actual_speed, actual_speed / r);
 			loop_delay();
 		}
 	});
@@ -186,10 +197,10 @@ result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 }
 
 result autolabor::pm1::turn_around(double speed, double rad) {
-	if (speed == 0 && rad != 0) throw std::exception("this action will never complete");
+	if (speed == 0 && rad != 0) return {"this action will never complete"};
 	return run([speed, rad] {
 		const auto o = wheels::difference();
-		while (std::abs(wheels::difference() - o) < mechanical::width * rad) {
+		while (std::abs(wheels::difference() - o) < std::abs(mechanical::width * rad)) {
 			block::wait_or_drive(0, speed);
 			loop_delay();
 		}

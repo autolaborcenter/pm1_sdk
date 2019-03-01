@@ -21,16 +21,11 @@ struct result {
 
   * 返回：串口名字列表
 
-* `result initialize(std::string port)`
+* `result initialize(std::string port = "")`
 
   * 描述：初始化
 
-  * 参数 `port`：串口名
-
-  * 返回：指令执行的结果
-
-* `result initialize()`
-  * 描述：自动选取串口并初始化
+  * 参数 `port`：串口名，若为空，选取任意一个可用的串口
 
   * 返回：指令执行的结果
 
@@ -72,7 +67,7 @@ struct result {
 
     * 参数 `speed`：线速度（m/s）
 
-    * 参数 `r`：转弯半径（m，非负）
+    * 参数 `r`：转弯半径（m）
 
     * 参数 `rad`：行驶弧度（rad，非负）
 
@@ -84,7 +79,7 @@ struct result {
 
     - 参数 `speed`：线速度（m/s）
 
-    - 参数 `r`：转弯半径（m，非负）
+    - 参数 `r`：转弯半径（m）
 
     - 参数 `time`：行驶时间（s，非负）
 
