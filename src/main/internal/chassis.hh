@@ -52,6 +52,10 @@ namespace autolabor {
 			
 			/** 电机数据 */
 			motor_info _left{}, _right{}, _rudder{};
+			
+			/** 电机指令 */
+			mutable msg_union<int>   target_left, target_right;
+			mutable msg_union<short> target_rudder;
 		};
 	}
 }
