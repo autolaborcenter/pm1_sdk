@@ -86,23 +86,24 @@ chassis::chassis(const std::string &port_name)
 					catch (std::exception &) {}
 				} else if (received) {
 					// 另外半个周期，发送指令，计算里程计
-					write(port, pack<ecu0_target>({target_left.bytes[3],
-					                               target_left.bytes[2],
-					                               target_left.bytes[1],
-					                               target_left.bytes[0]}));
-					write(port, pack<ecu1_target>({target_right.bytes[3],
-					                               target_right.bytes[2],
-					                               target_right.bytes[1],
-					                               target_right.bytes[0]}));
-					write(port, pack<tcu0_target>({target_rudder.bytes[1],
-					                               target_rudder.bytes[0]}));
+					write(port_ptr, pack<ecu0_target>({target_left.bytes[3],
+					                                   target_left.bytes[2],
+					                                   target_left.bytes[1],
+					                                   target_left.bytes[0]}));
+					write(port_ptr, pack<ecu1_target>({target_right.bytes[3],
+					                                   target_right.bytes[2],
+					                                   target_right.bytes[1],
+					                                   target_right.bytes[0]}));
+					write(port_ptr, pack<tcu0_target>({target_rudder.bytes[1],
+					                                   target_rudder.bytes[0]}));
 					
 				}
 			}
 			
 			// 接收
-			try { buffer = port->read(); }
+			try { buffer = port_ptr->read(); }
 			catch (std::exception &) { buffer = ""; }
+			
 			if (buffer.empty()) continue;
 			
 			// 解析

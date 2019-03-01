@@ -9,7 +9,12 @@
 using namespace autolabor::pm1;
 
 int main() {
-	initialize();
-	turn_around(-.2, mechanical::pi / 2);
-	// go_straight(.2, 2);
+	while (true) {
+		initialize();
+		std::cout << "tik";
+		delay(.1);
+		shutdown();
+		std::cout << "-tok" << std::endl;
+		delay(.1);
+	}
 }
