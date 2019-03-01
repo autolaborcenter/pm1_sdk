@@ -32,14 +32,7 @@ namespace autolabor {
 		 * @param port 串口名字
 		 * @returns 是否成功
 		 */
-		result initialize(const std::string &port);
-		
-		/**
-		 * 自动选取串口并初始化
-		 *
-		 * @return 是否成功
-		 */
-		result initialize();
+		result initialize(const std::string &port = "");
 		
 		/**
 		 * 关闭

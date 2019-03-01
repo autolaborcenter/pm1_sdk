@@ -111,18 +111,22 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 }
 
 result autolabor::pm1::initialize(const std::string &port) {
-	try { _ptr = std::make_shared<chassis>(port); }
-	catch (std::exception &e) {
-		_ptr = nullptr;
-		return {e.what()};
+	if (port.empty()) {
+		for (const auto &item:serial_ports())
+			if (initialize(item))
+				return delay(.2), result{};
+		
+		return {"no available port"};
+	} else {
+		try {
+			_ptr = std::make_shared<chassis>(port);
+			return delay(.2), result{};
+		}
+		catch (std::exception &e) {
+			_ptr = nullptr;
+			return {e.what()};
+		}
 	}
-	delay(.2);
-	return {};
-}
-
-result autolabor::pm1::initialize() {
-	delay(.2);
-	return {"to do"};
 }
 
 result autolabor::pm1::shutdown() {
