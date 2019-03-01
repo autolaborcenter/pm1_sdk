@@ -53,6 +53,24 @@ namespace wheels {
 }
 
 namespace block {
+	/** 减速距离 */
+	constexpr auto slow_down_distance = .3;
+	
+	/** 最小线速度 */
+	constexpr auto min_speed = 0.1;
+	
+	/** 最大线速度 */
+	constexpr auto max_speed = 2.0;
+	
+	/** 求与目标特定距离时的最大速度 */
+	double max_speed_when(double distance_difference) {
+		constexpr static auto k = (max_speed - min_speed) / slow_down_distance;
+		
+		return distance_difference > slow_down_distance
+		       ? max_speed
+		       : k * distance_difference + min_speed;
+	}
+	
 	/** 直接设置控制量 */
 	inline void set(double l, double r, double rudder) {
 		ptr()->left(l / mechanical::radius);
@@ -134,11 +152,14 @@ result autolabor::pm1::shutdown() {
 }
 
 result autolabor::pm1::go_straight(double speed, double distance) {
+	if (speed == 0 && distance != 0) throw std::exception("this action will never complete");
 	return run([speed, distance] {
-		const auto o = wheels::average();
-		while (std::abs(wheels::average() - o) < distance) {
+		const auto o                   = wheels::average();
+		auto       distance_difference = std::abs(wheels::average() - o);
+		while (distance_difference < distance) {
 			std::cout << std::abs(wheels::average() - o) << std::endl;
-			block::wait_or_drive(speed, 0);
+			auto actual_speed = std::min(std::abs(speed), block::max_speed_when(distance_difference));
+			block::wait_or_drive(speed > 0 ? actual_speed : -actual_speed, 0);
 			loop_delay();
 		}
 		std::cout << std::abs(wheels::average() - o) << std::endl;
@@ -150,6 +171,7 @@ result autolabor::pm1::go_straight_timing(double speed, double time) {
 }
 
 result autolabor::pm1::go_arc(double speed, double r, double rad) {
+	if (speed == 0 && rad != 0) throw std::exception("this action will never complete");
 	return run([speed, r, rad] {
 		const auto o = wheels::average();
 		while (std::abs(wheels::average() - o) < r * rad) {
@@ -164,6 +186,7 @@ result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 }
 
 result autolabor::pm1::turn_around(double speed, double rad) {
+	if (speed == 0 && rad != 0) throw std::exception("this action will never complete");
 	return run([speed, rad] {
 		const auto o = wheels::difference();
 		while (std::abs(wheels::difference() - o) < mechanical::width * rad) {

@@ -9,5 +9,7 @@ using namespace autolabor::pm1;
 
 int main() {
 	initialize();
-	std::cerr << std::boolalpha << (bool) go_straight(-.2, .8) << std::endl;
+	std::cerr << std::boolalpha
+	          << (bool) go_straight(-.2, .8)
+	          << std::endl;
 }
