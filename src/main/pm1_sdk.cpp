@@ -144,13 +144,13 @@ result autolabor::pm1::initialize(const std::string &port) {
 	if (port.empty()) {
 		for (const auto &item:serial_ports())
 			if (initialize(item))
-				return delay(.2), result{};
+				return {};
 		
 		return {"no available port"};
 	} else {
 		try {
 			_ptr = std::make_shared<chassis>(port);
-			return delay(.2), result{};
+			return {};
 		}
 		catch (std::exception &e) {
 			_ptr = nullptr;

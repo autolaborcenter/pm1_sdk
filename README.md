@@ -1,6 +1,18 @@
-# PM1 SDK API 文档
+# PM1 SDK
+
+## 介绍
+
+本工程是 Autolabor PM1 底盘简单、跨平台、无依赖的驱动库。包括建立串口连接、控制底盘运动到关闭连接释放资源的全部流程。
+
+## 开始使用
+
+* 从 [`release`](releases) 下载库文件
+* 或从[这里](https://github.com/autolaborcenter/pm1_driver_ros)下载 ROS 驱动
+
+## API 参考
 
 * 命名空间 `autolabor::pm1`
+* 反馈数据结构
 
 ```c++
 /** 表示全局指令执行的结果 */
@@ -16,7 +28,6 @@ struct result {
 ## 连接控制
 
 * `std::vector<std::string> serial_ports()`
-
   * 描述：列出当前系统上所有串口的名字
 
   * 返回：串口名字列表
