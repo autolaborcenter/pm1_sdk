@@ -46,10 +46,12 @@ inline t get_first(const uint8_t *bytes) {
 	return temp.data;
 }
 
-std::tuple<double, double, double>
-calculate_odometry(double delta_left, double delta_right) {
-	const auto theta = (delta_right - delta_left) / mechanical::width;
-	double     x, y;
+void calculate_odometry(double delta_left,
+                        double delta_right,
+                        double &theta,
+                        double &x,
+                        double &y) {
+	theta = (delta_right - delta_left) / mechanical::width;
 	if (theta == 0) {
 		x = delta_left;
 		y = 0;
@@ -61,7 +63,6 @@ calculate_odometry(double delta_left, double delta_right) {
 		x = d * sin;
 		y = d * cos;
 	}
-	return {x, y, theta};
 }
 
 void rotate(double &x, double &y, double theta) {
@@ -73,11 +74,14 @@ void rotate(double &x, double &y, double theta) {
 	x = _;
 }
 
-void update(std::tuple<double, double, double> &&delta,
+void update(double delta_left,
+            double delta_right,
             odometry_t &memory,
             std::chrono::duration<double, std::ratio<1>> duration) {
-	double x, y, theta;
-	std::tie(x, y, theta) = std::move(delta);
+	memory.s += (delta_left + delta_right) / 2;
+	
+	double theta, x, y;
+	calculate_odometry(delta_left, delta_right, theta, x, y);
 	rotate(x, y, memory.theta);
 	
 	memory.x += x;
@@ -87,15 +91,6 @@ void update(std::tuple<double, double, double> &&delta,
 	memory.vx = x / duration.count();
 	memory.vy = y / duration.count();
 	memory.w  = theta / duration.count();
-	
-	std::cout << memory.x << '\t'
-	          << memory.y << '\t'
-	          << memory.theta << '\t'
-	          << memory.vx << '\t'
-	          << memory.vy << '\t'
-	          << memory.w << '\t'
-	          << memory.s << '\t'
-	          << std::endl;
 }
 
 chassis::chassis(const std::string &port_name)
@@ -167,8 +162,8 @@ chassis::chassis(const std::string &port_name)
 					std::lock_guard<std::mutex> _(lock);
 					right_ready = false;
 					auto now = mechdancer::common::now();
-					_odometry.s += (delta_left + delta_right) / 2;
-					update(calculate_odometry(delta_left, delta_right),
+					update(delta_left,
+					       delta_right,
 					       _odometry,
 					       now - time);
 					time = now;
@@ -182,8 +177,8 @@ chassis::chassis(const std::string &port_name)
 					std::lock_guard<std::mutex> _(lock);
 					left_ready = false;
 					auto now = mechdancer::common::now();
-					_odometry.s += (delta_left + delta_right) / 2;
-					update(calculate_odometry(delta_left, delta_right),
+					update(delta_left,
+					       delta_right,
 					       _odometry,
 					       now - time);
 					time = now;
