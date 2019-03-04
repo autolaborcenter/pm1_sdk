@@ -42,6 +42,8 @@ namespace autolabor {
 			void right(double) const;
 			
 			void rudder(double) const;
+			
+			odometry_t odometry() const;
 		
 		private:
 			/** 串口引用 */
@@ -61,7 +63,7 @@ namespace autolabor {
 			bool received;
 			
 			/** 状态 */
-			odometry_t odometry{};
+			odometry_t _odometry{};
 			
 			/** 更新里程计 */
 			std::mutex lock;

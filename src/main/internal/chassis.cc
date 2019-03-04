@@ -94,6 +94,7 @@ void update(std::tuple<double, double, double> &&delta,
 	          << memory.vx << '\t'
 	          << memory.vy << '\t'
 	          << memory.w << '\t'
+	          << memory.s << '\t'
 	          << std::endl;
 }
 
@@ -166,8 +167,9 @@ chassis::chassis(const std::string &port_name)
 					std::lock_guard<std::mutex> _(lock);
 					right_ready = false;
 					auto now = mechdancer::common::now();
+					_odometry.s += (delta_left + delta_right) / 2;
 					update(calculate_odometry(delta_left, delta_right),
-					       odometry,
+					       _odometry,
 					       now - time);
 					time = now;
 				} else
@@ -180,8 +182,9 @@ chassis::chassis(const std::string &port_name)
 					std::lock_guard<std::mutex> _(lock);
 					left_ready = false;
 					auto now = mechdancer::common::now();
+					_odometry.s += (delta_left + delta_right) / 2;
 					update(calculate_odometry(delta_left, delta_right),
-					       odometry,
+					       _odometry,
 					       now - time);
 					time = now;
 				} else
@@ -230,4 +233,8 @@ void chassis::right(double target) const {
 
 void chassis::rudder(double target) const {
 	target_rudder.data = static_cast<short> (target / mechanical::rudder_k);
+}
+
+odometry_t chassis::odometry() const {
+	return _odometry;
 }

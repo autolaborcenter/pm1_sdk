@@ -41,24 +41,12 @@ inline result run(const std::function<void()> &code,
 	return {};
 }
 
-namespace wheels {
-	/** 获取编码器均值 */
-	inline double average() {
-		return mechanical::radius * .5 * (ptr()->left() + ptr()->right());
-	}
-	
-	/** 获取编码器差 */
-	inline double difference() {
-		return mechanical::radius * std::abs(ptr()->left() - ptr()->right());
-	}
-}
-
 namespace block {
 	/** 开始减速距离 */
-	constexpr auto slow_down_begin = 1.0;
+	constexpr auto slow_down_begin = 3.0;
 	
 	/** 减到最小距离 */
-	constexpr auto slow_down_end = .1;
+	constexpr auto slow_down_end = 0.05;
 	
 	/** 最小线速度 */
 	constexpr auto min_speed = 0.1;
@@ -95,15 +83,17 @@ namespace block {
 		if ((v == 0 && w == 0) || paused)
 			set(0, 0, ptr()->rudder());
 		else {
-			auto target_rudder = v == 0
-			                     ? w > 0 ? -mechanical::pi / 2 : +mechanical::pi / 2
+			auto rudder_target = v == 0
+			                     ? ptr()->rudder() > 0
+			                       ? +mechanical::pi / 2
+			                       : -mechanical::pi / 2
 			                     : std::atan(w * mechanical::length / v);
 			
-			if (std::abs(ptr()->rudder() - target_rudder) > mechanical::pi / 36) {
-				set(0, 0, target_rudder);
+			if (std::abs(ptr()->rudder() - rudder_target) > mechanical::pi / 36) {
+				set(0, 0, rudder_target);
 			} else {
 				auto diff = mechanical::width / 2 * w;
-				set(v - diff, v + diff, target_rudder);
+				set(v - diff, v + diff, rudder_target);
 			}
 		}
 	}
@@ -166,11 +156,11 @@ result autolabor::pm1::shutdown() {
 result autolabor::pm1::go_straight(double speed, double distance) {
 	if (speed == 0 && distance != 0) return {"this action will never complete"};
 	return run([speed, distance] {
-		const auto o = wheels::average();
-		double     distance_difference;
+		const auto o = ptr()->odometry().s;
+		double     rest_distance;
 		
-		while ((distance_difference = distance - std::abs(wheels::average() - o)) > 0) {
-			block::wait_or_drive(block::actual_speed(speed, distance_difference), 0);
+		while ((rest_distance = distance - std::abs(ptr()->odometry().s - o)) > 0) {
+			block::wait_or_drive(block::actual_speed(speed, rest_distance), 0);
 			loop_delay();
 		}
 	});
@@ -183,12 +173,12 @@ result autolabor::pm1::go_straight_timing(double speed, double time) {
 result autolabor::pm1::go_arc(double speed, double r, double rad) {
 	if (speed == 0 && rad != 0) return {"this action will never complete"};
 	return run([speed, r, rad] {
-		const auto o = wheels::average();
+		const auto o = ptr()->odometry().s;
 		const auto d = std::abs(r * rad);
-		double     distance_difference;
+		double     rest_distance;
 		
-		while ((distance_difference = d - std::abs(wheels::average() - o)) > 0) {
-			auto actual_speed = block::actual_speed(speed, distance_difference);
+		while ((rest_distance = d - std::abs(ptr()->odometry().s - o)) > 0) {
+			auto actual_speed = block::actual_speed(speed, rest_distance);
 			block::wait_or_drive(actual_speed, actual_speed / r);
 			loop_delay();
 		}
@@ -202,8 +192,10 @@ result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 result autolabor::pm1::turn_around(double speed, double rad) {
 	if (speed == 0 && rad != 0) return {"this action will never complete"};
 	return run([speed, rad] {
-		const auto o = wheels::difference();
-		while (std::abs(wheels::difference() - o) < std::abs(mechanical::width * rad)) {
+		const auto o = ptr()->odometry().theta;
+		double     rest_distance;
+		
+		while ((rest_distance = rad - std::abs(ptr()->odometry().theta - o)) > 0) {
 			block::wait_or_drive(0, speed);
 			loop_delay();
 		}
@@ -230,7 +222,17 @@ void autolabor::pm1::delay(double time) {
 }
 
 autolabor::pm1::Odometry autolabor::pm1::get_odometry() {
-	throw std::runtime_error("to do");
+	try {
+		auto odometry = ptr()->odometry();
+		return {.x   = odometry.x,
+				.y   = odometry.y,
+				.yaw = odometry.theta,
+				.vx  = odometry.vx,
+				.vy  = odometry.vy,
+				.w   = odometry.w};
+	} catch (std::exception &) {
+		return {NAN, NAN, NAN, NAN, NAN, NAN};
+	}
 }
 
 result autolabor::pm1::drive(double v, double w) {
