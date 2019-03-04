@@ -12,18 +12,6 @@
 
 using namespace autolabor::pm1;
 
-using ecu0_speed    = ecu<0>::current_speed_rx;
-using ecu0_position = ecu<0>::current_position_rx;
-using ecu0_target   = ecu<0>::target_speed;
-
-using ecu1_speed    = ecu<1>::current_speed_rx;
-using ecu1_position = ecu<1>::current_position_rx;
-using ecu1_target   = ecu<1>::target_speed;
-
-using tcu0_speed    = tcu<0>::current_speed_rx;
-using tcu0_position = tcu<0>::current_position_rx;
-using tcu0_target   = tcu<0>::target_position;
-
 /** 发送数据包 */
 template<class t>
 inline const std::shared_ptr<serial::Serial> &operator<<(
@@ -100,7 +88,8 @@ chassis::chassis(const std::string &port_name)
 			const auto msg   = result.message;
 			const auto bytes = msg.data.data;
 			
-			if (ecu0_position::match(msg)) {
+			
+			if (ecu<0>::current_position_rx::match(msg)) {
 				
 				auto value = get_first<int>(bytes) * mechanical::wheel_k;
 				delta_left = (value - _left) * mechanical::radius;
@@ -115,7 +104,7 @@ chassis::chassis(const std::string &port_name)
 				} else
 					left_ready = true;
 				
-			} else if (ecu1_position::match(msg)) {
+			} else if (ecu<1>::current_position_rx::match(msg)) {
 				
 				auto value = get_first<int>(bytes) * mechanical::wheel_k;
 				delta_right = (value - _right) * mechanical::radius;
@@ -130,20 +119,20 @@ chassis::chassis(const std::string &port_name)
 				} else
 					right_ready = true;
 				
-			} else if (tcu0_position::match(msg)) {
+			} else if (tcu<0>::current_position_rx::match(msg)) {
 				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				port_ptr << pack<ecu0_target>({target_left.bytes[3],
-				                               target_left.bytes[2],
-				                               target_left.bytes[1],
-				                               target_left.bytes[0]})
-				         << pack<ecu1_target>({target_right.bytes[3],
-				                               target_right.bytes[2],
-				                               target_right.bytes[1],
-				                               target_right.bytes[0]})
-				         << pack<tcu0_target>({target_rudder.bytes[1],
-				                               target_rudder.bytes[0]});
+				port_ptr << pack<ecu<0>::target_speed>({target_left.bytes[3],
+				                                        target_left.bytes[2],
+				                                        target_left.bytes[1],
+				                                        target_left.bytes[0]})
+				         << pack<ecu<1>::target_speed>({target_right.bytes[3],
+				                                        target_right.bytes[2],
+				                                        target_right.bytes[1],
+				                                        target_right.bytes[0]})
+				         << pack<tcu<0>::target_position>({target_rudder.bytes[1],
+				                                           target_rudder.bytes[0]});
 			}
 		}
 	}).detach();
