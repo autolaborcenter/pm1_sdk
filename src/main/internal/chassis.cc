@@ -131,7 +131,7 @@ chassis::chassis(const std::string &port_name)
 			
 			if (ecu0_position::match(msg)) {
 				auto value = get_first<int>(bytes) * mechanical::wheel_k;
-				delta_left = _left - value;
+				delta_left = (value - _left) * mechanical::radius;
 				_left      = value;
 				if (right_ready) {
 					right_ready = false;
@@ -141,12 +141,14 @@ chassis::chassis(const std::string &port_name)
 					odometry.x += x;
 					odometry.y += y;
 					odometry.theta += theta;
-					std::cout << x << '\t' << y << '\t' << theta << '\t' << std::endl;
+					std::cout << odometry.x << '\t'
+					          << odometry.y << '\t'
+					          << odometry.theta << std::endl;
 				} else
 					left_ready = true;
 			} else if (ecu1_position::match(msg)) {
 				auto value = get_first<int>(bytes) * mechanical::wheel_k;
-				delta_right = _right - value;
+				delta_right = (value - _right) * mechanical::radius;
 				_right      = value;
 				if (left_ready) {
 					left_ready = false;
@@ -156,7 +158,9 @@ chassis::chassis(const std::string &port_name)
 					odometry.x += x;
 					odometry.y += y;
 					odometry.theta += theta;
-					std::cout << x << '\t' << y << '\t' << theta << '\t' << std::endl;
+					std::cout << odometry.x << '\t'
+					          << odometry.y << '\t'
+					          << odometry.theta << std::endl;
 				} else
 					right_ready = true;
 			} else if (tcu0_position::match(msg)) {
