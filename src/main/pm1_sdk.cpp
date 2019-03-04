@@ -41,36 +41,56 @@ inline result run(const std::function<void()> &code,
 	return {};
 }
 
-namespace block {
+class move {
+public:
 	/** 开始减速距离 */
-	constexpr auto slow_down_begin = 3.0;
+	constexpr static auto slow_down_begin = 3.0;
 	
 	/** 减到最小距离 */
-	constexpr auto slow_down_end = 0.05;
+	constexpr static auto slow_down_end = 0.05;
 	
 	/** 最小线速度 */
-	constexpr auto min_speed = 0.1;
+	constexpr static auto min_speed = 0.1;
 	
 	/** 最大线速度 */
-	constexpr auto max_speed = 2.0;
+	constexpr static auto max_speed = 2.0;
+};
+
+class rotate {
+public:
+	/** 开始减速距离 */
+	constexpr static auto slow_down_begin = mechanical::pi;    // == 180°
 	
-	/** 求与目标特定距离时的最大速度 */
-	inline double max_speed_when(double distance_difference) {
-		constexpr static auto k = (max_speed - min_speed) / (slow_down_begin - slow_down_end);
-		
-		return distance_difference > slow_down_begin
-		       ? max_speed
-		       : distance_difference < slow_down_end
-		         ? min_speed
-		         : k * (distance_difference - slow_down_end) + min_speed;
-	}
+	/** 减到最小距离 */
+	constexpr static auto slow_down_end = mechanical::pi / 18; // == 10°
 	
-	/** 求目标速度下实际应有的速度 */
-	inline double actual_speed(double target, double distance_difference) {
-		auto actual = std::min(std::abs(target), max_speed_when(distance_difference));
-		return target > 0 ? actual : -actual;
-	}
+	/** 最小角速度 */
+	constexpr static auto min_speed = slow_down_end * 2;
 	
+	/** 最大角速度 */
+	constexpr static auto max_speed = 4.0 / mechanical::width;
+};
+
+/** 求与目标特定距离时的最大速度 */
+template<class t>
+inline double max_speed_when(double distance_difference) {
+	constexpr static auto k = (t::max_speed - t::min_speed) / (t::slow_down_begin - t::slow_down_end);
+	
+	return distance_difference > t::slow_down_begin
+	       ? t::max_speed
+	       : distance_difference < t::slow_down_end
+	         ? t::min_speed
+	         : k * (distance_difference - t::slow_down_end) + t::min_speed;
+}
+
+/** 求目标速度下实际应有的速度 */
+template<class t>
+inline double actual_speed(double target, double rest_distance) {
+	const auto actual = std::min(std::abs(target), max_speed_when<t>(rest_distance));
+	return target > 0 ? +actual : -actual;
+}
+
+namespace block {
 	/** 直接设置控制量 */
 	inline void set(double l, double r, double rudder) {
 		ptr()->left(l / mechanical::radius);
@@ -160,7 +180,7 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 		double     rest_distance;
 		
 		while ((rest_distance = distance - std::abs(ptr()->odometry().s - o)) > 0) {
-			block::wait_or_drive(block::actual_speed(speed, rest_distance), 0);
+			block::wait_or_drive(actual_speed<move>(speed, rest_distance), 0);
 			loop_delay();
 		}
 	});
@@ -178,8 +198,8 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 		double     rest_distance;
 		
 		while ((rest_distance = d - std::abs(ptr()->odometry().s - o)) > 0) {
-			auto actual_speed = block::actual_speed(speed, rest_distance);
-			block::wait_or_drive(actual_speed, actual_speed / r);
+			auto available = actual_speed<move>(speed, rest_distance);
+			block::wait_or_drive(available, available / r);
 			loop_delay();
 		}
 	});
@@ -196,7 +216,7 @@ result autolabor::pm1::turn_around(double speed, double rad) {
 		double     rest_distance;
 		
 		while ((rest_distance = rad - std::abs(ptr()->odometry().theta - o)) > 0) {
-			block::wait_or_drive(0, speed);
+			block::wait_or_drive(0, actual_speed<rotate>(speed, rest_distance));
 			loop_delay();
 		}
 	});
