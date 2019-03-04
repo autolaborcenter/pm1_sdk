@@ -86,6 +86,8 @@ namespace autolabor {
 			// 当前编码器读数
 			using current_position_tx = can_pack_info<sgn, 0, 0, type_id, node_index, 0x6>;
 			using current_position_rx = can_pack_info<msg, 0, 0, type_id, node_index, 0x6>;
+			// 编码器清零
+			using clear               = can_pack_info<sgn, 0, 0, type_id, node_index, 0x7>;
 			// 超时时间
 			using timeout             = can_pack_info<msg, 0, 0, type_id, node_index, 0xa>;
 		};

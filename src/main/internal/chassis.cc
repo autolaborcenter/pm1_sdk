@@ -54,10 +54,12 @@ calculate_odometry(double delta_left, double delta_right) {
 		x = delta_left;
 		y = 0;
 	} else {
-		const auto r = (delta_left + delta_right) / 2 / theta;
-		const auto d = 2 * r * std::sin(theta / 2);
-		x = 2 * d * std::sin(theta / 2);
-		y = 2 * d * std::cos(theta / 2);
+		const auto sin = std::sin(theta / 2);
+		const auto cos = std::cos(theta / 2);
+		const auto r   = (delta_left + delta_right) / 2 / theta;
+		const auto d   = 2 * r * sin;
+		x = d * sin;
+		y = d * cos;
 	}
 	return {x, y, theta};
 }
@@ -71,6 +73,30 @@ void rotate(double &x, double &y, double theta) {
 	x = _;
 }
 
+void update(std::tuple<double, double, double> &&delta,
+            odometry_t &memory,
+            std::chrono::duration<double, std::ratio<1>> duration) {
+	double x, y, theta;
+	std::tie(x, y, theta) = std::move(delta);
+	rotate(x, y, memory.theta);
+	
+	memory.x += x;
+	memory.y += y;
+	memory.theta += theta;
+	
+	memory.vx = x / duration.count();
+	memory.vy = y / duration.count();
+	memory.w  = theta / duration.count();
+	
+	std::cout << memory.x << '\t'
+	          << memory.y << '\t'
+	          << memory.theta << '\t'
+	          << memory.vx << '\t'
+	          << memory.vy << '\t'
+	          << memory.w << '\t'
+	          << std::endl;
+}
+
 chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
@@ -79,6 +105,7 @@ chassis::chassis(const std::string &port_name)
 	
 	// 设置超时时间：200 ms
 	write(port_ptr, pack<ecu<>::timeout>({2, 0}));
+	write(port_ptr, pack<ecu<>::clear>());
 	
 	// 定时询问前轮
 	std::thread([port_ptr] {
@@ -108,10 +135,12 @@ chassis::chassis(const std::string &port_name)
 	std::thread([port_ptr, this] {
 		std::string buffer;
 		parser      parser;
-		auto        left_ready  = false,
-		            right_ready = false;
-		auto        delta_left  = .0,
-		            delta_right = .0;
+		
+		auto left_ready  = false,
+		     right_ready = false;
+		auto delta_left  = .0,
+		     delta_right = .0;
+		auto time        = mechdancer::common::now();
 		
 		while (port_ptr->isOpen()) {
 			// 接收
@@ -134,16 +163,13 @@ chassis::chassis(const std::string &port_name)
 				delta_left = (value - _left) * mechanical::radius;
 				_left      = value;
 				if (right_ready) {
+					std::lock_guard<std::mutex> _(lock);
 					right_ready = false;
-					double x, y, theta;
-					std::tie(x, y, theta) = calculate_odometry(delta_left, delta_right);
-					rotate(x, y, odometry.theta);
-					odometry.x += x;
-					odometry.y += y;
-					odometry.theta += theta;
-					std::cout << odometry.x << '\t'
-					          << odometry.y << '\t'
-					          << odometry.theta << std::endl;
+					auto now = mechdancer::common::now();
+					update(calculate_odometry(delta_left, delta_right),
+					       odometry,
+					       now - time);
+					time = now;
 				} else
 					left_ready = true;
 			} else if (ecu1_position::match(msg)) {
@@ -151,16 +177,13 @@ chassis::chassis(const std::string &port_name)
 				delta_right = (value - _right) * mechanical::radius;
 				_right      = value;
 				if (left_ready) {
+					std::lock_guard<std::mutex> _(lock);
 					left_ready = false;
-					double x, y, theta;
-					std::tie(x, y, theta) = calculate_odometry(delta_left, delta_right);
-					rotate(x, y, odometry.theta);
-					odometry.x += x;
-					odometry.y += y;
-					odometry.theta += theta;
-					std::cout << odometry.x << '\t'
-					          << odometry.y << '\t'
-					          << odometry.theta << std::endl;
+					auto now = mechdancer::common::now();
+					update(calculate_odometry(delta_left, delta_right),
+					       odometry,
+					       now - time);
+					time = now;
 				} else
 					right_ready = true;
 			} else if (tcu0_position::match(msg)) {

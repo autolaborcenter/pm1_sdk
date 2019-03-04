@@ -6,7 +6,7 @@
 #define PM1_SDK_CHASSIS_H
 
 #include <iostream>
-#include <thread>
+#include <mutex>
 #include "serial/serial.h"
 #include "can/can_define.h"
 
@@ -14,7 +14,7 @@ namespace autolabor {
 	
 	namespace pm1 {
 		/** 轮速里程计 */
-		struct odometry_t { double x, y, theta, vx, vy, w; };
+		struct odometry_t { double s, x, y, theta, vx, vy, w; };
 		
 		/** 底盘 */
 		class chassis final {
@@ -62,6 +62,9 @@ namespace autolabor {
 			
 			/** 状态 */
 			odometry_t odometry{};
+			
+			/** 更新里程计 */
+			std::mutex lock;
 		};
 	}
 }
