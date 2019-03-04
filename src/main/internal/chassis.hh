@@ -59,14 +59,11 @@ namespace autolabor {
 			                         target_right{0};
 			mutable msg_union<short> target_rudder{0};
 			
-			/** 判断是否接受过数据 */
-			bool received;
-			
 			/** 状态 */
 			odometry_t _odometry{};
 			
 			/** 更新里程计 */
-			std::mutex lock;
+			mutable std::mutex lock;
 		};
 	}
 }

@@ -24,93 +24,39 @@ using tcu0_speed    = tcu<0>::current_speed_rx;
 using tcu0_position = tcu<0>::current_position_rx;
 using tcu0_target   = tcu<0>::target_position;
 
-using serial_ref = const std::shared_ptr<serial::Serial> &;
-
 /** 发送数据包 */
 template<class t>
-inline void write(serial_ref port, const msg_union<t> &msg) {
-	port->write(msg.bytes, sizeof(t));
-}
+inline const std::shared_ptr<serial::Serial> &operator<<(
+		const std::shared_ptr<serial::Serial> &,
+		const msg_union<t> &);
 
-/**
- * 获取存储区中大端存储的第一个数据
- *
- * @tparam t    数据类型
- * @param bytes 存储区指针起点
- * @return      数据
- */
+/** 获取存储区中大端存储的第一个数据 */
 template<class t>
-inline t get_first(const uint8_t *bytes) {
-	msg_union<t> temp{};
-	std::reverse_copy(bytes, bytes + sizeof(t), temp.bytes);
-	return temp.data;
-}
+inline t get_first(const uint8_t *);
 
-void calculate_odometry(double delta_left,
-                        double delta_right,
-                        double &theta,
-                        double &x,
-                        double &y) {
-	theta = (delta_right - delta_left) / mechanical::width;
-	if (theta == 0) {
-		x = delta_left;
-		y = 0;
-	} else {
-		const auto sin = std::sin(theta / 2);
-		const auto cos = std::cos(theta / 2);
-		const auto r   = (delta_left + delta_right) / 2 / theta;
-		const auto d   = 2 * r * sin;
-		x = d * sin;
-		y = d * cos;
-	}
-}
+/** 里程计更新信息 */
+template<class time_unit = std::chrono::duration<double, std::ratio<1>>>
+struct odometry_update_info { double d_left, d_rigth; time_unit d_t; };
 
-void rotate(double &x, double &y, double theta) {
-	double _;
-	auto   sin = std::sin(theta);
-	auto   cos = std::cos(theta);
-	_ = x * cos - y * sin;
-	y = x * sin + y * cos;
-	x = _;
-}
-
-void update(double delta_left,
-            double delta_right,
-            odometry_t &memory,
-            std::chrono::duration<double, std::ratio<1>> duration) {
-	memory.s += (delta_left + delta_right) / 2;
-	
-	double theta, x, y;
-	calculate_odometry(delta_left, delta_right, theta, x, y);
-	rotate(x, y, memory.theta);
-	
-	memory.x += x;
-	memory.y += y;
-	memory.theta += theta;
-	
-	memory.vx = x / duration.count();
-	memory.vy = y / duration.count();
-	memory.w  = theta / duration.count();
-}
+/** 更新轮速里程计 */
+inline void operator+=(odometry_t &, odometry_update_info<>);
 
 chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
-		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
-		  received(false) {
+		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
+	
+	port << pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
+	     << pack<ecu<>::clear>();        // 底层编码器清零
+	
 	auto port_ptr = port;
-	
-	// 设置超时时间：200 ms
-	write(port_ptr, pack<ecu<>::timeout>({2, 0}));
-	write(port_ptr, pack<ecu<>::clear>());
-	
 	// 定时询问前轮
 	std::thread([port_ptr] {
 		auto time = mechdancer::common::now();
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
 			try {
-				write(port_ptr, pack<ecu<>::current_position_tx>());
-			} catch (std::exception &e) {}
+				port_ptr << pack<ecu<>::current_position_tx>();
+			} catch (std::exception &) {}
 			std::this_thread::sleep_until(time);
 		}
 	}).detach();
@@ -121,8 +67,8 @@ chassis::chassis(const std::string &port_name)
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
 			try {
-				write(port_ptr, pack<tcu<0>::current_position_tx>());
-			} catch (std::exception &e) {}
+				port_ptr << pack<tcu<0>::current_position_tx>();
+			} catch (std::exception &) {}
 			std::this_thread::sleep_until(time);
 		}
 	}).detach();
@@ -155,48 +101,49 @@ chassis::chassis(const std::string &port_name)
 			const auto bytes = msg.data.data;
 			
 			if (ecu0_position::match(msg)) {
+				
 				auto value = get_first<int>(bytes) * mechanical::wheel_k;
 				delta_left = (value - _left) * mechanical::radius;
 				_left      = value;
 				if (right_ready) {
 					std::lock_guard<std::mutex> _(lock);
 					right_ready = false;
+					
 					auto now = mechdancer::common::now();
-					update(delta_left,
-					       delta_right,
-					       _odometry,
-					       now - time);
-					time = now;
+					_odometry += {delta_left, delta_right, now - time};
+					time     = now;
 				} else
 					left_ready = true;
+				
 			} else if (ecu1_position::match(msg)) {
+				
 				auto value = get_first<int>(bytes) * mechanical::wheel_k;
 				delta_right = (value - _right) * mechanical::radius;
 				_right      = value;
 				if (left_ready) {
 					std::lock_guard<std::mutex> _(lock);
 					left_ready = false;
+					
 					auto now = mechdancer::common::now();
-					update(delta_left,
-					       delta_right,
-					       _odometry,
-					       now - time);
-					time = now;
+					_odometry += {delta_left, delta_right, now - time};
+					time     = now;
 				} else
 					right_ready = true;
+				
 			} else if (tcu0_position::match(msg)) {
+				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				write(port_ptr, pack<ecu0_target>({target_left.bytes[3],
-				                                   target_left.bytes[2],
-				                                   target_left.bytes[1],
-				                                   target_left.bytes[0]}));
-				write(port_ptr, pack<ecu1_target>({target_right.bytes[3],
-				                                   target_right.bytes[2],
-				                                   target_right.bytes[1],
-				                                   target_right.bytes[0]}));
-				write(port_ptr, pack<tcu0_target>({target_rudder.bytes[1],
-				                                   target_rudder.bytes[0]}));
+				port_ptr << pack<ecu0_target>({target_left.bytes[3],
+				                               target_left.bytes[2],
+				                               target_left.bytes[1],
+				                               target_left.bytes[0]})
+				         << pack<ecu1_target>({target_right.bytes[3],
+				                               target_right.bytes[2],
+				                               target_right.bytes[1],
+				                               target_right.bytes[0]})
+				         << pack<tcu0_target>({target_rudder.bytes[1],
+				                               target_rudder.bytes[0]});
 			}
 		}
 	}).detach();
@@ -231,5 +178,85 @@ void chassis::rudder(double target) const {
 }
 
 odometry_t chassis::odometry() const {
+	std::lock_guard<std::mutex> _(lock);
 	return _odometry;
+}
+
+template<class t>
+const std::shared_ptr<serial::Serial> &operator<<(
+		const std::shared_ptr<serial::Serial> &port,
+		const msg_union<t> &msg) {
+	port->write(msg.bytes, sizeof(t));
+	return port;
+}
+
+template<class t>
+t get_first(const uint8_t *bytes) {
+	msg_union<t> temp{};
+	std::reverse_copy(bytes, bytes + sizeof(t), temp.bytes);
+	return temp.data;
+}
+
+/**
+ * 计算机器人坐标系下的里程计
+ *
+ * @param delta_left  左轮变化量
+ * @param delta_right 右轮变化量
+ * @param theta       车身转角
+ * @param x           横坐标相对变化
+ * @param y           纵坐标相对变化
+ */
+inline void calculate_odometry(
+		double delta_left,
+		double delta_right,
+		double &theta,
+		double &x,
+		double &y) {
+	theta = (delta_right - delta_left) / mechanical::width;
+	if (theta == 0) {
+		x = delta_left;
+		y = 0;
+	} else {
+		const auto sin = std::sin(theta / 2);
+		const auto cos = std::cos(theta / 2);
+		const auto r   = (delta_left + delta_right) / 2 / theta;
+		const auto d   = 2 * r * sin;
+		x = d * sin;
+		y = d * cos;
+	}
+}
+
+/**
+ * 坐标系旋转
+ *
+ * @param x     横坐标
+ * @param y     纵坐标
+ * @param theta 旋转弧度
+ */
+inline void rotate(double &x,
+                   double &y,
+                   double theta) {
+	double _;
+	auto   sin = std::sin(theta);
+	auto   cos = std::cos(theta);
+	_ = x * cos - y * sin;
+	y = x * sin + y * cos;
+	x = _;
+}
+
+void operator+=(odometry_t &odometry,
+                odometry_update_info<> info) {
+	odometry.s += (info.d_left + info.d_rigth) / 2;
+	
+	double theta, x, y;
+	calculate_odometry(info.d_left, info.d_rigth, theta, x, y);
+	rotate(x, y, odometry.theta);
+	
+	odometry.x += x;
+	odometry.y += y;
+	odometry.theta += theta;
+	
+	odometry.vx = x / info.d_t.count();
+	odometry.vy = y / info.d_t.count();
+	odometry.w  = theta / info.d_t.count();
 }
