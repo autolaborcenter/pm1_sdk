@@ -11,7 +11,11 @@
 #include "can/can_define.h"
 
 namespace autolabor {
+	
 	namespace pm1 {
+		/** 轮速里程计 */
+		struct odometry_t { double x, y, theta, vx, vy, w; };
+		
 		/** 底盘 */
 		class chassis final {
 		public:
@@ -55,6 +59,9 @@ namespace autolabor {
 			
 			/** 判断是否接受过数据 */
 			bool received;
+			
+			/** 状态 */
+			odometry_t odometry{};
 		};
 	}
 }

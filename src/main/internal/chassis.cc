@@ -46,8 +46,29 @@ inline t get_first(const uint8_t *bytes) {
 	return temp.data;
 }
 
-void calculate_odometry() {
+std::tuple<double, double, double>
+calculate_odometry(double delta_left, double delta_right) {
+	const auto theta = (delta_right - delta_left) / mechanical::width;
+	double     x, y;
+	if (theta == 0) {
+		x = delta_left;
+		y = 0;
+	} else {
+		const auto r = (delta_left + delta_right) / 2 / theta;
+		const auto d = 2 * r * std::sin(theta / 2);
+		x = 2 * d * std::sin(theta / 2);
+		y = 2 * d * std::cos(theta / 2);
+	}
+	return {x, y, theta};
+}
 
+void rotate(double &x, double &y, double theta) {
+	double _;
+	auto   sin = std::sin(theta);
+	auto   cos = std::cos(theta);
+	_ = x * cos - y * sin;
+	y = x * sin + y * cos;
+	x = _;
 }
 
 chassis::chassis(const std::string &port_name)
@@ -89,6 +110,8 @@ chassis::chassis(const std::string &port_name)
 		parser      parser;
 		auto        left_ready  = false,
 		            right_ready = false;
+		auto        delta_left  = .0,
+		            delta_right = .0;
 		
 		while (port_ptr->isOpen()) {
 			// 接收
@@ -107,17 +130,33 @@ chassis::chassis(const std::string &port_name)
 			const auto bytes = msg.data.data;
 			
 			if (ecu0_position::match(msg)) {
-				_left = get_first<int>(bytes) * mechanical::wheel_k;
+				auto value = get_first<int>(bytes) * mechanical::wheel_k;
+				delta_left = _left - value;
+				_left      = value;
 				if (right_ready) {
 					right_ready = false;
-					calculate_odometry();
+					double x, y, theta;
+					std::tie(x, y, theta) = calculate_odometry(delta_left, delta_right);
+					rotate(x, y, odometry.theta);
+					odometry.x += x;
+					odometry.y += y;
+					odometry.theta += theta;
+					std::cout << x << '\t' << y << '\t' << theta << '\t' << std::endl;
 				} else
 					left_ready = true;
 			} else if (ecu1_position::match(msg)) {
-				_right = get_first<int>(bytes) * mechanical::wheel_k;
+				auto value = get_first<int>(bytes) * mechanical::wheel_k;
+				delta_right = _right - value;
+				_right      = value;
 				if (left_ready) {
 					left_ready = false;
-					calculate_odometry();
+					double x, y, theta;
+					std::tie(x, y, theta) = calculate_odometry(delta_left, delta_right);
+					rotate(x, y, odometry.theta);
+					odometry.x += x;
+					odometry.y += y;
+					odometry.theta += theta;
+					std::cout << x << '\t' << y << '\t' << theta << '\t' << std::endl;
 				} else
 					right_ready = true;
 			} else if (tcu0_position::match(msg)) {
