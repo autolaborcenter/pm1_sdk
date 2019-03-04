@@ -53,7 +53,7 @@ public:
 	constexpr static auto min_speed = 0.1;
 	
 	/** 最大线速度 */
-	constexpr static auto max_speed = 2.0;
+	constexpr static auto max_speed = mechanical::max_v;
 };
 
 class rotate {
@@ -68,19 +68,19 @@ public:
 	constexpr static auto min_speed = slow_down_end * 2;
 	
 	/** 最大角速度 */
-	constexpr static auto max_speed = 4.0 / mechanical::width;
+	constexpr static auto max_speed = mechanical::max_w;
 };
 
 /** 求与目标特定距离时的最大速度 */
 template<class t>
-inline double max_speed_when(double distance_difference) {
+inline double max_speed_when(double rest_distance) {
 	constexpr static auto k = (t::max_speed - t::min_speed) / (t::slow_down_begin - t::slow_down_end);
 	
-	return distance_difference > t::slow_down_begin
+	return rest_distance > t::slow_down_begin
 	       ? t::max_speed
-	       : distance_difference < t::slow_down_end
+	       : rest_distance < t::slow_down_end
 	         ? t::min_speed
-	         : k * (distance_difference - t::slow_down_end) + t::min_speed;
+	         : k * (rest_distance - t::slow_down_end) + t::min_speed;
 }
 
 /** 求目标速度下实际应有的速度 */
@@ -146,7 +146,7 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 	auto                     info = serial::list_ports();
 	std::vector<std::string> result(info.size());
 	std::transform(info.begin(), info.end(), result.begin(),
-	               [](const serial::PortInfo &it) -> std::string { return it.port; });
+	               [](const serial::PortInfo &it) { return it.port; });
 	return result;
 }
 

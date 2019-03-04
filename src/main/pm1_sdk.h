@@ -8,7 +8,6 @@
 
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace autolabor {
 	namespace pm1 {

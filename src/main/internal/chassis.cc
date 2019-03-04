@@ -22,6 +22,13 @@ inline const std::shared_ptr<serial::Serial> &operator<<(
 template<class t>
 inline t get_first(const uint8_t *);
 
+template<class pack_info_t, class data_t>
+auto pack_data(const msg_union<data_t> &value) -> decltype(pack<pack_info_t>()) {
+	std::array<uint8_t, 8> buffer{};
+	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
+	return pack<pack_info_t>(std::array<uint8_t, 8>(buffer));
+}
+
 /** 里程计更新信息 */
 template<class time_unit = std::chrono::duration<double, std::ratio<1>>>
 struct odometry_update_info { double d_left, d_rigth; time_unit d_t; };
@@ -88,7 +95,6 @@ chassis::chassis(const std::string &port_name)
 			const auto msg   = result.message;
 			const auto bytes = msg.data.data;
 			
-			
 			if (ecu<0>::current_position_rx::match(msg)) {
 				
 				auto value = get_first<int>(bytes) * mechanical::wheel_k;
@@ -101,6 +107,9 @@ chassis::chassis(const std::string &port_name)
 					auto now = mechdancer::common::now();
 					_odometry += {delta_left, delta_right, now - time};
 					time     = now;
+					
+					port_ptr << pack_data<ecu<0>::target_speed, int>(target_left)
+					         << pack_data<ecu<1>::target_speed, int>(target_right);
 				} else
 					left_ready = true;
 				
@@ -116,6 +125,9 @@ chassis::chassis(const std::string &port_name)
 					auto now = mechdancer::common::now();
 					_odometry += {delta_left, delta_right, now - time};
 					time     = now;
+					
+					port_ptr << pack_data<ecu<0>::target_speed, int>(target_left)
+					         << pack_data<ecu<1>::target_speed, int>(target_right);
 				} else
 					right_ready = true;
 				
@@ -123,15 +135,7 @@ chassis::chassis(const std::string &port_name)
 				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				port_ptr << pack<ecu<0>::target_speed>({target_left.bytes[3],
-				                                        target_left.bytes[2],
-				                                        target_left.bytes[1],
-				                                        target_left.bytes[0]})
-				         << pack<ecu<1>::target_speed>({target_right.bytes[3],
-				                                        target_right.bytes[2],
-				                                        target_right.bytes[1],
-				                                        target_right.bytes[0]})
-				         << pack<tcu<0>::target_position>({target_rudder.bytes[1],
+				port_ptr << pack<tcu<0>::target_position>({target_rudder.bytes[1],
 				                                           target_rudder.bytes[0]});
 			}
 		}

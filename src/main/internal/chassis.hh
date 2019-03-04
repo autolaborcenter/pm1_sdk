@@ -5,13 +5,11 @@
 #ifndef PM1_SDK_CHASSIS_H
 #define PM1_SDK_CHASSIS_H
 
-#include <iostream>
 #include <mutex>
 #include "serial/serial.h"
 #include "can/can_define.h"
 
 namespace autolabor {
-	
 	namespace pm1 {
 		/** 轮速里程计 */
 		struct odometry_t { double s, x, y, theta, vx, vy, w; };
