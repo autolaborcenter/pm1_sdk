@@ -244,12 +244,12 @@ void autolabor::pm1::delay(double time) {
 autolabor::pm1::Odometry autolabor::pm1::get_odometry() {
 	try {
 		auto odometry = ptr()->odometry();
-		return {.x   = odometry.x,
-				.y   = odometry.y,
-				.yaw = odometry.theta,
-				.vx  = odometry.vx,
-				.vy  = odometry.vy,
-				.w   = odometry.w};
+		return {odometry.x,
+		        odometry.y,
+		        odometry.theta,
+		        odometry.vx,
+		        odometry.vy,
+		        odometry.w};
 	} catch (std::exception &) {
 		return {NAN, NAN, NAN, NAN, NAN, NAN};
 	}
