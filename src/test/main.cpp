@@ -17,16 +17,20 @@ int main() {
 			auto c = std::tolower(_getch());
 			switch (c) {
 				case 'w':
-					v = .3;
+					v = +.2;
+					w = 0;
 					break;
 				case 'a':
-					w = .5;
+					v = 0;
+					w = +.3;
 					break;
 				case 's':
-					v = -.3;
+					v = -.2;
+					w = 0;
 					break;
 				case 'd':
-					w = -.5;
+					v = 0;
+					w = -.3;
 					break;
 				case ' ':
 					v = w = 0;

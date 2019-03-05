@@ -62,8 +62,8 @@ namespace autolabor {
 				             w_rate = sign * rho * std::cos(polar),
 				             v      = max_v * v_rate,
 				             w      = max_w * w_rate,
-				             left   = (v - width / 2 * w) / radius,
-				             right  = (v + width / 2 * w) / radius;
+				             left   = v - width / 2 * w,
+				             right  = v + width / 2 * w;
 				
 				/**
 				 * 从目标状态构造
@@ -77,7 +77,9 @@ namespace autolabor {
 					auto theta   = v == 0
 					               ? w > 0
 					                 ? -mechanical::pi / 2
-					                 : +mechanical::pi / 2
+					                 : w < 0
+					                   ? +mechanical::pi / 2
+					                   : 0
 					               : w == 0
 					                 ? 0
 					                 : -std::atan(w * mechanical::length / v);

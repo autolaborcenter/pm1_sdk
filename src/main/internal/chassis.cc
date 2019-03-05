@@ -5,6 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
+#include <iostream>
 #include "time_extensions.h"
 #include "can/can_define.h"
 #include "can/parser.hh"
@@ -131,19 +132,25 @@ chassis::chassis(const std::string &port_name)
 				
 			} else if (tcu<0>::current_position_rx::match(msg)) {
 				
-				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
+				_rudder = -get_first<short>(bytes) * mechanical::rudder_k;
 				
 				auto target    = mechanical::state::from_wheels(target_left, target_right);
 				auto optimized = mechanical::state(optimize(target.rho, target.theta, _rudder), _rudder);
 				
 				msg_union<int>   left{}, right{};
 				msg_union<short> temp{};
-				left.data  = static_cast<int> (optimized.left / mechanical::wheel_k);
-				right.data = static_cast<int> (optimized.right / mechanical::wheel_k);
-				temp.data  = static_cast<short> (target_rudder / mechanical::rudder_k);
+				left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
+				right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
+				temp.data  = static_cast<short> (-target_rudder / mechanical::rudder_k);
 				port_ptr << pack_into<ecu<0>::target_speed, int>(left)
 				         << pack_into<ecu<1>::target_speed, int>(right)
 				         << pack_into<tcu<0>::target_position, short>(temp);
+				
+				std::cout
+						<< _rudder << '\t'
+						<< target_left << '\t'
+						<< optimized.left << '\t'
+						<< std::endl;
 			}
 		}
 	}).detach();
