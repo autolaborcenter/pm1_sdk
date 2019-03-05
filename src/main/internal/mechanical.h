@@ -73,10 +73,16 @@ namespace autolabor {
 				 * @param theta 后轮角度
 				 * @return      状态
 				 */
-				static state from_target(double v, double w, double theta) {
-					auto polar = std::atan(max_w / max_v * -length / std::tan(theta));
-					auto sign  = adjust<half_round>(theta) >= 0 ? -1 : +1;
-					return {std::hypot(v / max_v, w / max_w), theta};
+				static state from_target(double v, double w) {
+					auto theta   = v == 0
+					               ? w > 0
+					                 ? -mechanical::pi / 2
+					                 : +mechanical::pi / 2
+					               : std::atan(w * mechanical::length / v);
+					auto polar   = std::atan(max_w / max_v * -length / std::tan(theta));
+					auto sign    = adjust<half_round>(theta) >= 0 ? -1 : +1;
+					auto abs_rho = std::hypot(v / max_v, w / max_w);
+					return {v >= 0 ? +abs_rho : -abs_rho, theta};
 				}
 				
 				/**
@@ -87,10 +93,9 @@ namespace autolabor {
 				 * @param theta 后轮
 				 * @return 状态
 				 */
-				static state from_wheels(double left, double right, double theta) {
+				static state from_wheels(double left, double right) {
 					return from_target((right + left) / 2,
-					                   (right - left) / width,
-					                   theta);
+					                   (right - left) / width);
 				}
 			};
 		}

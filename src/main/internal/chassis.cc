@@ -133,7 +133,7 @@ chassis::chassis(const std::string &port_name)
 				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				auto target    = mechanical::state::from_wheels(target_left, target_right, target_rudder);
+				auto target    = mechanical::state::from_wheels(target_left, target_right);
 				auto optimized = mechanical::state(optimize(target.rho, target.theta, _rudder), _rudder);
 				
 				msg_union<int>   left{}, right{};
@@ -183,14 +183,10 @@ odometry_t chassis::odometry() const {
 }
 
 void chassis::set(double v, double w) {
-	target_rudder = v == 0
-	                ? w > 0
-	                  ? -mechanical::pi / 2
-	                  : +mechanical::pi / 2
-	                : std::atan(w * mechanical::length / v);
-	auto target = mechanical::state::from_target(v, w, target_rudder);
-	target_left  = target.left;
-	target_right = target.right;
+	auto target = mechanical::state::from_target(v, w);
+	target_left   = target.left;
+	target_right  = target.right;
+	target_rudder = target.theta;
 }
 
 template<class t>

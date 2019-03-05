@@ -17,25 +17,25 @@ int main() {
 			auto c = std::tolower(_getch());
 			switch (c) {
 				case 'w':
-					v = .2;
+					v = .3;
 					break;
 				case 'a':
-					w = .3;
+					w = .5;
 					break;
 				case 's':
-					v = -.2;
+					v = -.3;
 					break;
 				case 'd':
-					w = -.3;
+					w = -.5;
 					break;
 				case 27:
 					return 0;
 				default:
 					break;
 			}
-		} else {
+		} else
 			v = w = 0;
-		}
 		drive(v, w);
+		delay(0.05);
 	}
 }
