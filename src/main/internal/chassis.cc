@@ -23,11 +23,7 @@ template<class t>
 inline t get_first(const uint8_t *);
 
 template<class pack_info_t, class data_t>
-auto pack_data(const msg_union<data_t> &value) -> decltype(pack<pack_info_t>()) {
-	std::array<uint8_t, 8> buffer{};
-	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
-	return pack<pack_info_t>(std::array<uint8_t, 8>(buffer));
-}
+inline auto pack_into(const msg_union<data_t> &value) -> decltype(pack<pack_info_t>());
 
 /** 里程计更新信息 */
 template<class time_unit = std::chrono::duration<double, std::ratio<1>>>
@@ -35,6 +31,10 @@ struct odometry_update_info { double d_left, d_rigth; time_unit d_t; };
 
 /** 更新轮速里程计 */
 inline void operator+=(odometry_t &, odometry_update_info<>);
+
+void optimize(double rho, double theta, double current_theta) {
+	
+}
 
 chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
@@ -107,9 +107,6 @@ chassis::chassis(const std::string &port_name)
 					auto now = mechdancer::common::now();
 					_odometry += {delta_left, delta_right, now - time};
 					time     = now;
-					
-					port_ptr << pack_data<ecu<0>::target_speed, int>(target_left)
-					         << pack_data<ecu<1>::target_speed, int>(target_right);
 				} else
 					left_ready = true;
 				
@@ -125,9 +122,6 @@ chassis::chassis(const std::string &port_name)
 					auto now = mechdancer::common::now();
 					_odometry += {delta_left, delta_right, now - time};
 					time     = now;
-					
-					port_ptr << pack_data<ecu<0>::target_speed, int>(target_left)
-					         << pack_data<ecu<1>::target_speed, int>(target_right);
 				} else
 					right_ready = true;
 				
@@ -135,8 +129,10 @@ chassis::chassis(const std::string &port_name)
 				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				port_ptr << pack<tcu<0>::target_position>({target_rudder.bytes[1],
-				                                           target_rudder.bytes[0]});
+				// todo optimize
+				port_ptr << pack_into<ecu<0>::target_speed, int>(target_left)
+				         << pack_into<ecu<1>::target_speed, int>(target_right)
+				         << pack_into<tcu<0>::target_position, short>(target_rudder);
 			}
 		}
 	}).detach();
@@ -176,7 +172,7 @@ odometry_t chassis::odometry() const {
 }
 
 template<class t>
-const std::shared_ptr<serial::Serial> &operator<<(
+inline const std::shared_ptr<serial::Serial> &operator<<(
 		const std::shared_ptr<serial::Serial> &port,
 		const msg_union<t> &msg) {
 	port->write(msg.bytes, sizeof(t));
@@ -184,10 +180,17 @@ const std::shared_ptr<serial::Serial> &operator<<(
 }
 
 template<class t>
-t get_first(const uint8_t *bytes) {
+inline t get_first(const uint8_t *bytes) {
 	msg_union<t> temp{};
 	std::reverse_copy(bytes, bytes + sizeof(t), temp.bytes);
 	return temp.data;
+}
+
+template<class pack_info_t, class data_t>
+inline auto pack_into(const msg_union<data_t> &value) -> decltype(pack<pack_info_t>()) {
+	std::array<uint8_t, 8> buffer{};
+	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
+	return pack<pack_info_t>(std::array<uint8_t, 8>(buffer));
 }
 
 /**
@@ -237,8 +240,8 @@ inline void rotate(double &x,
 	x = _;
 }
 
-void operator+=(odometry_t &odometry,
-                odometry_update_info<> info) {
+inline void operator+=(odometry_t &odometry,
+                       odometry_update_info<> info) {
 	odometry.s += (info.d_left + info.d_rigth) / 2;
 	
 	double theta, x, y;
