@@ -52,16 +52,16 @@ namespace autolabor {
 			       _right  = 0,
 			       _rudder = 0;
 			
-			/** 电机指令 */
-			mutable msg_union<int> target_left{0},
-			                       target_right{0};
-			mutable double         target_rudder;
-			
 			/** 状态 */
 			odometry_t _odometry{};
 			
 			/** 更新里程计 */
 			mutable std::mutex lock;
+			
+			/** 电机指令 */
+			mutable double target_left   = 0,
+			               target_right  = 0,
+			               target_rudder = 0;
 		};
 	}
 }

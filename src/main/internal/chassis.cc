@@ -129,11 +129,16 @@ chassis::chassis(const std::string &port_name)
 				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
+				auto target    = mechanical::state::from_wheels(target_left, target_right, target_rudder);
+				auto optimized = mechanical::state(optimize(target.rho, target.theta, _rudder), _rudder);
+				
+				msg_union<int>   left{}, right{};
 				msg_union<short> temp{};
-				temp.data = static_cast<short> (target_rudder / mechanical::rudder_k);
-				optimize(0, target_rudder, _rudder);
-				port_ptr << pack_into<ecu<0>::target_speed, int>(target_left)
-				         << pack_into<ecu<1>::target_speed, int>(target_right)
+				left.data  = static_cast<int> (optimized.left / mechanical::wheel_k);
+				right.data = static_cast<int> (optimized.right / mechanical::wheel_k);
+				temp.data  = static_cast<short> (target_rudder / mechanical::rudder_k);
+				port_ptr << pack_into<ecu<0>::target_speed, int>(left)
+				         << pack_into<ecu<1>::target_speed, int>(right)
 				         << pack_into<tcu<0>::target_position, short>(temp);
 			}
 		}
@@ -157,11 +162,11 @@ double chassis::rudder() const {
 }
 
 void chassis::left(double target) const {
-	target_left.data = static_cast<int> (target / mechanical::wheel_k);
+	target_left = target;
 }
 
 void chassis::right(double target) const {
-	target_right.data = static_cast<int> (target / mechanical::wheel_k);
+	target_right = target;
 }
 
 void chassis::rudder(double target) const {
