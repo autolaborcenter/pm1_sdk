@@ -28,13 +28,15 @@ int main() {
 				case 'd':
 					w = -.5;
 					break;
+				case ' ':
+					v = w = 0;
+					break;
 				case 27:
 					return 0;
 				default:
 					break;
 			}
-		} else
-			v = w = 0;
+		}
 		drive(v, w);
 		delay(0.05);
 	}
