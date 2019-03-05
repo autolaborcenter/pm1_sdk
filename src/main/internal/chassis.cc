@@ -32,8 +32,8 @@ struct odometry_update_info { double d_left, d_rigth; time_unit d_t; };
 /** 更新轮速里程计 */
 inline void operator+=(odometry_t &, odometry_update_info<>);
 
-void optimize(double rho, double theta, double current_theta) {
-	
+inline double optimize(double rho, double theta, double current_theta) {
+	return rho;
 }
 
 chassis::chassis(const std::string &port_name)
@@ -129,10 +129,12 @@ chassis::chassis(const std::string &port_name)
 				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				// todo optimize
+				msg_union<short> temp{};
+				temp.data = static_cast<short> (target_rudder / mechanical::rudder_k);
+				optimize(0, target_rudder, _rudder);
 				port_ptr << pack_into<ecu<0>::target_speed, int>(target_left)
 				         << pack_into<ecu<1>::target_speed, int>(target_right)
-				         << pack_into<tcu<0>::target_position, short>(target_rudder);
+				         << pack_into<tcu<0>::target_position, short>(temp);
 			}
 		}
 	}).detach();
@@ -163,7 +165,7 @@ void chassis::right(double target) const {
 }
 
 void chassis::rudder(double target) const {
-	target_rudder.data = static_cast<short> (target / mechanical::rudder_k);
+	target_rudder = target;
 }
 
 odometry_t chassis::odometry() const {

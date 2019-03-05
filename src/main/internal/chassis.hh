@@ -53,9 +53,9 @@ namespace autolabor {
 			       _rudder = 0;
 			
 			/** 电机指令 */
-			mutable msg_union<int>   target_left{0},
-			                         target_right{0};
-			mutable msg_union<short> target_rudder{0};
+			mutable msg_union<int> target_left{0},
+			                       target_right{0};
+			mutable double         target_rudder;
 			
 			/** 状态 */
 			odometry_t _odometry{};
