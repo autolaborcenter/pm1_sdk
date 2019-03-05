@@ -44,7 +44,7 @@ namespace autolabor {
 			struct state {
 				const double rho, rudder;
 				
-				state(double rho, double rudder) : rho(rho), rudder(rudder) {}
+				state(double rho, double rudder) : rho(rho), rudder(rudder == 0 ? 0 : rudder) {}
 			
 			private:
 				struct half_round {
@@ -74,19 +74,13 @@ namespace autolabor {
 				 * @return      状态
 				 */
 				static std::pair<double, double> from_target(double v, double w) {
-					auto theta   = v == 0
+					auto rudder  = v == 0
 					               ? w > 0
 					                 ? -mechanical::pi / 2
-					                 : w < 0
-					                   ? +mechanical::pi / 2
-					                   : 0
-					               : w == 0
-					                 ? 0
-					                 : -std::atan(w * mechanical::length / v);
-					auto polar   = std::atan(max_w / max_v * -length / std::tan(theta));
-					auto sign    = adjust<half_round>(theta) >= 0 ? -1 : +1;
+					                 : +mechanical::pi / 2
+					               : -std::atan(w * mechanical::length / v);
 					auto abs_rho = std::hypot(v / max_v, w / max_w);
-					return {v >= 0 ? +abs_rho : -abs_rho, theta};
+					return {v >= 0 ? +abs_rho : -abs_rho, rudder};
 				}
 			};
 		}
