@@ -11,7 +11,7 @@ using namespace autolabor::pm1;
 
 int main() {
 	initialize();
-	double v, w;
+	double v = 0, w = 0;
 	while (true) {
 		if (_kbhit()) {
 			auto c = std::tolower(_getch());
@@ -30,6 +30,8 @@ int main() {
 					break;
 				case 27:
 					return 0;
+				default:
+					break;
 			}
 		} else {
 			v = w = 0;
