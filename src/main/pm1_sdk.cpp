@@ -104,9 +104,9 @@ namespace block {
 			set(0, 0, ptr()->rudder());
 		else {
 			auto rudder_target = v == 0
-			                     ? ptr()->rudder() > 0
-			                       ? +mechanical::pi / 2
-			                       : -mechanical::pi / 2
+			                     ? w > 0
+			                       ? -mechanical::pi / 2
+			                       : +mechanical::pi / 2
 			                     : std::atan(w * mechanical::length / v);
 			
 			if (std::abs(ptr()->rudder() - rudder_target) > mechanical::pi / 36) {

@@ -5,6 +5,7 @@
 #ifndef PM1_SDK_PM1_H
 #define PM1_SDK_PM1_H
 
+
 namespace {
 	template<class range>
 	typename range::t adjust(typename range::t value) {
@@ -75,7 +76,7 @@ namespace autolabor {
 				static state from_target(double v, double w, double theta) {
 					auto polar = std::atan(max_w / max_v * -length / std::tan(theta));
 					auto sign  = adjust<half_round>(theta) >= 0 ? -1 : +1;
-					return {v / (max_v * sign * std::sin(polar)), theta};
+					return {std::hypot(v / max_v, w / max_w), theta};
 				}
 				
 				/**
@@ -88,12 +89,13 @@ namespace autolabor {
 				 */
 				static state from_wheels(double left, double right, double theta) {
 					return from_target((right + left) / 2,
-					                   (right - left) / 2,
+					                   (right - left) / width,
 					                   theta);
 				}
 			};
 		}
 	}
 }
+
 
 #endif //PM1_SDK_PM1_H
