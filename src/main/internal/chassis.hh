@@ -9,6 +9,7 @@
 #include "serial/serial.h"
 #include "can/can_define.h"
 #include "mechanical.h"
+#include "time_extensions.h"
 
 namespace autolabor {
 	namespace pm1 {
@@ -59,6 +60,9 @@ namespace autolabor {
 			
 			/** 电机指令 */
 			mutable std::shared_ptr<mechanical::state> target;
+			
+			/** 最后一次请求的时间 */
+			mutable decltype(mechdancer::common::now()) request_time;
 		};
 	}
 }

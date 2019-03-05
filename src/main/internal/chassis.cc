@@ -130,13 +130,19 @@ chassis::chassis(const std::string &port_name)
 				
 				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				auto optimized = optimize(*target, _rudder);
-				
 				msg_union<int>   left{}, right{};
 				msg_union<short> temp{};
-				left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
-				right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
-				temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
+				
+				if (mechdancer::common::now() - request_time < std::chrono::milliseconds(200)) {
+					auto optimized = optimize(*target, _rudder);
+					left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
+					right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
+					temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
+				} else {
+					left.data = right.data = 0;
+					temp.data = static_cast<short> (_rudder / mechanical::rudder_k);
+				}
+				
 				port_ptr << pack_into<ecu<0>::target_speed, int>(left)
 				         << pack_into<ecu<1>::target_speed, int>(right)
 				         << pack_into<tcu<0>::target_position, short>(temp);
@@ -167,10 +173,12 @@ odometry_t chassis::odometry() const {
 }
 
 void chassis::set_state(double rho, double rudder) const {
-	target = std::make_shared<mechanical::state>(rho, rudder);
+	request_time = mechdancer::common::now();
+	target       = std::make_shared<mechanical::state>(rho, rudder);
 }
 
 void chassis::set_target(double v, double w) const {
+	request_time = mechdancer::common::now();
 	double rho, rudder;
 	std::tie(rho, rudder) = mechanical::state::from_target(v, w);
 	target = std::make_shared<mechanical::state>(rho, rudder);
