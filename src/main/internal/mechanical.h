@@ -25,7 +25,7 @@ namespace autolabor {
 			constexpr double pi = 3.141592653589793238462643383279502884l;
 			
 			constexpr unsigned int encoder_wheel  = 32000;
-			constexpr unsigned int encoder_rudder = 16384;
+			constexpr unsigned int encoder_rudder = -16384;
 			
 			constexpr double wheel_k  = 2 * pi / encoder_wheel;
 			constexpr double rudder_k = 2 * pi / encoder_rudder;
@@ -42,9 +42,9 @@ namespace autolabor {
 			constexpr double max_w = 2 * max_wheel_speed * radius / width;
 			
 			struct state {
-				const double rho, theta;
+				const double rho, rudder;
 				
-				state(double rho, double theta) : rho(rho), theta(theta) {}
+				state(double rho, double rudder) : rho(rho), rudder(rudder) {}
 			
 			private:
 				struct half_round {
@@ -53,9 +53,9 @@ namespace autolabor {
 					                   max = +pi;
 				};
 				
-				const double r     = -length / std::tan(theta),
+				const double r     = -length / std::tan(rudder),
 				             polar = std::atan(max_w / max_v * r);
-				const int    sign  = adjust<half_round>(theta) >= 0 ? -1 : +1;
+				const int    sign  = adjust<half_round>(rudder) >= 0 ? -1 : +1;
 			
 			public:
 				const double v_rate = sign * rho * std::sin(polar),
@@ -73,7 +73,7 @@ namespace autolabor {
 				 * @param theta 后轮角度
 				 * @return      状态
 				 */
-				static state from_target(double v, double w) {
+				static std::pair<double, double> from_target(double v, double w) {
 					auto theta   = v == 0
 					               ? w > 0
 					                 ? -mechanical::pi / 2
@@ -87,19 +87,6 @@ namespace autolabor {
 					auto sign    = adjust<half_round>(theta) >= 0 ? -1 : +1;
 					auto abs_rho = std::hypot(v / max_v, w / max_w);
 					return {v >= 0 ? +abs_rho : -abs_rho, theta};
-				}
-				
-				/**
-				 * 从两轮轮速构造
-				 *
-				 * @param left  左轮
-				 * @param right 右轮
-				 * @param theta 后轮
-				 * @return 状态
-				 */
-				static state from_wheels(double left, double right) {
-					return from_target((right + left) / 2,
-					                   (right - left) / width);
 				}
 			};
 		}

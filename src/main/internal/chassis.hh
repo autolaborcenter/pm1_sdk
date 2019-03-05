@@ -8,6 +8,7 @@
 #include <mutex>
 #include "serial/serial.h"
 #include "can/can_define.h"
+#include "mechanical.h"
 
 namespace autolabor {
 	namespace pm1 {
@@ -35,13 +36,9 @@ namespace autolabor {
 			
 			double rudder() const;
 			
-			void set(double, double);
+			void set_state(double, double) const;
 			
-			void left(double) const;
-			
-			void right(double) const;
-			
-			void rudder(double) const;
+			void set_target(double, double) const;
 			
 			odometry_t odometry() const;
 		
@@ -61,9 +58,7 @@ namespace autolabor {
 			mutable std::mutex lock;
 			
 			/** 电机指令 */
-			mutable double target_left   = 0,
-			               target_right  = 0,
-			               target_rudder = 0;
+			mutable std::shared_ptr<mechanical::state> target;
 		};
 	}
 }

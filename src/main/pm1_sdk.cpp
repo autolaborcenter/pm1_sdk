@@ -91,17 +91,10 @@ inline double actual_speed(double target, double rest_distance) {
 }
 
 namespace block {
-	/** 直接设置控制量 */
-	inline void set(double l, double r, double rudder) {
-		ptr()->left(l / mechanical::radius);
-		ptr()->right(r / mechanical::radius);
-		ptr()->rudder(rudder);
-	}
-	
 	/** 阻塞等待后轮转动 */
 	inline void wait_or_drive(double v, double w) {
 		if ((v == 0 && w == 0) || paused)
-			set(0, 0, ptr()->rudder());
+			ptr()->set_state(0, ptr()->rudder());
 		else {
 			auto rudder_target = v == 0
 			                     ? w > 0
@@ -109,12 +102,10 @@ namespace block {
 			                       : +mechanical::pi / 2
 			                     : std::atan(w * mechanical::length / v);
 			
-			if (std::abs(ptr()->rudder() - rudder_target) > mechanical::pi / 36) {
-				set(0, 0, rudder_target);
-			} else {
-				auto diff = mechanical::width / 2 * w;
-				set(v - diff, v + diff, rudder_target);
-			}
+			if (std::abs(ptr()->rudder() - rudder_target) > mechanical::pi / 36)
+				ptr()->set_state(0, rudder_target);
+			else
+				ptr()->set_target(v, w);
 		}
 	}
 	
@@ -256,5 +247,5 @@ autolabor::pm1::Odometry autolabor::pm1::get_odometry() {
 }
 
 result autolabor::pm1::drive(double v, double w) {
-	return run([v, w] { ptr()->set(v, w); });
+	return run([v, w] { ptr()->set_target(v, w); });
 }

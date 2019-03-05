@@ -5,9 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <iostream>
 #include "time_extensions.h"
-#include "can/can_define.h"
 #include "can/parser.hh"
 #include "mechanical.h"
 
@@ -33,13 +31,11 @@ struct odometry_update_info { double d_left, d_rigth; time_unit d_t; };
 /** 更新轮速里程计 */
 inline void operator+=(odometry_t &, odometry_update_info<>);
 
-inline double optimize(double rho, double theta, double current_theta) {
-	constexpr static auto limit = mechanical::pi / 3;
-	
-	auto difference = std::abs(theta - current_theta);
-	return difference > limit ? 0
-	                          : (1 - difference / limit) * rho;
-}
+/** 控制优化参数 */
+constexpr double optimize_limit = mechanical::pi / 3;
+
+/** 连续控制优化 */
+inline mechanical::state optimize(const mechanical::state &target, double rudder);
 
 chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
@@ -132,25 +128,18 @@ chassis::chassis(const std::string &port_name)
 				
 			} else if (tcu<0>::current_position_rx::match(msg)) {
 				
-				_rudder = -get_first<short>(bytes) * mechanical::rudder_k;
+				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 				
-				auto target    = mechanical::state::from_wheels(target_left, target_right);
-				auto optimized = mechanical::state(optimize(target.rho, target.theta, _rudder), _rudder);
+				auto optimized = optimize(*target, _rudder);
 				
 				msg_union<int>   left{}, right{};
 				msg_union<short> temp{};
 				left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
 				right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
-				temp.data  = static_cast<short> (-target_rudder / mechanical::rudder_k);
+				temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
 				port_ptr << pack_into<ecu<0>::target_speed, int>(left)
 				         << pack_into<ecu<1>::target_speed, int>(right)
 				         << pack_into<tcu<0>::target_position, short>(temp);
-				
-				std::cout
-						<< _rudder << '\t'
-						<< target_left << '\t'
-						<< optimized.left << '\t'
-						<< std::endl;
 			}
 		}
 	}).detach();
@@ -172,28 +161,19 @@ double chassis::rudder() const {
 	return _rudder;
 }
 
-void chassis::left(double target) const {
-	target_left = target;
-}
-
-void chassis::right(double target) const {
-	target_right = target;
-}
-
-void chassis::rudder(double target) const {
-	target_rudder = target;
-}
-
 odometry_t chassis::odometry() const {
 	std::lock_guard<std::mutex> _(lock);
 	return _odometry;
 }
 
-void chassis::set(double v, double w) {
-	auto target = mechanical::state::from_target(v, w);
-	target_left   = target.left;
-	target_right  = target.right;
-	target_rudder = target.theta;
+void chassis::set_state(double rho, double rudder) const {
+	target = std::make_shared<mechanical::state>(rho, rudder);
+}
+
+void chassis::set_target(double v, double w) const {
+	double rho, rudder;
+	std::tie(rho, rudder) = mechanical::state::from_target(v, w);
+	target = std::make_shared<mechanical::state>(rho, rudder);
 }
 
 template<class t>
@@ -280,4 +260,9 @@ inline void operator+=(odometry_t &odometry,
 	odometry.vx = x / info.d_t.count();
 	odometry.vy = y / info.d_t.count();
 	odometry.w  = theta / info.d_t.count();
+}
+
+inline mechanical::state optimize(const mechanical::state &target, double rudder) {
+	const auto difference = std::abs(target.rudder - rudder);
+	return {difference > optimize_limit ? 0 : (1 - difference / optimize_limit) * target.rho, rudder};
 }
