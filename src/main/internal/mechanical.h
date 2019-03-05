@@ -25,10 +25,10 @@ namespace autolabor {
 			constexpr double pi = 3.141592653589793238462643383279502884l;
 			
 			constexpr unsigned int encoder_wheel  = 32000;
-			constexpr unsigned int encoder_rudder = -16384;
+			constexpr unsigned int encoder_rudder = 16384;
 			
-			constexpr double wheel_k  = 2 * pi / encoder_wheel;
-			constexpr double rudder_k = 2 * pi / encoder_rudder;
+			constexpr double wheel_k  = +2 * pi / encoder_wheel;
+			constexpr double rudder_k = -2 * pi / encoder_rudder;
 			
 			constexpr double width    = 0.412;
 			constexpr double length   = 0.324;
