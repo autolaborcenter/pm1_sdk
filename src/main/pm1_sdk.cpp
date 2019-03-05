@@ -256,5 +256,5 @@ autolabor::pm1::Odometry autolabor::pm1::get_odometry() {
 }
 
 result autolabor::pm1::drive(double v, double w) {
-	return result{"to do"};
+	return run([v, w] { ptr()->set(v, w); });
 }

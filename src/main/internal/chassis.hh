@@ -35,6 +35,8 @@ namespace autolabor {
 			
 			double rudder() const;
 			
+			void set(double, double);
+			
 			void left(double) const;
 			
 			void right(double) const;

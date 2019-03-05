@@ -33,7 +33,11 @@ struct odometry_update_info { double d_left, d_rigth; time_unit d_t; };
 inline void operator+=(odometry_t &, odometry_update_info<>);
 
 inline double optimize(double rho, double theta, double current_theta) {
-	return rho;
+	constexpr static auto limit = mechanical::pi / 3;
+	
+	auto difference = std::abs(theta - current_theta);
+	return difference > limit ? 0
+	                          : (1 - difference / limit) * rho;
 }
 
 chassis::chassis(const std::string &port_name)
@@ -176,6 +180,17 @@ void chassis::rudder(double target) const {
 odometry_t chassis::odometry() const {
 	std::lock_guard<std::mutex> _(lock);
 	return _odometry;
+}
+
+void chassis::set(double v, double w) {
+	target_rudder = v == 0
+	                ? w > 0
+	                  ? -mechanical::pi / 2
+	                  : +mechanical::pi / 2
+	                : std::atan(w * mechanical::length / v);
+	auto target = mechanical::state::from_target(v, w, target_rudder);
+	target_left  = target.left;
+	target_right = target.right;
 }
 
 template<class t>
