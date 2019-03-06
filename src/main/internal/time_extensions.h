@@ -35,13 +35,13 @@ namespace mechdancer {
 		/**
 		 * 测量一段代码的执行时间
 		 *
-		 * @tparam TimeUnit 时间间隔的单位
+		 * @tparam time_unit 时间间隔的单位
 		 * @param function 待测代码块
 		 * @return 用[TimeUnit]表示的时间间隔
 		 */
-		template<class TimeUnit = std::chrono::duration<double, std::ratio<1>>>
+		template<class time_unit = std::chrono::duration<double, std::ratio<1>>>
 		inline auto measure_time(const std::function<void()> &function)
-		-> TimeUnit {
+		-> time_unit {
 			const auto origin = now();
 			function();
 			return now() - origin;

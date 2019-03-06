@@ -111,12 +111,12 @@ namespace block {
 	
 	/** 阻塞并抑制输出 */
 	seconds inhibit() {
-		const auto temp = mechdancer::common::now();
-		while (paused) {
-			wait_or_drive(0, 0);
-			loop_delay();
-		}
-		return mechdancer::common::now() - temp;
+		return mechdancer::common::measure_time([] {
+			while (paused) {
+				wait_or_drive(0, 0);
+				loop_delay();
+			}
+		});
 	}
 	
 	/** 按固定控制量运行指定时间 */

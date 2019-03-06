@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <conio.h>
+#include <thread>
 #include "../main/pm1_sdk.h"
 #include "../main/internal/mechanical.h"
 
@@ -15,6 +16,18 @@ int main() {
 		std::cerr << result.error_info << std::endl;
 		return 1;
 	}
+	
+	std::thread([] {
+		delay(1);
+		pause();
+		std::cout << "paused" << std::endl;
+		delay(3);
+		resume();
+		std::cout << "resumed" << std::endl;
+	}).detach();
+	
+	go_straight_timing(1, 2);
+	std::cout << "done" << std::endl;
 	
 	double v = 0, w = 0;
 	while (true) {
