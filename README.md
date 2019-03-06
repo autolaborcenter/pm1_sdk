@@ -22,4 +22,20 @@
 
 * 或从[这里](https://github.com/autolaborcenter/pm1_driver_ros)下载 ROS 驱动；
 
+## 试一下！
+
+你买的 PM1 底盘已经到货了吗？现在连接到计算机，来试一下吧！
+
+```c++
+#include "pm1_sdk.h"
+using namespace autolabor::pm1;
+
+int main() {
+    initialize();
+    turn_around(0.5, 1.57);
+}
+```
+
+## 细节
+
 要了解关于使用的更多细节，请浏览 [`wiki`](https://github.com/autolaborcenter/pm1_sdk/wiki/Home)
