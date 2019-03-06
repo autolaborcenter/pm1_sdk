@@ -13,4 +13,4 @@
 * 从[发布页](https://github.com/autolaborcenter/pm1_sdk/releases)直接下载库文件；
 * 或从[这里](https://github.com/autolaborcenter/pm1_driver_ros)下载 ROS 驱动；
 
-要了解关于使用的更多细节，请浏览 [`wiki`](https://github.com/autolaborcenter/pm1_sdk/wiki/PM1-SDK)
+要了解关于使用的更多细节，请浏览 [`wiki`](https://github.com/autolaborcenter/pm1_sdk/wiki/Home)
