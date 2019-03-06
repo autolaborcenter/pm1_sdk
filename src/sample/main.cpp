@@ -10,7 +10,12 @@
 using namespace autolabor::pm1;
 
 int main() {
-	initialize();
+	auto result = initialize();
+	if (!result) {
+		std::cerr << result.error_info << std::endl;
+		return 1;
+	}
+	
 	double v = 0, w = 0;
 	while (true) {
 		if (_kbhit()) {

@@ -1,3 +1,7 @@
-cmake-build-debug
+# environment
 .idea/
 .vs/
+
+# cmake
+cmake-build-debug/
+cmake-build-release/

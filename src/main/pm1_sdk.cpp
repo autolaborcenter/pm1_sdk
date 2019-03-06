@@ -161,7 +161,7 @@ result autolabor::pm1::initialize(const std::string &port) {
 }
 
 result autolabor::pm1::shutdown() {
-	return _ptr = nullptr, result{};
+	return _ptr ? _ptr = nullptr, result{} : result{"chassis doesn't exist"};
 }
 
 result autolabor::pm1::go_straight(double speed, double distance) {

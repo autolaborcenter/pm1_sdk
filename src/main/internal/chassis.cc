@@ -5,9 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include "time_extensions.h"
 #include "can/parser.hh"
-#include "mechanical.h"
 
 using namespace autolabor::pm1;
 
@@ -174,14 +172,12 @@ odometry_t chassis::odometry() const {
 
 void chassis::set_state(double rho, double rudder) const {
 	request_time = mechdancer::common::now();
-	target       = std::make_shared<mechanical::state>(rho, rudder);
+	target       = mechanical::state::make_shared(rho, rudder);
 }
 
 void chassis::set_target(double v, double w) const {
 	request_time = mechdancer::common::now();
-	double rho, rudder;
-	std::tie(rho, rudder) = mechanical::state::from_target(v, w);
-	target = std::make_shared<mechanical::state>(rho, rudder);
+	target       = mechanical::state::from_target(v, w);
 }
 
 template<class t>

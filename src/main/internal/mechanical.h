@@ -44,26 +44,30 @@ namespace autolabor {
 			struct state {
 				const double rho, rudder;
 				
-				state(double rho, double rudder) : rho(rho), rudder(rudder == 0 ? 0 : rudder) {}
-			
-			private:
-				struct half_round {
-					using t = double;
-					constexpr static t min = -pi,
-					                   max = +pi;
-				};
+				/**
+				 * 构造器
+				 *
+				 * @param rho    equals to sqrt(v^2 + w^2), but with sign
+				 * @param rudder if rudder is 0, it should be `+0`, rather than `-0`
+				 */
+				state(double rho, double rudder) :
+						rho(rho), rudder(rudder == 0 ? +0 : rudder) {}
 				
-				const double r     = -length / std::tan(rudder),
-				             polar = std::atan(max_w / max_v * r);
-				const int    sign  = adjust<half_round>(rudder) >= 0 ? -1 : +1;
-			
-			public:
-				const double v_rate = sign * rho * std::sin(polar),
-				             w_rate = sign * rho * std::cos(polar),
-				             v      = max_v * v_rate,
-				             w      = max_w * w_rate,
-				             left   = v - width / 2 * w,
-				             right  = v + width / 2 * w;
+				const int    sign   = adjust<half_round>(rudder) >= 0 ? -1 : +1;
+				const double r      = -length / std::tan(rudder),   // 转弯半径
+				             polar  = std::atan(max_w / max_v * r), // 速度向量极角
+				             v_rate = sign * rho * std::sin(polar), // 线速度比率
+				             w_rate = sign * rho * std::cos(polar), // 角速度比率
+				             v      = max_v * v_rate,               // 线速度
+				             w      = max_w * w_rate,               // 角速度
+				             left   = v - width / 2 * w,            // 左轮线速度
+				             right  = v + width / 2 * w;            // 右轮线速度
+				
+				/** 构造智能指针 */
+				inline static std::shared_ptr<state>
+				make_shared(double rho, double rudder) {
+					return std::make_shared<state>(rho, rudder);
+				}
 				
 				/**
 				 * 从目标状态构造
@@ -73,15 +77,23 @@ namespace autolabor {
 				 * @param theta 后轮角度
 				 * @return      状态
 				 */
-				static std::pair<double, double> from_target(double v, double w) {
+				inline static std::shared_ptr<state>
+				from_target(double v, double w) {
 					auto rudder  = v == 0
 					               ? w > 0
 					                 ? -mechanical::pi / 2
 					                 : +mechanical::pi / 2
 					               : -std::atan(w * mechanical::length / v);
 					auto abs_rho = std::hypot(v / max_v, w / max_w);
-					return {v >= 0 ? +abs_rho : -abs_rho, rudder};
+					return make_shared(v >= 0 ? +abs_rho : -abs_rho, rudder);
 				}
+			
+			private:
+				struct half_round {
+					using t = double;
+					constexpr static t min = -pi,
+					                   max = +pi;
+				};
 			};
 		}
 	}
