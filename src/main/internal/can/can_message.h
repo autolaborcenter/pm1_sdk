@@ -5,7 +5,7 @@
 #ifndef PM1_SDK_CAN_MESSAGE_H
 #define PM1_SDK_CAN_MESSAGE_H
 
-#include <array>
+#include <sstream>
 
 namespace {
 	uint8_t CRC8Table[256] = {
