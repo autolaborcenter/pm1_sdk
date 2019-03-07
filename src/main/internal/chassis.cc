@@ -40,7 +40,8 @@ chassis::chassis(const std::string &port_name)
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
 	using namespace mechdancer::common;
 	
-	{ // check nodes
+	// region check nodes
+	{
 		port << pack<unit<>::state_tx>();
 		
 		std::string buffer;
@@ -62,9 +63,8 @@ chassis::chassis(const std::string &port_name)
 			
 			// 解析
 			auto result = parser(*buffer.begin());
-			if (result.type != parser::result_type::message) {
+			if (result.type != parser::result_type::message)
 				continue;
-			}
 			
 			// 处理
 			const auto msg   = result.message;
@@ -83,9 +83,14 @@ chassis::chassis(const std::string &port_name)
 		if (!ecu0 || !ecu1 || !tcu0)
 			throw std::exception("it's not a pm1 chassis");
 	}
+	// endregion
 	
+	// region initialize
 	port << pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
 	     << pack<ecu<>::clear>();        // 底层编码器清零
+	// endregion
+	
+	// region ask
 	
 	auto port_ptr = port;
 	// 定时询问前轮
@@ -112,7 +117,9 @@ chassis::chassis(const std::string &port_name)
 		}
 	}).detach();
 	
-	// 接收
+	// endregion
+	
+	// region receive
 	std::thread([port_ptr, this] {
 		std::string buffer;
 		parser      parser;
@@ -148,9 +155,9 @@ chassis::chassis(const std::string &port_name)
 					std::lock_guard<std::mutex> _(lock);
 					right_ready = false;
 					
-					auto now = mechdancer::common::now();
-					_odometry += {delta_left, delta_right, now - time};
-					time     = now;
+					auto _now = now();
+					_odometry += {delta_left, delta_right, _now - time};
+					time      = _now;
 				} else
 					left_ready = true;
 				
@@ -163,9 +170,9 @@ chassis::chassis(const std::string &port_name)
 					std::lock_guard<std::mutex> _(lock);
 					left_ready = false;
 					
-					auto now = mechdancer::common::now();
-					_odometry += {delta_left, delta_right, now - time};
-					time     = now;
+					auto _now = now();
+					_odometry += {delta_left, delta_right, _now - time};
+					time      = _now;
 				} else
 					right_ready = true;
 				
@@ -176,13 +183,14 @@ chassis::chassis(const std::string &port_name)
 				msg_union<int>   left{}, right{};
 				msg_union<short> temp{};
 				
-				if (mechdancer::common::now() - request_time < std::chrono::milliseconds(200)) {
+				if (now() - request_time < std::chrono::milliseconds(200)) {
 					auto optimized = optimize(*target, _rudder);
 					left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
 					right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
 					temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
 				} else {
-					left.data = right.data = 0;
+					left.data =
+					right.data = 0;
 					temp.data = static_cast<short> (_rudder / mechanical::rudder_k);
 				}
 				
@@ -192,6 +200,7 @@ chassis::chassis(const std::string &port_name)
 			}
 		}
 	}).detach();
+	// endregion
 }
 
 chassis::~chassis() {
