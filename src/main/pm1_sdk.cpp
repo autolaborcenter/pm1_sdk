@@ -232,7 +232,7 @@ void autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(mechdancer::common::seconds_duration(time));
 }
 
-autolabor::pm1::Odometry autolabor::pm1::get_odometry() {
+autolabor::pm1::odometry autolabor::pm1::get_odometry() {
 	try {
 		auto odometry = ptr()->odometry();
 		return {odometry.x,

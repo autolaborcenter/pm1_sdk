@@ -99,29 +99,29 @@ namespace autolabor {
 		result resume();
 		
 		/**
-		 * 延时
-		 *
-		 * @param time 时间（s，非负）
-		 */
-		void delay(double time);
-		
-		/** 轮速里程计数据结构 */
-		struct Odometry { double x, y, yaw, vx, vy, w; };
-		
-		/**
-		 * 获取里程计值
-		 *
-		 * @return 里程计值
-		 */
-		Odometry get_odometry();
-		
-		/**
 		 * 控制机器人运行
 		 *
 		 * @param v 线速度（m/s）
 		 * @param w 角速度（rad/s）
 		 */
 		result drive(double v, double w);
+		
+		/**
+	     * 延时
+	     *
+	     * @param time 时间（s，非负）
+	     */
+		void delay(double time);
+		
+		/** 轮速里程计数据结构 */
+		struct odometry { double x, y, yaw, vx, vy, w; };
+		
+		/**
+		 * 获取里程计值
+		 *
+		 * @return 里程计值
+		 */
+		odometry get_odometry();
 	}
 }
 
