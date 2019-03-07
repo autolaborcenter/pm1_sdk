@@ -73,11 +73,52 @@ namespace autolabor {
 			}
 		};
 		
+		/** 任意类型控制器结构 */
+		struct any_controller {
+			constexpr static uint8_t type_id    = any_type;
+			constexpr static uint8_t node_index = any_index;
+		};
+		
+		/** 通用控制器消息 */
+		template<class type = any_controller>
+		struct unit {
+			constexpr static uint8_t type_id    = type::type_id;
+			constexpr static uint8_t node_index = type::node_index;
+			// 状态
+			using state_tx       = can_pack_info<sgn, 0, 0, type_id, node_index, 0x80>;
+			using state_rx       = can_pack_info<msg, 0, 0, type_id, node_index, 0x80>;
+			// 版本 id
+			using version_id_tx  = can_pack_info<sgn, 0, 0, type_id, node_index, 0x81>;
+			using version_id_rx  = can_pack_info<msg, 0, 0, type_id, node_index, 0x81>;
+			// 设备 id
+			using device_id_tx   = can_pack_info<sgn, 0, 0, type_id, node_index, 0x82>;
+			using device_id_rx   = can_pack_info<msg, 0, 0, type_id, node_index, 0x82>;
+			// 芯片 id
+			using chip_id_tx     = can_pack_info<sgn, 0, 0, type_id, node_index, 0x83>;
+			using chip_id_rx     = can_pack_info<msg, 0, 0, type_id, node_index, 0x83>;
+			// HAL 版本
+			using hal_version_tx = can_pack_info<sgn, 0, 0, type_id, node_index, 0x80>;
+			using hal_version_rx = can_pack_info<msg, 0, 0, type_id, node_index, 0x80>;
+			// 核心板硬件版本
+			using core_hardware_version_tx  = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x85>;
+			using core_hardware_version_rx  = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x85>;
+			// 扩展板硬件版本
+			using extra_hardware_version_tx = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x86>;
+			using extra_hardware_version_rx = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x86>;
+			// 软件版本
+			using software_version_tx = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x87>;
+			using software_version_rx = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x87>;
+			// 累计运行时间
+			using uptime_tx      = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x88>;
+			using uptime_rx      = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x88>;
+		};
+		
 		/** 动力控制器包信息协议 */
-		template<uint8_t node_index = any_index>
+		template<uint8_t _node_index = any_index>
 		class ecu {
 		public:
-			constexpr static uint8_t type_id = 0x11;
+			constexpr static uint8_t type_id    = 0x11;
+			constexpr static uint8_t node_index = _node_index;
 			// 目标速度
 			using target_speed        = can_pack_info<msg, 0, 0, type_id, node_index, 0x1>;
 			// 当前速度
@@ -93,10 +134,11 @@ namespace autolabor {
 		};
 		
 		/** 动力控制器包信息协议 */
-		template<uint8_t node_index = any_index>
+		template<uint8_t _node_index = any_index>
 		class tcu {
 		public:
-			constexpr static uint8_t type_id = 0x12;
+			constexpr static uint8_t type_id    = 0x12;
+			constexpr static uint8_t node_index = _node_index;
 			// 目标角度
 			using target_position     = can_pack_info<msg, 0, 0, type_id, node_index, 0x1>;
 			// 当前角度

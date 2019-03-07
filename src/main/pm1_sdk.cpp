@@ -5,6 +5,7 @@
 #include "pm1_sdk.h"
 
 #include <string>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
@@ -143,11 +144,15 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 
 result autolabor::pm1::initialize(const std::string &port) {
 	if (port.empty()) {
-		for (const auto &item:serial_ports())
-			if (initialize(item))
-				return {};
-		
-		return {"no available port"};
+		std::stringstream builder;
+		for (const auto   &item : serial_ports()) {
+			auto result = initialize(item);
+			if (result) return {};
+			builder << item << ": " << result.error_info << std::endl;
+		}
+		auto              msg = builder.str();
+		return msg.empty() ? result{"no available port"}
+		                   : result{msg};
 	} else {
 		try {
 			_ptr = std::make_shared<chassis>(port);

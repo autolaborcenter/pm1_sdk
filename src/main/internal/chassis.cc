@@ -38,6 +38,51 @@ inline mechanical::state optimize(const mechanical::state &target, double rudder
 chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
+	using namespace mechdancer::common;
+	
+	{ // check nodes
+		port << pack<unit<>::state_tx>();
+		
+		std::string buffer;
+		parser      parser;
+		
+		const auto time = now();
+		auto       ecu0 = false,
+		           ecu1 = false,
+		           tcu0 = false;
+		
+		while (port->isOpen()
+		       && !(ecu0 && ecu1 && tcu0)
+		       && now() - time < seconds_duration(1)) {
+			// 接收
+			try { buffer = port->read(); }
+			catch (std::exception &) { buffer = ""; }
+			
+			if (buffer.empty()) continue;
+			
+			// 解析
+			auto result = parser(*buffer.begin());
+			if (result.type != parser::result_type::message) {
+				continue;
+			}
+			
+			// 处理
+			const auto msg   = result.message;
+			const auto bytes = msg.data.data;
+			
+			if (unit<ecu<0>>::state_rx::match(msg))
+				ecu0 = *bytes;
+			else if (unit<ecu<1>>::state_rx::match(msg))
+				ecu1 = *bytes;
+			else if (unit<tcu<0>>::state_rx::match(msg))
+				tcu0 = *bytes;
+			
+			if (ecu0 && ecu1 && tcu0) break;
+		}
+		
+		if (!ecu0 || !ecu1 || !tcu0)
+			throw std::exception("it's not a pm1 chassis");
+	}
 	
 	port << pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
 	     << pack<ecu<>::clear>();        // 底层编码器清零
@@ -45,7 +90,7 @@ chassis::chassis(const std::string &port_name)
 	auto port_ptr = port;
 	// 定时询问前轮
 	std::thread([port_ptr] {
-		auto time = mechdancer::common::now();
+		auto time = now();
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
 			try {
@@ -57,7 +102,7 @@ chassis::chassis(const std::string &port_name)
 	
 	// 定时询问后轮
 	std::thread([port_ptr] {
-		auto time = mechdancer::common::now();
+		auto time = now();
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
 			try {
@@ -76,7 +121,7 @@ chassis::chassis(const std::string &port_name)
 		     right_ready = false;
 		auto delta_left  = .0,
 		     delta_right = .0;
-		auto time        = mechdancer::common::now();
+		auto time        = now();
 		
 		while (port_ptr->isOpen()) {
 			// 接收
