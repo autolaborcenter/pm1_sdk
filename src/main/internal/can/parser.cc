@@ -23,18 +23,26 @@ parser::result parser::operator()(uint8_t byte) {
 		case state_type::signal: {
 			// 保存数据字节
 			bytes[state.value++] = byte;
-			if (state.state() == last || !(state.value = 0, crc_check(sgn_buffer)))
-				break;
-			result result{parser::result_type::signal};
+			if (state.state() == last)
+				return result{parser::result_type::nothing};
+			
+			state.value = 0;
+			result result{crc_check(sgn_buffer)
+			              ? parser::result_type::signal
+			              : parser::result_type::signal_failed};
 			result.signal = sgn_buffer;
 			return result;
 		}
 		case state_type::message: {
 			// 保存数据字节
 			bytes[state.value++ - 4] = byte;
-			if (state.state() == last || !(state.value = 0, crc_check(msg_buffer)))
-				break;
-			result result{parser::result_type::message};
+			if (state.state() == last)
+				return result{parser::result_type::nothing};
+			
+			state.value = 0;
+			result result{crc_check(msg_buffer)
+			              ? parser::result_type::message
+			              : parser::result_type::message_failed};
 			result.message = msg_buffer;
 			return result;
 		}

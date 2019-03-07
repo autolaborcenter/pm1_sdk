@@ -14,8 +14,14 @@ namespace autolabor {
 		public:
 			/** 结果类型 */
 			enum class result_type : uint8_t {
-				/** 无（不完整或校验失败） */
+				/** 无 */
 						nothing,
+				/* 内部错误 **/
+						failed,
+				/** 信号（校验错误） */
+						signal_failed,
+				/** 消息（校验错误） */
+						message_failed,
 				/** 信号 */
 						signal,
 				/** 消息 */
