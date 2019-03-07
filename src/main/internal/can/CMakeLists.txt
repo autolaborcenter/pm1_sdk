@@ -9,4 +9,4 @@ add_library(can_msg
         can_message.cpp
 
         parser.hh
-        parser.cc)
+        parser.cc parse_engine.cpp parse_engine.h)
