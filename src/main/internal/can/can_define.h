@@ -42,8 +42,7 @@ namespace autolabor {
 		public:
 			using data_t = _data_t;
 			
-			static_assert(std::is_same<_data_t, msg>::value
-			              || std::is_same<_data_t, sgn>::value,
+			static_assert(std::is_same<_data_t, msg>::value || std::is_same<_data_t, sgn>::value,
 			              "struct must be a can pack type");
 			static_assert(_network <= mask(2), "network in 2 bits");
 			static_assert(_property <= mask(3), "property in 3 bits");
@@ -84,33 +83,40 @@ namespace autolabor {
 		struct unit {
 			constexpr static uint8_t type_id    = type::type_id;
 			constexpr static uint8_t node_index = type::node_index;
+			
+			template<uint8_t msg_type_id>
+			struct pack_info_pair {
+				using tx = can_pack_info<sgn, 0, 0, type_id, node_index, msg_type_id>;
+				using rx = can_pack_info<msg, 0, 0, type_id, node_index, msg_type_id>;
+			};
+			
 			// 状态
-			using state_tx       = can_pack_info<sgn, 0, 0, type_id, node_index, 0x80>;
-			using state_rx       = can_pack_info<msg, 0, 0, type_id, node_index, 0x80>;
+			using state_tx       = typename pack_info_pair<0x80>::tx;
+			using state_rx       = typename pack_info_pair<0x80>::rx;
 			// 版本 id
-			using version_id_tx  = can_pack_info<sgn, 0, 0, type_id, node_index, 0x81>;
-			using version_id_rx  = can_pack_info<msg, 0, 0, type_id, node_index, 0x81>;
+			using version_id_tx  = typename pack_info_pair<0x81>::tx;
+			using version_id_rx  = typename pack_info_pair<0x81>::rx;
 			// 设备 id
-			using device_id_tx   = can_pack_info<sgn, 0, 0, type_id, node_index, 0x82>;
-			using device_id_rx   = can_pack_info<msg, 0, 0, type_id, node_index, 0x82>;
+			using device_id_tx   = typename pack_info_pair<0x82>::tx;
+			using device_id_rx   = typename pack_info_pair<0x82>::rx;
 			// 芯片 id
-			using chip_id_tx     = can_pack_info<sgn, 0, 0, type_id, node_index, 0x83>;
-			using chip_id_rx     = can_pack_info<msg, 0, 0, type_id, node_index, 0x83>;
+			using chip_id_tx     = typename pack_info_pair<0x83>::tx;
+			using chip_id_rx     = typename pack_info_pair<0x83>::rx;
 			// HAL 版本
-			using hal_version_tx = can_pack_info<sgn, 0, 0, type_id, node_index, 0x80>;
-			using hal_version_rx = can_pack_info<msg, 0, 0, type_id, node_index, 0x80>;
+			using hal_version_tx = typename pack_info_pair<0x84>::tx;
+			using hal_version_rx = typename pack_info_pair<0x84>::rx;
 			// 核心板硬件版本
-			using core_hardware_version_tx  = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x85>;
-			using core_hardware_version_rx  = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x85>;
+			using core_hardware_version_tx  = typename pack_info_pair<0x85>::tx;
+			using core_hardware_version_rx  = typename pack_info_pair<0x85>::rx;
 			// 扩展板硬件版本
-			using extra_hardware_version_tx = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x86>;
-			using extra_hardware_version_rx = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x86>;
+			using extra_hardware_version_tx = typename pack_info_pair<0x86>::tx;
+			using extra_hardware_version_rx = typename pack_info_pair<0x86>::rx;
 			// 软件版本
-			using software_version_tx = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x87>;
-			using software_version_rx = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x87>;
+			using software_version_tx = typename pack_info_pair<0x87>::tx;
+			using software_version_rx = typename pack_info_pair<0x87>::rx;
 			// 累计运行时间
-			using uptime_tx      = can_pack_info<sgn, 0, 0, type::type_id, node_index, 0x88>;
-			using uptime_rx      = can_pack_info<msg, 0, 0, type::type_id, node_index, 0x88>;
+			using uptime_tx      = typename pack_info_pair<0x88>::tx;
+			using uptime_rx      = typename pack_info_pair<0x88>::rx;
 		};
 		
 		/** 动力控制器包信息协议 */
