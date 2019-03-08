@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13.4)
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_DEBUG_POSTFIX "_debug")
+
 add_subdirectory(internal/can)
 add_library(pm1_sdk
         # --------------------------
@@ -36,3 +38,7 @@ add_library(pm1_sdk
         internal/mechanical.h
         internal/can_define.h)
 target_link_libraries(pm1_sdk can_msg)
+
+# 指定安装路径
+install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out)

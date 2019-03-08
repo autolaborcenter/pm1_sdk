@@ -3,5 +3,6 @@
 .vs/
 
 # cmake
+out/
 cmake-build-debug/
 cmake-build-release/

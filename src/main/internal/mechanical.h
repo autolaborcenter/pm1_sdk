@@ -31,7 +31,7 @@ namespace autolabor {
 			constexpr double rudder_k = -2 * pi / encoder_rudder;
 			
 			constexpr double width    = 0.4205;
-			constexpr double length   = 0.3240;
+			constexpr double length   = 0.3170;
 			constexpr double diameter = 0.2074;
 			constexpr double radius   = diameter / 2;
 			
