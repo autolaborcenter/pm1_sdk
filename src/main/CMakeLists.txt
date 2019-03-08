@@ -11,6 +11,8 @@ add_library(pm1_sdk
         pm1_sdk.cpp
         # --------------------------
         internal/time_extensions.h
+        internal/mechanical.h
+        internal/can_define.h
         # --------------------------
         internal/serial/v8stdint.h
         internal/serial/serial.h
@@ -32,12 +34,11 @@ add_library(pm1_sdk
         internal/can/parser.hh
         internal/can/parser.cc
 
-        internal/chassis.hh
-        internal/chassis.cc
+        internal/can/parse_engine.hh
+        internal/can/parse_engine.cc
         # --------------------------
-        internal/mechanical.h
-        internal/can_define.h)
-target_link_libraries(pm1_sdk can_msg)
+        internal/chassis.hh
+        internal/chassis.cc)
 
 # 指定安装路径
 install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out)
