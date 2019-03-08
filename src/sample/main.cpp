@@ -10,13 +10,15 @@
 using namespace autolabor::pm1;
 
 int main() {
-	initialize();
-	while (true) {
+	auto result = initialize();
+	if (!result) std::cerr << result.error_info << std::endl;
+	
+	while (result) {
 		go_straight_timing(.5, 1);
 		turn_around(mechanical::pi / 2, mechanical::pi / 2);
 		auto odometry = get_odometry();
-		std::cout << "x = " << odometry.x << ',\t'
-		          << "y = " << odometry.y << ',\t'
+		std::cout << "x = " << odometry.x << ",\t"
+		          << "y = " << odometry.y << ",\t"
 		          << "θ = " << odometry.yaw << std::endl;
 		while (_kbhit());
 	}

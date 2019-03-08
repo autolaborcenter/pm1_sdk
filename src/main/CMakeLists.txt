@@ -27,13 +27,12 @@ add_library(pm1_sdk
         internal/can/can_message.h
         internal/can/can_message.cpp
 
-        internal/can/can_define.h
-
         internal/can/parser.hh
         internal/can/parser.cc
 
         internal/chassis.hh
         internal/chassis.cc
         # --------------------------
-        internal/mechanical.h)
+        internal/mechanical.h
+        internal/can_define.h)
 target_link_libraries(pm1_sdk can_msg)

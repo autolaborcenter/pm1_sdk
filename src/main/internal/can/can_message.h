@@ -49,8 +49,8 @@ namespace {
 	}
 }
 
-namespace autolabor {
-	namespace pm1 {
+namespace mechdancer {
+	namespace can {
 		/** 计算某个长度的位遮盖 */
 		constexpr uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
 		
@@ -124,8 +124,14 @@ namespace autolabor {
 			msg.bytes[last_index] = crc_calculate(msg);
 		}
 		
+		/**
+		 * 显示格式化的消息内容
+		 * @tparam t  消息类型
+		 * @param msg 消息体
+		 * @return 字符串
+		 */
 		template<class t>
-		std::string to_string(msg_union<t> msg) {
+		std::string to_string(const msg_union<t> &msg) {
 			std::stringstream builder;
 			auto              info = msg.data.info();
 			builder << std::hex

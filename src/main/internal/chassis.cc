@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include "can/parser.hh"
+#include "can/parse_engine.hh"
 
 using namespace autolabor::pm1;
 
@@ -39,45 +40,40 @@ chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
 	using namespace mechdancer::common;
+	using result_t = mechdancer::can::parser::result_type;
 	
 	// region check nodes
 	{
 		port << pack<unit<>::state_tx>();
 		
 		std::string buffer;
-		parser      parser;
+		const auto  time = now();
+		auto        ecu0 = false,
+		            ecu1 = false,
+		            tcu0 = false;
 		
-		const auto time = now();
-		auto       ecu0 = false,
-		           ecu1 = false,
-		           tcu0 = false;
+		mechdancer::can::parse_engine parser(
+				[&ecu0, &ecu1, &tcu0](const mechdancer::can::parser::result &result) {
+					if (result.type != result_t::message) return;
+					
+					const auto msg = result.message;
+					
+					if (unit<ecu<0>>::state_rx::match(msg))
+						ecu0 = *msg.data.data;
+					else if (unit<ecu<1>>::state_rx::match(msg))
+						ecu1 = *msg.data.data;
+					else if (unit<tcu<0>>::state_rx::match(msg))
+						tcu0 = *msg.data.data;
+				});
 		
 		while (port->isOpen()
 		       && !(ecu0 && ecu1 && tcu0)
 		       && now() - time < seconds_duration(1)) {
-			// 接收
+			
 			try { buffer = port->read(); }
 			catch (std::exception &) { buffer = ""; }
 			
-			if (buffer.empty()) continue;
-			
-			// 解析
-			auto result = parser(*buffer.begin());
-			if (result.type != parser::result_type::message)
-				continue;
-			
-			// 处理
-			const auto msg   = result.message;
-			const auto bytes = msg.data.data;
-			
-			if (unit<ecu<0>>::state_rx::match(msg))
-				ecu0 = *bytes;
-			else if (unit<ecu<1>>::state_rx::match(msg))
-				ecu1 = *bytes;
-			else if (unit<tcu<0>>::state_rx::match(msg))
-				tcu0 = *bytes;
-			
-			if (ecu0 && ecu1 && tcu0) break;
+			if (!buffer.empty()) parser(*buffer.begin());
 		}
 		
 		if (!ecu0 || !ecu1 || !tcu0)
@@ -122,7 +118,6 @@ chassis::chassis(const std::string &port_name)
 	// region receive
 	std::thread([port_ptr, this] {
 		std::string buffer;
-		parser      parser;
 		
 		auto left_ready  = false,
 		     right_ready = false;
@@ -130,74 +125,73 @@ chassis::chassis(const std::string &port_name)
 		     delta_right = .0;
 		auto time        = now();
 		
+		mechdancer::can::parse_engine parser(
+				[&](const mechdancer::can::parser::result &result) {
+					if (result.type != result_t::message) return;
+					
+					// 处理
+					const auto msg   = result.message;
+					const auto bytes = msg.data.data;
+					
+					if (ecu<0>::current_position_rx::match(msg)) {
+						
+						auto value = get_first<int>(bytes) * mechanical::wheel_k;
+						delta_left = (value - _left) * mechanical::radius;
+						_left      = value;
+						if (right_ready) {
+							std::lock_guard<std::mutex> _(lock);
+							right_ready = false;
+							
+							auto _now = now();
+							_odometry += {delta_left, delta_right, _now - time};
+							time      = _now;
+						} else
+							left_ready = true;
+						
+					} else if (ecu<1>::current_position_rx::match(msg)) {
+						
+						auto value = get_first<int>(bytes) * mechanical::wheel_k;
+						delta_right = (value - _right) * mechanical::radius;
+						_right      = value;
+						if (left_ready) {
+							std::lock_guard<std::mutex> _(lock);
+							left_ready = false;
+							
+							auto _now = now();
+							_odometry += {delta_left, delta_right, _now - time};
+							time      = _now;
+						} else
+							right_ready = true;
+						
+					} else if (tcu<0>::current_position_rx::match(msg)) {
+						
+						_rudder = get_first<short>(bytes) * mechanical::rudder_k;
+						
+						msg_union<int>   left{}, right{};
+						msg_union<short> temp{};
+						
+						if (now() - request_time < std::chrono::milliseconds(200)) {
+							auto optimized = optimize(*target, _rudder);
+							left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
+							right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
+							temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
+						} else {
+							left.data =
+							right.data = 0;
+							temp.data = static_cast<short> (_rudder / mechanical::rudder_k);
+						}
+						
+						port_ptr << pack_into<ecu<0>::target_speed, int>(left)
+						         << pack_into<ecu<1>::target_speed, int>(right)
+						         << pack_into<tcu<0>::target_position, short>(temp);
+					}
+				});
+		
 		while (port_ptr->isOpen()) {
-			// 接收
 			try { buffer = port_ptr->read(); }
 			catch (std::exception &) { buffer = ""; }
 			
-			if (buffer.empty()) continue;
-			
-			// 解析
-			auto result = parser(*buffer.begin());
-			if (result.type != parser::result_type::message)
-				continue;
-			
-			// 处理
-			const auto msg   = result.message;
-			const auto bytes = msg.data.data;
-			
-			if (ecu<0>::current_position_rx::match(msg)) {
-				
-				auto value = get_first<int>(bytes) * mechanical::wheel_k;
-				delta_left = (value - _left) * mechanical::radius;
-				_left      = value;
-				if (right_ready) {
-					std::lock_guard<std::mutex> _(lock);
-					right_ready = false;
-					
-					auto _now = now();
-					_odometry += {delta_left, delta_right, _now - time};
-					time      = _now;
-				} else
-					left_ready = true;
-				
-			} else if (ecu<1>::current_position_rx::match(msg)) {
-				
-				auto value = get_first<int>(bytes) * mechanical::wheel_k;
-				delta_right = (value - _right) * mechanical::radius;
-				_right      = value;
-				if (left_ready) {
-					std::lock_guard<std::mutex> _(lock);
-					left_ready = false;
-					
-					auto _now = now();
-					_odometry += {delta_left, delta_right, _now - time};
-					time      = _now;
-				} else
-					right_ready = true;
-				
-			} else if (tcu<0>::current_position_rx::match(msg)) {
-				
-				_rudder = get_first<short>(bytes) * mechanical::rudder_k;
-				
-				msg_union<int>   left{}, right{};
-				msg_union<short> temp{};
-				
-				if (now() - request_time < std::chrono::milliseconds(200)) {
-					auto optimized = optimize(*target, _rudder);
-					left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
-					right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
-					temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
-				} else {
-					left.data =
-					right.data = 0;
-					temp.data = static_cast<short> (_rudder / mechanical::rudder_k);
-				}
-				
-				port_ptr << pack_into<ecu<0>::target_speed, int>(left)
-				         << pack_into<ecu<1>::target_speed, int>(right)
-				         << pack_into<tcu<0>::target_position, short>(temp);
-			}
+			if (!buffer.empty()) parser(*buffer.begin());
 		}
 	}).detach();
 	// endregion

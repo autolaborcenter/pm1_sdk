@@ -7,7 +7,7 @@
 
 #include <mutex>
 #include "serial/serial.h"
-#include "can/can_define.h"
+#include "can_define.h"
 #include "mechanical.h"
 #include "time_extensions.h"
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include "parser.hh"
 
-using namespace autolabor::pm1;
+using namespace mechdancer::can;
 
 parser::result parser::operator()(uint8_t byte) {
 	// 保存当前状态

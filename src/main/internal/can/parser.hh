@@ -7,8 +7,8 @@
 
 #include "can_message.h"
 
-namespace autolabor {
-	namespace pm1 {
+namespace mechdancer {
+	namespace can {
 		/** 解析器 */
 		class parser {
 		public:

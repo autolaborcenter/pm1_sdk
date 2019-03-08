@@ -4,7 +4,7 @@
 
 #include "can_message.h"
 
-using namespace autolabor::pm1;
+using namespace mechdancer::can;
 
 /**
  * 从数据中截取
