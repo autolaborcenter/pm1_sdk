@@ -14,14 +14,14 @@ using namespace autolabor::pm1;
 template<class t>
 inline const std::shared_ptr<serial::Serial> &operator<<(
 		const std::shared_ptr<serial::Serial> &,
-		const msg_union<t> &);
+		const autolabor::can::msg_union<t> &);
 
 /** 获取存储区中大端存储的第一个数据 */
 template<class t>
 inline t get_first(const uint8_t *);
 
 template<class pack_info_t, class data_t>
-inline auto pack_into(const msg_union<data_t> &value) -> decltype(pack<pack_info_t>());
+inline auto pack_into(const autolabor::can::msg_union<data_t> &value) -> decltype(pack<pack_info_t>());
 
 /** 里程计更新信息 */
 template<class time_unit = std::chrono::duration<double, std::ratio<1>>>
@@ -166,8 +166,8 @@ chassis::chassis(const std::string &port_name)
 						
 						_rudder = get_first<short>(bytes) * mechanical::rudder_k;
 						
-						msg_union<int>   left{}, right{};
-						msg_union<short> temp{};
+						autolabor::can::msg_union<int>   left{}, right{};
+						autolabor::can::msg_union<short> temp{};
 						
 						if (now() - request_time < std::chrono::milliseconds(200)) {
 							auto optimized = optimize(*target, _rudder);
@@ -230,20 +230,22 @@ void chassis::set_target(double v, double w) const {
 template<class t>
 inline const std::shared_ptr<serial::Serial> &operator<<(
 		const std::shared_ptr<serial::Serial> &port,
-		const msg_union<t> &msg) {
+		const autolabor::can::msg_union<t> &msg) {
 	port->write(msg.bytes, sizeof(t));
 	return port;
 }
 
 template<class t>
 inline t get_first(const uint8_t *bytes) {
-	msg_union<t> temp{};
+	autolabor::can::msg_union<t> temp{};
 	std::reverse_copy(bytes, bytes + sizeof(t), temp.bytes);
 	return temp.data;
 }
 
 template<class pack_info_t, class data_t>
-inline auto pack_into(const msg_union<data_t> &value) -> decltype(pack<pack_info_t>()) {
+inline auto
+pack_into(const autolabor::can::msg_union<data_t> &value)
+-> decltype(pack<pack_info_t>()) {
 	std::array<uint8_t, 8> buffer{};
 	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
 	return pack<pack_info_t>(std::array<uint8_t, 8>(buffer));

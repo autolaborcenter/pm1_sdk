@@ -28,8 +28,10 @@ add_library(pm1_sdk
         internal/serial/list_ports/list_ports_linux.cc
         internal/serial/list_ports/list_ports_osx.cc
         # --------------------------
-        internal/can/can_message.h
-        internal/can/can_message.cpp
+        internal/can/pack.h
+        internal/can/pack.cpp
+
+        internal/can/info.h
 
         internal/can/parser.hh
         internal/can/parser.cc

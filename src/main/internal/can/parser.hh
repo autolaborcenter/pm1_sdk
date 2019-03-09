@@ -5,7 +5,7 @@
 #ifndef PM1_SDK_PARSER_H
 #define PM1_SDK_PARSER_H
 
-#include "can_message.h"
+#include "pack.h"
 
 namespace autolabor {
 	namespace can {
@@ -66,7 +66,7 @@ namespace autolabor {
 			};
 			
 			union {
-				uint8_t bytes[sizeof(can_pack_with_data)]{0xfe};
+				uint8_t bytes[sizeof(pack_with_data)]{0xfe};
 				
 				union_no_data   sgn_buffer;
 				union_with_data msg_buffer;

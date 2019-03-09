@@ -27,11 +27,11 @@ void parse_engine::parse() {
 				break;
 			case parser::result_type::signal:
 				callback(result);
-				find_head(sizeof(can_pack_no_data));
+				find_head(sizeof(pack_no_data));
 				break;
 			case parser::result_type::message:
 				callback(result);
-				find_head(sizeof(can_pack_with_data));
+				find_head(sizeof(pack_with_data));
 				break;
 		}
 	}

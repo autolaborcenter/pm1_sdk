@@ -6,10 +6,13 @@
 #include <iostream>
 #include "../main/pm1_sdk.h"
 #include "../main/internal/mechanical.h"
+#include "../main/internal/can_define.h"
 
 using namespace autolabor::pm1;
 
 int main() {
+	std::cout << pack<unit<>::state_tx>() << std::endl;
+	
 	auto result = initialize();
 	if (!result) std::cerr << result.error_info << std::endl;
 	
