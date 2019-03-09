@@ -21,7 +21,8 @@ template<class t>
 inline t get_first(const uint8_t *);
 
 template<class pack_info_t, class data_t>
-inline auto pack_into(const autolabor::can::msg_union<data_t> &value) -> decltype(pack<pack_info_t>());
+inline auto pack_into(const autolabor::can::msg_union<data_t> &value)
+-> decltype(autolabor::can::pack<pack_info_t>());
 
 /** 里程计更新信息 */
 template<class time_unit = std::chrono::duration<double, std::ratio<1>>>
@@ -43,7 +44,7 @@ chassis::chassis(const std::string &port_name)
 	
 	// region check nodes
 	{
-		port << pack<unit<>::state_tx>();
+		port << autolabor::can::pack<unit<>::state_tx>();
 		
 		std::string buffer;
 		const auto  time = now();
@@ -81,8 +82,8 @@ chassis::chassis(const std::string &port_name)
 	// endregion
 	
 	// region initialize
-	port << pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
-	     << pack<ecu<>::clear>();        // 底层编码器清零
+	port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
+	     << autolabor::can::pack<ecu<>::clear>();        // 底层编码器清零
 	// endregion
 	
 	// region ask
@@ -94,7 +95,7 @@ chassis::chassis(const std::string &port_name)
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
 			try {
-				port_ptr << pack<ecu<>::current_position_tx>();
+				port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
 			} catch (std::exception &) {}
 			std::this_thread::sleep_until(time);
 		}
@@ -106,7 +107,7 @@ chassis::chassis(const std::string &port_name)
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(100);
 			try {
-				port_ptr << pack<tcu<0>::current_position_tx>();
+				port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
 			} catch (std::exception &) {}
 			std::this_thread::sleep_until(time);
 		}
@@ -245,10 +246,10 @@ inline t get_first(const uint8_t *bytes) {
 template<class pack_info_t, class data_t>
 inline auto
 pack_into(const autolabor::can::msg_union<data_t> &value)
--> decltype(pack<pack_info_t>()) {
+-> decltype(autolabor::can::pack<pack_info_t>()) {
 	std::array<uint8_t, 8> buffer{};
 	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
-	return pack<pack_info_t>(std::array<uint8_t, 8>(buffer));
+	return autolabor::can::pack<pack_info_t>(std::array<uint8_t, 8>(buffer));
 }
 
 /**
