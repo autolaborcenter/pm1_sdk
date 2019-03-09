@@ -112,7 +112,7 @@ namespace block {
 	
 	/** 阻塞并抑制输出 */
 	seconds inhibit() {
-		return mechdancer::common::measure_time([] {
+		return autolabor::measure_time([] {
 			while (paused) {
 				wait_or_drive(0, 0);
 				loop_delay();
@@ -122,10 +122,8 @@ namespace block {
 	
 	/** 按固定控制量运行指定时间 */
 	void go_timing(double v, double w, double seconds) {
-		using namespace mechdancer::common;
-		
-		auto ending = now() + seconds_duration(seconds);
-		while (now() < ending) {
+		auto ending = autolabor::now() + autolabor::seconds_duration(seconds);
+		while (autolabor::now() < ending) {
 			if (paused) ending += inhibit();
 			else wait_or_drive(v, w);
 			
@@ -234,7 +232,7 @@ result autolabor::pm1::resume() {
 }
 
 void autolabor::pm1::delay(double time) {
-	std::this_thread::sleep_for(mechdancer::common::seconds_duration(time));
+	std::this_thread::sleep_for(autolabor::seconds_duration(time));
 }
 
 autolabor::pm1::odometry autolabor::pm1::get_odometry() {

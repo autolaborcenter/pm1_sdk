@@ -10,8 +10,8 @@
 #include <array>
 
 namespace {
-	using sgn = mechdancer::can::union_no_data;   // 信号，无数据
-	using msg = mechdancer::can::union_with_data; // 消息，有数据
+	using sgn = autolabor::can::union_no_data;   // 信号，无数据
+	using msg = autolabor::can::union_with_data; // 消息，有数据
 }
 
 namespace autolabor {
@@ -44,10 +44,10 @@ namespace autolabor {
 			
 			static_assert(std::is_same<_data_t, msg>::value || std::is_same<_data_t, sgn>::value,
 			              "struct must be a can pack type");
-			static_assert(_network <= mechdancer::can::mask(2), "network in 2 bits");
-			static_assert(_property <= mechdancer::can::mask(3), "property in 3 bits");
-			static_assert(_node_type <= mechdancer::can::mask(6), "node type in 6 bits");
-			static_assert(_node_index <= mechdancer::can::mask(4), "node index in 4 bits");
+			static_assert(_network <= autolabor::can::mask(2), "network in 2 bits");
+			static_assert(_property <= autolabor::can::mask(3), "property in 3 bits");
+			static_assert(_node_type <= autolabor::can::mask(6), "node type in 6 bits");
+			static_assert(_node_index <= autolabor::can::mask(4), "node index in 4 bits");
 			
 			constexpr static auto network    = _network;
 			constexpr static auto data_field = std::is_same<_data_t, msg>::value;
@@ -164,7 +164,7 @@ namespace autolabor {
 			type msg{};
 			std::memcpy(msg.bytes + 1, info_t::bytes, 3);
 			msg.data.reserve = reserve;
-			mechdancer::can::reformat(msg);
+			autolabor::can::reformat(msg);
 			return msg;
 		}
 		
@@ -178,7 +178,7 @@ namespace autolabor {
 			std::memcpy(msg.bytes + 1, info_t::bytes, 3);
 			std::memcpy(msg.data.data, data.data(), 8);
 			msg.data.frame_id = frame_id;
-			mechdancer::can::reformat(msg);
+			autolabor::can::reformat(msg);
 			return msg;
 		}
 	}

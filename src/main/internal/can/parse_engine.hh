@@ -10,7 +10,7 @@
 #include <functional>
 #include "parser.hh"
 
-namespace mechdancer {
+namespace autolabor {
 	namespace can {
 		class parse_engine {
 			using callback_t = std::function<void(const parser::result &)>;

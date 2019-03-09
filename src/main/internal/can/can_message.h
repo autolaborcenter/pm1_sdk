@@ -49,7 +49,7 @@ namespace {
 	}
 }
 
-namespace mechdancer {
+namespace autolabor {
 	namespace can {
 		/** 计算某个长度的位遮盖 */
 		constexpr uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }

@@ -4,7 +4,7 @@
 
 #include "parse_engine.hh"
 
-using namespace mechdancer::can;
+using namespace autolabor::can;
 
 parse_engine::parse_engine(parse_engine::callback_t &&callback)
 		: callback(std::move(callback)), ptr(0) {}

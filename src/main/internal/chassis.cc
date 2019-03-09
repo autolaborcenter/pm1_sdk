@@ -39,8 +39,7 @@ inline mechanical::state optimize(const mechanical::state &target, double rudder
 chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
-	using namespace mechdancer::common;
-	using result_t = mechdancer::can::parser::result_type;
+	using result_t = autolabor::can::parser::result_type;
 	
 	// region check nodes
 	{
@@ -52,8 +51,8 @@ chassis::chassis(const std::string &port_name)
 		            ecu1 = false,
 		            tcu0 = false;
 		
-		mechdancer::can::parse_engine parser(
-				[&ecu0, &ecu1, &tcu0](const mechdancer::can::parser::result &result) {
+		autolabor::can::parse_engine parser(
+				[&ecu0, &ecu1, &tcu0](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
 					const auto msg = result.message;
@@ -125,8 +124,8 @@ chassis::chassis(const std::string &port_name)
 		     delta_right = .0;
 		auto time        = now();
 		
-		mechdancer::can::parse_engine parser(
-				[&](const mechdancer::can::parser::result &result) {
+		autolabor::can::parse_engine parser(
+				[&](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
 					// 处理
@@ -219,12 +218,12 @@ odometry_t chassis::odometry() const {
 }
 
 void chassis::set_state(double rho, double rudder) const {
-	request_time = mechdancer::common::now();
+	request_time = now();
 	target       = mechanical::state::make_shared(rho, rudder);
 }
 
 void chassis::set_target(double v, double w) const {
-	request_time = mechdancer::common::now();
+	request_time = now();
 	target       = mechanical::state::from_target(v, w);
 }
 

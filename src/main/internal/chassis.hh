@@ -62,7 +62,7 @@ namespace autolabor {
 			mutable std::shared_ptr<mechanical::state> target;
 			
 			/** 最后一次请求的时间 */
-			mutable decltype(mechdancer::common::now()) request_time;
+			mutable decltype(autolabor::now()) request_time;
 		};
 	}
 }
