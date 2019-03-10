@@ -20,6 +20,7 @@ inline const std::shared_ptr<serial::Serial> &operator<<(
 template<class t>
 inline t get_first(const uint8_t *);
 
+/** 数据大端打包到数据域 */
 template<class pack_info_t, class data_t>
 inline auto pack_into(const autolabor::can::msg_union<data_t> &value)
 -> decltype(autolabor::can::pack<pack_info_t>());

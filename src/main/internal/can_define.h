@@ -9,12 +9,10 @@
 
 #include <array>
 
-namespace {
+namespace autolabor {
 	using sgn = autolabor::can::union_no_data;   // 信号，无数据
 	using msg = autolabor::can::union_with_data; // 消息，有数据
-}
-
-namespace autolabor {
+	
 	namespace pm1 {
 		/**
 		 * 广播地址常量

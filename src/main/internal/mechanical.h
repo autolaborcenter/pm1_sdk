@@ -6,18 +6,10 @@
 #define PM1_SDK_PM1_H
 
 
-namespace {
-	template<class range>
-	typename range::t adjust(typename range::t value) {
-		static_assert(range::max > range::min, "range must exist");
-		constexpr static typename range::t length = range::max - range::min;
-		
-		while (value < range::min) value += length;
-		while (value > range::max) value -= length;
-		
-		return value;
-	}
-}
+#include <cmath>
+
+template<class range>
+typename range::t adjust(typename range::t value);
 
 namespace autolabor {
 	namespace pm1 {
@@ -65,9 +57,7 @@ namespace autolabor {
 				
 				/** 构造智能指针 */
 				inline static std::shared_ptr<state>
-				make_shared(double rho, double rudder) {
-					return std::make_shared<state>(rho, rudder);
-				}
+				make_shared(double rho, double rudder);
 				
 				/**
 				 * 从目标状态构造
@@ -78,15 +68,7 @@ namespace autolabor {
 				 * @return      状态
 				 */
 				inline static std::shared_ptr<state>
-				from_target(double v, double w) {
-					auto rudder  = v == 0
-					               ? w > 0
-					                 ? -mechanical::pi / 2
-					                 : +mechanical::pi / 2
-					               : -std::atan(w * mechanical::length / v);
-					auto abs_rho = std::hypot(v / max_v, w / max_w);
-					return make_shared(v >= 0 ? +abs_rho : -abs_rho, rudder);
-				}
+				from_target(double v, double w);
 			
 			private:
 				struct half_round {
@@ -99,5 +81,31 @@ namespace autolabor {
 	}
 }
 
+template<class range>
+typename range::t adjust(typename range::t value) {
+	static_assert(range::max > range::min, "range must exist");
+	constexpr static typename range::t length = range::max - range::min;
+	
+	while (value < range::min) value += length;
+	while (value > range::max) value -= length;
+	
+	return value;
+}
+
+std::shared_ptr<autolabor::pm1::mechanical::state>
+autolabor::pm1::mechanical::state::make_shared(double rho, double rudder) {
+	return std::make_shared<state>(rho, rudder);
+}
+
+std::shared_ptr<autolabor::pm1::mechanical::state>
+autolabor::pm1::mechanical::state::from_target(double v, double w) {
+	auto rudder  = v == 0
+	               ? w > 0
+	                 ? -mechanical::pi / 2
+	                 : +mechanical::pi / 2
+	               : -std::atan(w * mechanical::length / v);
+	auto abs_rho = std::hypot(v / max_v, w / max_w);
+	return make_shared(v >= 0 ? +abs_rho : -abs_rho, rudder);
+}
 
 #endif //PM1_SDK_PM1_H
