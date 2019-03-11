@@ -12,23 +12,36 @@
 
 namespace autolabor {
 	namespace can {
+		/**
+		 * 解析引擎
+		 */
 		class parse_engine {
 			using callback_t = std::function<void(const parser::result &)>;
 			
 			std::deque<uint8_t> buffer;
 			parser              parser;
-			callback_t          callback;
+			const callback_t    callback;
 			
 			unsigned int ptr;
 			
+			/** 进行一次尽力而为的解析 */
 			void parse();
 			
+			/** 重新找到帧头 */
 			void find_head(int);
 		
 		public:
-			explicit parse_engine(callback_t &&callback);
+			/** 置入回调 */
+			explicit parse_engine(callback_t &&);
 			
-			void operator()(uint8_t byte);
+			/** 平凡复制 */
+			parse_engine(const parse_engine &) = default;
+			
+			/** 禁止移动 */
+			parse_engine(parse_engine &&) = delete;
+			
+			/** 进行解析 */
+			void operator()(uint8_t);
 		};
 	}
 }

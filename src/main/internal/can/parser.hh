@@ -39,10 +39,11 @@ namespace autolabor {
 				};
 			};
 			
+			/** 默认构造 */
 			parser() = default;
 			
-			/** 禁止复制 */
-			parser(const parser &others) = delete;
+			/** 实现复制 */
+			parser(const parser &others);
 			
 			/** 禁止移动 */
 			parser(parser &&others) = delete;
@@ -63,7 +64,7 @@ namespace autolabor {
 				uint8_t value;
 				
 				state_type state();
-			};
+			} state{0};
 			
 			union {
 				uint8_t bytes[sizeof(pack_with_data)]{0xfe};
@@ -71,7 +72,6 @@ namespace autolabor {
 				union_no_data   sgn_buffer;
 				union_with_data msg_buffer;
 			};
-			state_t state{0};
 		};
 	}
 }

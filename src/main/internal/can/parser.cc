@@ -7,6 +7,10 @@
 
 using namespace autolabor::can;
 
+parser::parser(const parser &others) : state(others.state) {
+	std::memcpy(bytes, others.bytes, sizeof(bytes));
+}
+
 parser::result parser::operator()(uint8_t byte) {
 	// 保存当前状态
 	auto last = state.state();

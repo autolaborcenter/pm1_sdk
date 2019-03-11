@@ -250,7 +250,7 @@ pack_into(const autolabor::can::msg_union<data_t> &value)
 -> decltype(autolabor::can::pack<pack_info_t>()) {
 	std::array<uint8_t, 8> buffer{};
 	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
-	return autolabor::can::pack<pack_info_t>(std::array<uint8_t, 8>(buffer));
+	return autolabor::can::pack<pack_info_t>(buffer);
 }
 
 /**

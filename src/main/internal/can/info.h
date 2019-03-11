@@ -75,13 +75,13 @@ namespace autolabor {
 		
 		/** 打包（有数据域） */
 		template<class info_t>
-		inline typename info_t::data_t pack(std::array<uint8_t, 8> &&data, uint8_t frame_id = 0) {
+		inline typename info_t::data_t pack(const std::array<uint8_t, 8> &data, uint8_t frame_id = 0) {
 			using type = typename info_t::data_t;
 			static_assert(std::is_same<type, msg>::value, "cannot build a message pack with signal info");
 			
 			type msg{};
 			std::memcpy(msg.bytes + 1, info_t::bytes, 3);
-			std::memcpy(msg.data.data, data.data(), 8);
+			std::memcpy(msg.data.data, data.data(), data.size());
 			msg.data.frame_id = frame_id;
 			reformat(msg);
 			return msg;
