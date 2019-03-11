@@ -51,7 +51,7 @@ public:
 	constexpr static auto slow_down_end = 0.05;
 	
 	/** 最小线速度 */
-	constexpr static auto min_speed = 0.1;
+	constexpr static auto min_speed = slow_down_end * 2;
 	
 	/** 最大线速度 */
 	constexpr static auto max_speed = mechanical::max_v;
@@ -60,13 +60,13 @@ public:
 class rotate {
 public:
 	/** 开始减速距离 */
-	constexpr static auto slow_down_begin = mechanical::pi;    // == 180°
+	constexpr static auto slow_down_begin = mechanical::pi;   // == 180°
 	
 	/** 减到最小距离 */
-	constexpr static auto slow_down_end = mechanical::pi / 18; // == 10°
+	constexpr static auto slow_down_end = mechanical::pi / 9; // == 20°
 	
 	/** 最小角速度 */
-	constexpr static auto min_speed = slow_down_end * 2;
+	constexpr static auto min_speed = slow_down_end / 2;
 	
 	/** 最大角速度 */
 	constexpr static auto max_speed = mechanical::max_w;
