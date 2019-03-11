@@ -12,6 +12,13 @@
 #include "time_extensions.h"
 
 namespace autolabor {
+	/** 电机信息 */
+	template<class time_t = decltype(now())>
+	struct motor_t {
+		double position, speed;
+		time_t time;
+	};
+	
 	namespace pm1 {
 		/** 轮速里程计 */
 		struct odometry_t { double s, x, y, theta, vx, vy, w; };
@@ -31,11 +38,11 @@ namespace autolabor {
 			/** 不可移动 */
 			chassis(chassis &&) = delete;
 			
-			double left() const;
+			motor_t<> left() const;
 			
-			double right() const;
+			motor_t<> right() const;
 			
-			double rudder() const;
+			motor_t<> rudder() const;
 			
 			void set_state(double, double) const;
 			
@@ -50,9 +57,9 @@ namespace autolabor {
 			std::shared_ptr<serial::Serial> port;
 			
 			/** 电机数据 */
-			double _left   = 0,
-			       _right  = 0,
-			       _rudder = 0;
+			motor_t<> _left{},
+			          _right{},
+			          _rudder{};
 			
 			bool clear_flag = true;
 			

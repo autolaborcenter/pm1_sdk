@@ -95,7 +95,7 @@ namespace block {
 	/** 阻塞等待后轮转动 */
 	inline void wait_or_drive(double v, double w) {
 		if ((v == 0 && w == 0) || paused)
-			ptr()->set_state(0, ptr()->rudder());
+			ptr()->set_state(0, ptr()->rudder().position);
 		else {
 			auto rudder_target = v == 0
 			                     ? w > 0
@@ -103,7 +103,7 @@ namespace block {
 			                       : +mechanical::pi / 2
 			                     : -std::atan(w * mechanical::length / v);
 			
-			if (std::abs(ptr()->rudder() - rudder_target) > mechanical::pi / 36)
+			if (std::abs(ptr()->rudder().position - rudder_target) > mechanical::pi / 36)
 				ptr()->set_state(0, rudder_target);
 			else
 				ptr()->set_target(v, w);
@@ -251,4 +251,8 @@ autolabor::pm1::odometry autolabor::pm1::get_odometry() {
 
 result autolabor::pm1::drive(double v, double w) {
 	return run([v, w] { ptr()->set_target(v, w); });
+}
+
+std::vector<autolabor::motor_t<>> autolabor::pm1::get_motors() {
+	return {ptr()->left(), ptr()->right(), ptr()->rudder()};
 }

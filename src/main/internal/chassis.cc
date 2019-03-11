@@ -43,6 +43,8 @@ chassis::chassis(const std::string &port_name)
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
 	using result_t = autolabor::can::parser::result_type;
 	
+	_left.time = _right.time = _rudder.time = now();
+	
 	// region check nodes
 	{
 		port << autolabor::can::pack<unit<>::state_tx>();
@@ -126,23 +128,29 @@ chassis::chassis(const std::string &port_name)
 				[&](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
+					auto _now = now();
+					
 					// 处理
 					const auto msg   = result.message;
 					const auto bytes = msg.data.data;
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
+						
 						auto value = get_first<int>(bytes) * mechanical::wheel_k;
-						delta_left = (value - _left) * mechanical::radius;
-						_left      = value;
+						delta_left = (value - _left.position) * mechanical::radius;
+						
+						_left.speed    = delta_left / (_now - _left.time).count();
+						_left.position = value;
+						_left.time     = _now;
+						
 						if (right_ready) {
 							if (clear_flag) clear_flag = false;
 							else {
 								std::lock_guard<std::mutex> _(lock);
 								right_ready = false;
 								
-								auto _now = now();
 								_odometry += {delta_left, delta_right, _now - time};
-								time      = _now;
+								time        = _now;
 							}
 						} else
 							left_ready = true;
@@ -150,37 +158,40 @@ chassis::chassis(const std::string &port_name)
 					} else if (ecu<1>::current_position_rx::match(msg)) {
 						
 						auto value = get_first<int>(bytes) * mechanical::wheel_k;
-						delta_right = (value - _right) * mechanical::radius;
-						_right      = value;
+						delta_right = (value - _right.position) * mechanical::radius;
+						
+						_right.speed    = delta_right / (_now - _right.time).count();
+						_right.position = value;
+						_right.time     = _now;
+						
 						if (left_ready) {
 							if (clear_flag) clear_flag = false;
 							else {
 								std::lock_guard<std::mutex> _(lock);
 								left_ready = false;
 								
-								auto _now = now();
 								_odometry += {delta_left, delta_right, _now - time};
-								time      = _now;
+								time       = _now;
 							}
 						} else
 							right_ready = true;
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						_rudder = get_first<short>(bytes) * mechanical::rudder_k;
+						_rudder.position = get_first<short>(bytes) * mechanical::rudder_k;
 						
 						autolabor::can::msg_union<int>   left{}, right{};
 						autolabor::can::msg_union<short> temp{};
 						
 						if (now() - request_time < std::chrono::milliseconds(200)) {
-							auto optimized = optimize(*target, _rudder);
+							auto optimized = optimize(*target, _rudder.position);
 							left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
 							right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
 							temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
 						} else {
 							left.data =
 							right.data = 0;
-							temp.data = static_cast<short> (_rudder / mechanical::rudder_k);
+							temp.data = static_cast<short> (_rudder.position / mechanical::rudder_k);
 						}
 						
 						port_ptr << pack_into<ecu<0>::target_speed, int>(left)
@@ -203,15 +214,15 @@ chassis::~chassis() {
 	port->close();
 }
 
-double chassis::left() const {
+autolabor::motor_t<> chassis::left() const {
 	return _left;
 }
 
-double chassis::right() const {
+autolabor::motor_t<> chassis::right() const {
 	return _right;
 }
 
-double chassis::rudder() const {
+autolabor::motor_t<> chassis::rudder() const {
 	return _rudder;
 }
 
@@ -283,8 +294,8 @@ inline void calculate_odometry(
 		const auto cos = std::cos(theta / 2);
 		const auto r   = (delta_left + delta_right) / 2 / theta;
 		const auto d   = 2 * r * sin;
-		x = d * sin;
-		y = d * cos;
+		x = d * cos;
+		y = d * sin;
 	}
 }
 
