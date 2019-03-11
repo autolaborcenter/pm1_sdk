@@ -42,6 +42,8 @@ namespace autolabor {
 			void set_target(double, double) const;
 			
 			odometry_t odometry() const;
+			
+			void clear_odometry();
 		
 		private:
 			/** 串口引用 */
@@ -51,6 +53,8 @@ namespace autolabor {
 			double _left   = 0,
 			       _right  = 0,
 			       _rudder = 0;
+			
+			bool clear_flag = true;
 			
 			/** 状态 */
 			odometry_t _odometry{};

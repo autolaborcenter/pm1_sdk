@@ -77,19 +77,16 @@ chassis::chassis(const std::string &port_name)
 			if (!buffer.empty()) parser(*buffer.begin());
 		}
 		
-		if (!ecu0 || !ecu1 || !tcu0)
-			throw std::exception("it's not a pm1 chassis");
+		//		if (!ecu0 || !ecu1 || !tcu0)
+		//			throw std::exception("it's not a pm1 chassis");
 	}
 	// endregion
 	
-	// region initialize
-	port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
-	     << autolabor::can::pack<ecu<>::clear>();        // 底层编码器清零
-	// endregion
+	port << autolabor::can::pack<ecu<>::timeout>({2, 0}); // 设置超时时间：200 ms
 	
 	// region ask
-	
 	auto port_ptr = port;
+	
 	// 定时询问前轮
 	std::thread([port_ptr] {
 		auto time = now();
@@ -113,7 +110,6 @@ chassis::chassis(const std::string &port_name)
 			std::this_thread::sleep_until(time);
 		}
 	}).detach();
-	
 	// endregion
 	
 	// region receive
@@ -135,17 +131,19 @@ chassis::chassis(const std::string &port_name)
 					const auto bytes = msg.data.data;
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
-						
 						auto value = get_first<int>(bytes) * mechanical::wheel_k;
 						delta_left = (value - _left) * mechanical::radius;
 						_left      = value;
 						if (right_ready) {
-							std::lock_guard<std::mutex> _(lock);
-							right_ready = false;
-							
-							auto _now = now();
-							_odometry += {delta_left, delta_right, _now - time};
-							time      = _now;
+							if (clear_flag) clear_flag = false;
+							else {
+								std::lock_guard<std::mutex> _(lock);
+								right_ready = false;
+								
+								auto _now = now();
+								_odometry += {delta_left, delta_right, _now - time};
+								time      = _now;
+							}
 						} else
 							left_ready = true;
 						
@@ -155,12 +153,15 @@ chassis::chassis(const std::string &port_name)
 						delta_right = (value - _right) * mechanical::radius;
 						_right      = value;
 						if (left_ready) {
-							std::lock_guard<std::mutex> _(lock);
-							left_ready = false;
-							
-							auto _now = now();
-							_odometry += {delta_left, delta_right, _now - time};
-							time      = _now;
+							if (clear_flag) clear_flag = false;
+							else {
+								std::lock_guard<std::mutex> _(lock);
+								left_ready = false;
+								
+								auto _now = now();
+								_odometry += {delta_left, delta_right, _now - time};
+								time      = _now;
+							}
 						} else
 							right_ready = true;
 						
@@ -229,11 +230,16 @@ void chassis::set_target(double v, double w) const {
 	target       = mechanical::state::from_target(v, w);
 }
 
+void chassis::clear_odometry() {
+	clear_flag = true;
+	_odometry  = {};
+}
+
 template<class t>
 inline const std::shared_ptr<serial::Serial> &operator<<(
 		const std::shared_ptr<serial::Serial> &port,
 		const autolabor::can::msg_union<t> &msg) {
-	port->write(msg.bytes, sizeof(t));
+	try { port->write(msg.bytes, sizeof(t)); } catch (...) {}
 	return port;
 }
 
