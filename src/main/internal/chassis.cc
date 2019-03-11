@@ -120,10 +120,11 @@ chassis::chassis(const std::string &port_name)
 	std::thread([port_ptr, this] {
 		std::string buffer;
 		
-		decltype(now()) left_time, right_time;
-		auto            delta_left  = .0,
-		                delta_right = .0;
-		auto            time        = now();
+		auto left_ready  = false,
+		     right_ready = false;
+		auto delta_left  = .0,
+		     delta_right = .0;
+		auto time        = now();
 		
 		autolabor::can::parse_engine parser(
 				[&](const autolabor::can::parser::result &result) {
@@ -134,30 +135,34 @@ chassis::chassis(const std::string &port_name)
 					const auto bytes = msg.data.data;
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
-						left_time = now();
 						
-						if (left_time - right_time < seconds_duration(0.1)) {
-							auto value = get_first<int>(bytes) * mechanical::wheel_k;
-							delta_left = (value - _left) * mechanical::radius;
-							_left      = value;
-							
+						auto value = get_first<int>(bytes) * mechanical::wheel_k;
+						delta_left = (value - _left) * mechanical::radius;
+						_left      = value;
+						if (right_ready) {
 							std::lock_guard<std::mutex> _(lock);
-							_odometry += {delta_left, delta_right, left_time - time};
-							time       = left_time;
-						}
+							right_ready = false;
+							
+							auto _now = now();
+							_odometry += {delta_left, delta_right, _now - time};
+							time      = _now;
+						} else
+							left_ready = true;
 						
 					} else if (ecu<1>::current_position_rx::match(msg)) {
-						right_time = now();
 						
-						if (right_time - left_time < seconds_duration(0.1)) {
-							auto value = get_first<int>(bytes) * mechanical::wheel_k;
-							delta_right = (value - _right) * mechanical::radius;
-							_right      = value;
-							
+						auto value = get_first<int>(bytes) * mechanical::wheel_k;
+						delta_right = (value - _right) * mechanical::radius;
+						_right      = value;
+						if (left_ready) {
 							std::lock_guard<std::mutex> _(lock);
-							_odometry += {delta_left, delta_right, right_time - time};
-							time        = right_time;
-						}
+							left_ready = false;
+							
+							auto _now = now();
+							_odometry += {delta_left, delta_right, _now - time};
+							time      = _now;
+						} else
+							right_ready = true;
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
