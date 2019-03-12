@@ -114,16 +114,16 @@ namespace autolabor {
 	     */
 		void delay(double time);
 		
-		/** 轮速里程计数据结构 */
-		struct odometry { double x, y, yaw, vx, vy, w; };
-		
 		/**
 		 * 获取里程计值
 		 *
 		 * @return 里程计值
 		 */
-		odometry get_odometry();
+		struct odometry { double x, y, yaw, vx, vy, w; } get_odometry();
 		
+		/**
+		 * 电机数据
+		 */
 		std::vector<motor_t<>> get_motors();
 	}
 }
