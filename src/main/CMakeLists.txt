@@ -10,10 +10,6 @@ add_library(pm1_sdk
         pm1_sdk.h
         pm1_sdk.cpp
         # --------------------------
-        internal/time_extensions.h
-        internal/mechanical.h
-        internal/can_define.h
-        # --------------------------
         internal/serial/v8stdint.h
         internal/serial/serial.h
         internal/serial/serial.cc
@@ -27,6 +23,12 @@ add_library(pm1_sdk
         internal/serial/list_ports/list_ports_win.cc
         internal/serial/list_ports/list_ports_linux.cc
         internal/serial/list_ports/list_ports_osx.cc
+        # --------------------------
+        internal/time_extensions.h
+        internal/serial_extension.h
+
+        internal/mechanical.h
+        internal/can_define.h
         # --------------------------
         internal/can/pack.h
         internal/can/pack.cpp
@@ -43,7 +45,10 @@ add_library(pm1_sdk
         internal/chassis.cc
 
         internal/odometry_t.hh
-        internal/odometry_t.cc)
+        internal/odometry_t.cc
+        # --------------------------
+        internal/rudder_controller.hh
+        internal/rudder_controller.cc)
 
 # 指定安装路径
 install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out)

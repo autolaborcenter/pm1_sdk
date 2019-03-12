@@ -6,25 +6,15 @@
 
 #include <algorithm>
 #include <iostream>
+#include "serial_extension.h"
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
 
 using namespace autolabor::pm1;
 
-/** 发送数据包 */
-template<class t>
-inline const std::shared_ptr<serial::Serial> &operator<<(
-		const std::shared_ptr<serial::Serial> &,
-		const autolabor::can::msg_union<t> &);
-
 /** 获取存储区中大端存储的第一个数据 */
 template<class t>
 inline t get_first(const uint8_t *);
-
-/** 数据大端打包到数据域 */
-template<class pack_info_t, class data_t>
-inline auto pack_into(const autolabor::can::msg_union<data_t> &value)
--> decltype(autolabor::can::pack<pack_info_t>());
 
 /** 控制优化参数 */
 constexpr double optimize_limit = mechanical::pi / 3;
@@ -41,7 +31,7 @@ chassis::chassis(const std::string &port_name)
 	
 	// region check nodes
 	{
-		port << autolabor::can::pack<unit<>::state_tx>();
+		*port << autolabor::can::pack<unit<>::state_tx>();
 		
 		std::string buffer;
 		const auto  time = now();
@@ -78,7 +68,7 @@ chassis::chassis(const std::string &port_name)
 	}
 	// endregion
 	
-	port << autolabor::can::pack<ecu<>::timeout>({2, 0}); // 设置超时时间：200 ms
+	*port << autolabor::can::pack<ecu<>::timeout>({2, 0}); // 设置超时时间：200 ms
 	
 	// region ask
 	auto port_ptr = port;
@@ -89,7 +79,7 @@ chassis::chassis(const std::string &port_name)
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(50);
 			try {
-				port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
+				*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
 			} catch (std::exception &) {}
 			std::this_thread::sleep_until(time);
 		}
@@ -101,7 +91,7 @@ chassis::chassis(const std::string &port_name)
 		while (port_ptr->isOpen()) {
 			time += std::chrono::milliseconds(20);
 			try {
-				port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
+				*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
 			} catch (std::exception &) {}
 			std::this_thread::sleep_until(time);
 		}
@@ -180,23 +170,23 @@ chassis::chassis(const std::string &port_name)
 						
 						_rudder.position = get_first<short>(bytes) * mechanical::rudder_k;
 						
-						autolabor::can::msg_union<int>   left{}, right{};
-						autolabor::can::msg_union<short> temp{};
+						int   left, right;
+						short temp;
 						
 						if (now() - request_time < std::chrono::milliseconds(200)) {
 							auto optimized = optimize(*target, _rudder.position);
-							left.data  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
-							right.data = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
-							temp.data  = static_cast<short> (target->rudder / mechanical::rudder_k);
+							left  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
+							right = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
+							temp  = static_cast<short> (target->rudder / mechanical::rudder_k);
 						} else {
-							left.data =
-							right.data = 0;
-							temp.data = static_cast<short> (_rudder.position / mechanical::rudder_k);
+							left =
+							right = 0;
+							temp = static_cast<short> (_rudder.position / mechanical::rudder_k);
 						}
 						
-						port_ptr << pack_into<ecu<0>::target_speed, int>(left)
-						         << pack_into<ecu<1>::target_speed, int>(right)
-						         << pack_into<tcu<0>::target_position, short>(temp);
+						*port_ptr << pack_into<ecu<0>::target_speed, int>(left)
+						          << pack_into<ecu<1>::target_speed, int>(right)
+						          << pack_into<tcu<0>::target_position, short>(temp);
 					}
 				});
 		
@@ -247,27 +237,10 @@ void chassis::clear_odometry() {
 }
 
 template<class t>
-inline const std::shared_ptr<serial::Serial> &operator<<(
-		const std::shared_ptr<serial::Serial> &port,
-		const autolabor::can::msg_union<t> &msg) {
-	try { port->write(msg.bytes, sizeof(t)); } catch (...) {}
-	return port;
-}
-
-template<class t>
 inline t get_first(const uint8_t *bytes) {
 	autolabor::can::msg_union<t> temp{};
 	std::reverse_copy(bytes, bytes + sizeof(t), temp.bytes);
 	return temp.data;
-}
-
-template<class pack_info_t, class data_t>
-inline auto
-pack_into(const autolabor::can::msg_union<data_t> &value)
--> decltype(autolabor::can::pack<pack_info_t>()) {
-	std::array<uint8_t, 8> buffer{};
-	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
-	return autolabor::can::pack<pack_info_t>(buffer);
 }
 
 inline mechanical::state optimize(const mechanical::state &target, double rudder) {

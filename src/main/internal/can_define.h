@@ -95,13 +95,28 @@ namespace autolabor {
 			constexpr static uint8_t node_index = _node_index;
 			// 目标角度
 			using target_position     = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x1>;
+			// 目标角度增量
+			using target_difference   = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x2>;
 			// 当前角度
 			using current_position_tx = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x3>;
 			using current_position_rx = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x3>;
 			// 当前速度
 			using current_speed_tx    = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x5>;
 			using current_speed_rx    = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x5>;
+			// 编码器复位
+			using encoder_reset       = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x6>;
 		};
+		
+		template<class pack_info_t, class data_t>
+		inline auto
+		pack_into(data_t value)
+		-> decltype(autolabor::can::pack<pack_info_t>()) {
+			autolabor::can::msg_union<data_t> buffer1{};
+			std::array<uint8_t, 8>            buffer2{};
+			buffer1.data = value;
+			std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(data_t), buffer2.data());
+			return autolabor::can::pack<pack_info_t>(buffer2);
+		}
 	}
 }
 
