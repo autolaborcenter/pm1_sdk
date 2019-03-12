@@ -107,14 +107,22 @@ namespace autolabor {
 			using encoder_reset       = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x6>;
 		};
 		
+		template<class data_t>
+		inline data_t get_big_endian(const autolabor::can::union_with_data &msg) {
+			autolabor::can::msg_union<data_t> buffer{};
+			std::reverse_copy(msg.data.data, msg.data.data + sizeof(data_t), buffer.bytes);
+			return buffer.data;
+		}
+		
 		template<class pack_info_t, class data_t>
-		inline auto
-		pack_into(data_t value)
+		inline auto pack_big_endian(data_t value)
 		-> decltype(autolabor::can::pack<pack_info_t>()) {
 			autolabor::can::msg_union<data_t> buffer1{};
 			std::array<uint8_t, 8>            buffer2{};
+			
 			buffer1.data = value;
 			std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(data_t), buffer2.data());
+			
 			return autolabor::can::pack<pack_info_t>(buffer2);
 		}
 	}

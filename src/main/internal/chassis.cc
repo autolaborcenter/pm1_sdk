@@ -12,10 +12,6 @@
 
 using namespace autolabor::pm1;
 
-/** 获取存储区中大端存储的第一个数据 */
-template<class t>
-inline t get_first(const uint8_t *);
-
 /** 控制优化参数 */
 constexpr double optimize_limit = mechanical::pi / 3;
 
@@ -115,18 +111,14 @@ chassis::chassis(const std::string &port_name)
 					auto _now = now();
 					
 					// 处理
-					const auto msg   = result.message;
-					const auto bytes = msg.data.data;
+					const auto msg = result.message;
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
 						
-						auto value = get_first<int>(bytes) * mechanical::wheel_k;
+						auto value = get_big_endian<int>(msg) * mechanical::wheel_k;
 						delta_left = value - _left.position;
 						
-						std::chrono::duration<double, std::ratio<1>> delta_time = _now - _left.time;
-						_left.speed    = delta_left / delta_time.count();
-						_left.position = value;
-						_left.time     = _now;
+						_left.update(_now, value);
 						
 						if (right_ready) {
 							if (clear_flag) clear_flag = false;
@@ -144,13 +136,10 @@ chassis::chassis(const std::string &port_name)
 						
 					} else if (ecu<1>::current_position_rx::match(msg)) {
 						
-						auto value = get_first<int>(bytes) * mechanical::wheel_k;
+						auto value = get_big_endian<int>(msg) * mechanical::wheel_k;
 						delta_right = value - _right.position;
 						
-						std::chrono::duration<double, std::ratio<1>> delta_time = _now - _right.time;
-						_right.speed    = delta_right / delta_time.count();
-						_right.position = value;
-						_right.time     = _now;
+						_right.update(_now, value);
 						
 						if (left_ready) {
 							if (clear_flag) clear_flag = false;
@@ -168,7 +157,8 @@ chassis::chassis(const std::string &port_name)
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						_rudder.position = get_first<short>(bytes) * mechanical::rudder_k;
+						auto value = get_big_endian<int>(msg) * mechanical::rudder_k;
+						_rudder.update(_now, value);
 						
 						int   left, right;
 						short temp;
@@ -184,9 +174,9 @@ chassis::chassis(const std::string &port_name)
 							temp = static_cast<short> (_rudder.position / mechanical::rudder_k);
 						}
 						
-						*port_ptr << pack_into<ecu<0>::target_speed, int>(left)
-						          << pack_into<ecu<1>::target_speed, int>(right)
-						          << pack_into<tcu<0>::target_position, short>(temp);
+						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
+						          << pack_big_endian<ecu<1>::target_speed, int>(right)
+						          << pack_big_endian<tcu<0>::target_position, short>(temp);
 					}
 				});
 		
@@ -234,13 +224,6 @@ void chassis::set_target(double v, double w) const {
 void chassis::clear_odometry() {
 	clear_flag = true;
 	_odometry  = {};
-}
-
-template<class t>
-inline t get_first(const uint8_t *bytes) {
-	autolabor::can::msg_union<t> temp{};
-	std::reverse_copy(bytes, bytes + sizeof(t), temp.bytes);
-	return temp.data;
 }
 
 inline mechanical::state optimize(const mechanical::state &target, double rudder) {

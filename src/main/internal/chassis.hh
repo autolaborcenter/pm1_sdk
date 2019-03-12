@@ -18,6 +18,15 @@ namespace autolabor {
 	struct motor_t {
 		double position, speed;
 		time_t time;
+		
+		void update(time_t _now, double value) {
+			auto delta = value - position;
+			
+			autolabor::seconds_floating dt = _now - time;
+			speed    = delta / dt.count();
+			position = value;
+			time     = _now;
+		}
 	};
 	
 	namespace pm1 {

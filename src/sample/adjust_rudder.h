@@ -13,7 +13,7 @@
 namespace autolabor {
 	namespace pm1 {
 		int adjust_rudder(const std::string &port = "") {
-			constexpr static auto degree = mechanical::encoder_rudder / 360;
+			constexpr static auto degree = mechanical::encoder_rudder / 720;
 			
 			std::shared_ptr<rudder_controller> controller;
 			

@@ -16,7 +16,7 @@ rudder_controller::rudder_controller(const std::string &port_name)
 
 void rudder_controller::adjust(short additional) {
 	target += additional;
-	port << pack_into<tcu<0>::target_position>(target);
+	port << pack_big_endian<tcu<0>::target_position>(target);
 }
 
 void rudder_controller::done() {
