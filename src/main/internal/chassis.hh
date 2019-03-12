@@ -9,6 +9,7 @@
 #include "serial/serial.h"
 #include "can_define.h"
 #include "mechanical.h"
+#include "odometry_t.hh"
 #include "time_extensions.h"
 
 namespace autolabor {
@@ -20,9 +21,6 @@ namespace autolabor {
 	};
 	
 	namespace pm1 {
-		/** 轮速里程计 */
-		struct odometry_t { double s, x, y, theta, vx, vy, w; };
-		
 		/** 底盘 */
 		class chassis final {
 		public:

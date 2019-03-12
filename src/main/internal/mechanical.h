@@ -7,6 +7,7 @@
 
 
 #include <cmath>
+#include <memory>
 
 template<class range>
 typename range::t adjust(typename range::t value);

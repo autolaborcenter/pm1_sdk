@@ -25,13 +25,6 @@ template<class pack_info_t, class data_t>
 inline auto pack_into(const autolabor::can::msg_union<data_t> &value)
 -> decltype(autolabor::can::pack<pack_info_t>());
 
-/** 里程计更新信息 */
-template<class time_unit = std::chrono::duration<double, std::ratio<1>>>
-struct odometry_update_info { double d_left, d_rigth; time_unit d_t; };
-
-/** 更新轮速里程计 */
-inline void operator+=(odometry_t &, odometry_update_info<>);
-
 /** 控制优化参数 */
 constexpr double optimize_limit = mechanical::pi / 3;
 
@@ -268,70 +261,6 @@ pack_into(const autolabor::can::msg_union<data_t> &value)
 	std::array<uint8_t, 8> buffer{};
 	std::reverse_copy(value.bytes, value.bytes + sizeof(data_t), buffer.data());
 	return autolabor::can::pack<pack_info_t>(buffer);
-}
-
-/**
- * 计算机器人坐标系下的里程计
- *
- * @param delta_left  左轮变化量
- * @param delta_right 右轮变化量
- * @param theta       车身转角
- * @param x           横坐标相对变化
- * @param y           纵坐标相对变化
- */
-inline void calculate_odometry(
-		double delta_left,
-		double delta_right,
-		double &theta,
-		double &x,
-		double &y) {
-	theta = (delta_right - delta_left) / mechanical::width;
-	if (theta == 0) {
-		x = delta_left;
-		y = 0;
-	} else {
-		const auto sin = std::sin(theta / 2);
-		const auto cos = std::cos(theta / 2);
-		const auto r   = (delta_left + delta_right) / 2 / theta;
-		const auto d   = 2 * r * sin;
-		x = d * cos;
-		y = d * sin;
-	}
-}
-
-/**
- * 坐标系旋转
- *
- * @param x     横坐标
- * @param y     纵坐标
- * @param theta 旋转弧度
- */
-inline void rotate(double &x,
-                   double &y,
-                   double theta) {
-	double _;
-	auto   sin = std::sin(theta);
-	auto   cos = std::cos(theta);
-	_ = x * cos - y * sin;
-	y = x * sin + y * cos;
-	x = _;
-}
-
-inline void operator+=(odometry_t &odometry,
-                       odometry_update_info<> info) {
-	odometry.s += (info.d_left + info.d_rigth) / 2;
-	
-	double theta, x, y;
-	calculate_odometry(info.d_left, info.d_rigth, theta, x, y);
-	rotate(x, y, odometry.theta);
-	
-	odometry.x += x;
-	odometry.y += y;
-	odometry.theta += theta;
-	
-	odometry.vx = x / info.d_t.count();
-	odometry.vy = y / info.d_t.count();
-	odometry.w  = theta / info.d_t.count();
 }
 
 inline mechanical::state optimize(const mechanical::state &target, double rudder) {

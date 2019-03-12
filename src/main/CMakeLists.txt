@@ -40,7 +40,10 @@ add_library(pm1_sdk
         internal/can/parse_engine.cc
         # --------------------------
         internal/chassis.hh
-        internal/chassis.cc)
+        internal/chassis.cc
+
+        internal/odometry_t.hh
+        internal/odometry_t.cc)
 
 # 指定安装路径
 install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out)
