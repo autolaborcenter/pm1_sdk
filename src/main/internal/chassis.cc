@@ -5,6 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
+#include <iostream>
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
 
@@ -86,7 +87,7 @@ chassis::chassis(const std::string &port_name)
 	std::thread([port_ptr] {
 		auto time = now();
 		while (port_ptr->isOpen()) {
-			time += std::chrono::milliseconds(100);
+			time += std::chrono::milliseconds(50);
 			try {
 				port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -98,7 +99,7 @@ chassis::chassis(const std::string &port_name)
 	std::thread([port_ptr] {
 		auto time = now();
 		while (port_ptr->isOpen()) {
-			time += std::chrono::milliseconds(100);
+			time += std::chrono::milliseconds(20);
 			try {
 				port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -130,9 +131,10 @@ chassis::chassis(const std::string &port_name)
 					if (ecu<0>::current_position_rx::match(msg)) {
 						
 						auto value = get_first<int>(bytes) * mechanical::wheel_k;
-						delta_left = (value - _left.position) * mechanical::radius;
+						delta_left = value - _left.position;
 						
-						_left.speed    = delta_left / (_now - _left.time).count();
+						std::chrono::duration<double, std::ratio<1>> delta_time = _now - _left.time;
+						_left.speed    = delta_left / delta_time.count();
 						_left.position = value;
 						_left.time     = _now;
 						
@@ -142,7 +144,9 @@ chassis::chassis(const std::string &port_name)
 								std::lock_guard<std::mutex> _(lock);
 								right_ready = false;
 								
-								_odometry += {delta_left, delta_right, _now - time};
+								_odometry += {delta_left * mechanical::radius,
+								              delta_right * mechanical::radius,
+								              _now - time};
 								time        = _now;
 							}
 						} else
@@ -151,9 +155,10 @@ chassis::chassis(const std::string &port_name)
 					} else if (ecu<1>::current_position_rx::match(msg)) {
 						
 						auto value = get_first<int>(bytes) * mechanical::wheel_k;
-						delta_right = (value - _right.position) * mechanical::radius;
+						delta_right = value - _right.position;
 						
-						_right.speed    = delta_right / (_now - _right.time).count();
+						std::chrono::duration<double, std::ratio<1>> delta_time = _now - _right.time;
+						_right.speed    = delta_right / delta_time.count();
 						_right.position = value;
 						_right.time     = _now;
 						
@@ -163,7 +168,9 @@ chassis::chassis(const std::string &port_name)
 								std::lock_guard<std::mutex> _(lock);
 								left_ready = false;
 								
-								_odometry += {delta_left, delta_right, _now - time};
+								_odometry += {delta_left * mechanical::radius,
+								              delta_right * mechanical::radius,
+								              _now - time};
 								time       = _now;
 							}
 						} else
