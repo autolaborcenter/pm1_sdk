@@ -44,13 +44,16 @@ namespace autolabor {
 						case '+':
 						case '=':
 							controller->adjust(+degree);
+							std::cout << '+';
 							break;
 						case '-':
 						case '_':
 							controller->adjust(-degree);
+							std::cout << '-';
 							break;
 						case ' ':
 							controller->done();
+							std::cout << std::endl;
 							break;
 						case 27:
 							return 0;
