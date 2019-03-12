@@ -22,16 +22,12 @@ int main() {
 				pause();
 				break;
 			}
-			//
-			//			std::cout << get_odometry().x << '\t'
-			//			          << get_odometry().y << '\t'
-			//			          << get_odometry().yaw << std::endl;
 			
 			delay(0.1);
 		}
 	}).detach();
 	
-	turn_around(1, 2 * mechanical::pi);
+	//	turn_around(1, 2 * mechanical::pi);
 	
 	//	go_straight(+.5, 1);
 	//	turn_around(-1, mechanical::pi / 2);
@@ -55,4 +51,6 @@ int main() {
 	//	}
 	
 	shutdown();
+	
+	delay(1.0);
 }

@@ -3,6 +3,7 @@
 //
 
 #include <cmath>
+#include <tuple>
 #include "odometry_t.hh"
 #include "mechanical.h"
 
@@ -17,13 +18,11 @@ using namespace autolabor::pm1;
  * @param x           横坐标相对变化
  * @param y           纵坐标相对变化
  */
-inline void calculate_odometry(
-		double delta_left,
-		double delta_right,
-		double &theta,
-		double &x,
-		double &y) {
-	theta = (delta_right - delta_left) / mechanical::width;
+inline std::tuple<double, double, double>
+calculate_odometry(double delta_left, double delta_right) {
+	
+	double x, y, theta = (delta_right - delta_left) / mechanical::width;
+	
 	if (theta == 0) {
 		x = delta_left;
 		y = 0;
@@ -35,6 +34,8 @@ inline void calculate_odometry(
 		x = d * cos;
 		y = d * sin;
 	}
+	
+	return {x, y, theta};
 }
 
 /**
@@ -58,15 +59,15 @@ inline void rotate(double &x,
 void odometry_t::operator+=(const odometry_update_info<> &info) {
 	s += (info.d_left + info.d_rigth) / 2;
 	
-	double _theta, _x, _y;
-	calculate_odometry(info.d_left, info.d_rigth, _theta, _x, _y);
-	rotate(x, y, theta);
+	double dx, dy, d_theta;
+	std::tie(dx, dy, d_theta) = calculate_odometry(info.d_left, info.d_rigth);
+	rotate(dx, dy, theta);
 	
-	x += x;
-	y += y;
-	theta += theta;
+	x += dx;
+	y += dy;
+	theta += d_theta;
 	
-	vx = x / info.d_t.count();
-	vy = y / info.d_t.count();
-	w  = theta / info.d_t.count();
+	vx = dx / info.d_t.count();
+	vy = dy / info.d_t.count();
+	w  = d_theta / info.d_t.count();
 }
