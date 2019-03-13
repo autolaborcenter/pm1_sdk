@@ -126,12 +126,13 @@ chassis::chassis(const std::string &port_name)
 						if (right_ready) {
 							if (clear_flag) clear_flag = false;
 							else {
-								std::lock_guard<std::mutex> _(lock);
+								{
+									std::lock_guard<std::mutex> _(lock);
+									_odometry += {delta_left * mechanical::radius,
+									              delta_right * mechanical::radius,
+									              _now - time};
+								}
 								right_ready = false;
-								
-								_odometry += {delta_left * mechanical::radius,
-								              delta_right * mechanical::radius,
-								              _now - time};
 								time        = _now;
 							}
 						} else
@@ -147,12 +148,13 @@ chassis::chassis(const std::string &port_name)
 						if (left_ready) {
 							if (clear_flag) clear_flag = false;
 							else {
-								std::lock_guard<std::mutex> _(lock);
+								{
+									std::lock_guard<std::mutex> _(lock);
+									_odometry += {delta_left * mechanical::radius,
+									              delta_right * mechanical::radius,
+									              _now - time};
+								}
 								left_ready = false;
-								
-								_odometry += {delta_left * mechanical::radius,
-								              delta_right * mechanical::radius,
-								              _now - time};
 								time       = _now;
 							}
 						} else
@@ -164,22 +166,24 @@ chassis::chassis(const std::string &port_name)
 						_rudder.update(_now, value);
 						
 						int   left, right;
-						short temp;
+						short rudder;
 						
 						if (now() - request_time < std::chrono::milliseconds(200)) {
+							// 200 ms 内，优化
 							auto optimized = optimize(*target, _rudder.position);
-							left  = static_cast<int>(optimized.left / mechanical::radius / mechanical::wheel_k);
-							right = static_cast<int>(optimized.right / mechanical::radius / mechanical::wheel_k);
-							temp  = static_cast<short>(target->rudder / mechanical::rudder_k);
+							left   = static_cast<int>(optimized.left / mechanical::radius / mechanical::wheel_k);
+							right  = static_cast<int>(optimized.right / mechanical::radius / mechanical::wheel_k);
+							rudder = static_cast<short>(target->rudder / mechanical::rudder_k);
 						} else {
-							left =
-							right = 0;
-							temp = static_cast<short>(_rudder.position / mechanical::rudder_k);
+							// 停机
+							left   = 0;
+							right  = 0;
+							rudder = static_cast<short>(_rudder.position / mechanical::rudder_k);
 						}
 						
 						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
 						          << pack_big_endian<ecu<1>::target_speed, int>(right)
-						          << pack_big_endian<tcu<0>::target_position, short>(temp);
+						          << pack_big_endian<tcu<0>::target_position, short>(rudder);
 					}
 				});
 		
@@ -225,6 +229,7 @@ void chassis::set_target(double v, double w) const {
 }
 
 void chassis::clear_odometry() {
+	std::lock_guard<std::mutex> _(lock);
 	clear_flag = true;
 	_odometry  = {};
 }
