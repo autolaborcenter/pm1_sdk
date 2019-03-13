@@ -23,6 +23,9 @@ chassis::chassis(const std::string &port_name)
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
 	using result_t = autolabor::can::parser::result_type;
 	
+	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
+	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
+	
 	_left.time = _right.time = _rudder.time = now();
 	
 	// region check nodes
@@ -73,7 +76,7 @@ chassis::chassis(const std::string &port_name)
 	std::thread([port_ptr] {
 		auto time = now();
 		while (port_ptr->isOpen()) {
-			time += std::chrono::milliseconds(50);
+			time += odometry_interval;
 			try {
 				*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -85,7 +88,7 @@ chassis::chassis(const std::string &port_name)
 	std::thread([port_ptr] {
 		auto time = now();
 		while (port_ptr->isOpen()) {
-			time += std::chrono::milliseconds(20);
+			time += rudder_interval;
 			try {
 				*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -165,13 +168,13 @@ chassis::chassis(const std::string &port_name)
 						
 						if (now() - request_time < std::chrono::milliseconds(200)) {
 							auto optimized = optimize(*target, _rudder.position);
-							left  = static_cast<int> (optimized.left / mechanical::radius / mechanical::wheel_k);
-							right = static_cast<int> (optimized.right / mechanical::radius / mechanical::wheel_k);
-							temp  = static_cast<short> (target->rudder / mechanical::rudder_k);
+							left  = static_cast<int>(optimized.left / mechanical::radius / mechanical::wheel_k);
+							right = static_cast<int>(optimized.right / mechanical::radius / mechanical::wheel_k);
+							temp  = static_cast<short>(target->rudder / mechanical::rudder_k);
 						} else {
 							left =
 							right = 0;
-							temp = static_cast<short> (_rudder.position / mechanical::rudder_k);
+							temp = static_cast<short>(_rudder.position / mechanical::rudder_k);
 						}
 						
 						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)

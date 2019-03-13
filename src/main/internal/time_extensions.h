@@ -19,14 +19,18 @@ namespace autolabor {
 	 * @param seconds 秒数
 	 * @return 对应的 std::chrono::duration
 	 */
-	inline seconds_floating seconds_duration(double seconds);
+	inline seconds_floating seconds_duration(double seconds) {
+		return std::chrono::duration<double, std::ratio<1>>(seconds);
+	}
 	
 	/**
 	 * 从高精度时钟获取当前时间
 	 *
 	 * @return 当前时间
 	 */
-	inline auto now() -> decltype(std::chrono::high_resolution_clock::now());
+	inline auto now() -> decltype(std::chrono::high_resolution_clock::now()) {
+		return std::chrono::high_resolution_clock::now();
+	}
 	
 	/**
 	 * 测量一段代码的执行时间
@@ -36,23 +40,11 @@ namespace autolabor {
 	 * @return 用[TimeUnit]表示的时间间隔
 	 */
 	template<class time_unit = seconds_floating>
-	inline time_unit measure_time(const std::function<void()> &function);
+	inline time_unit measure_time(const std::function<void()> &function) {
+		const auto origin = now();
+		function();
+		return now() - origin;
+	}
 }
-
-autolabor::seconds_floating autolabor::seconds_duration(double seconds) {
-	return std::chrono::duration<double, std::ratio<1>>(seconds);
-}
-
-decltype(std::chrono::high_resolution_clock::now()) autolabor::now() {
-	return std::chrono::high_resolution_clock::now();
-}
-
-template<class time_unit>
-time_unit autolabor::measure_time(const std::function<void()> &function) {
-	const auto origin = now();
-	function();
-	return now() - origin;
-}
-
 
 #endif //PM1_SDK_TIME_EXTENSION_H
