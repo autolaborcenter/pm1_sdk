@@ -26,21 +26,16 @@ struct delta {
  */
 inline delta calculate_odometry(double delta_left, double delta_right) {
 	
-	double x, y, theta = (delta_right - delta_left) / mechanical::width;
+	double theta = (delta_right - delta_left) / mechanical::width;
 	
-	if (theta == 0) {
-		x = delta_left;
-		y = 0;
-	} else {
-		const auto sin = std::sin(theta / 2);
-		const auto cos = std::cos(theta / 2);
-		const auto r   = (delta_left + delta_right) / 2 / theta;
-		const auto d   = 2 * r * sin;
-		x = d * cos;
-		y = d * sin;
+	if (theta == 0)
+		return {delta_left, 0, theta};
+	else {
+		auto r = (delta_left + delta_right) / 2 / theta;
+		return {r * std::sin(theta),
+		        r * (1 - std::cos(theta)),
+		        theta};
 	}
-	
-	return {x, y, theta};
 }
 
 void odometry_t::operator+=(const odometry_update_info<> &info) {
