@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_DEBUG_POSTFIX "_debug")
 
 add_subdirectory(internal/can)
+add_subdirectory(internal/control_model)
+
 add_library(pm1_sdk
         # --------------------------
         pm1_sdk.h
