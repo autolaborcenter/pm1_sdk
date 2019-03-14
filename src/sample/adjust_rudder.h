@@ -9,6 +9,7 @@
 #include <conio.h>
 #include "../main/pm1_sdk.h"
 #include "../main/internal/rudder_controller.hh"
+#include "../main/internal/mechanical.h"
 
 namespace autolabor {
 	namespace pm1 {

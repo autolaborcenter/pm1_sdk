@@ -5,7 +5,6 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <iostream>
 #include "serial_extension.h"
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
@@ -162,7 +161,7 @@ chassis::chassis(const std::string &port_name)
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						auto value = get_big_endian<int>(msg) * mechanical::rudder_k;
+						auto value = get_big_endian<short>(msg) * mechanical::rudder_k;
 						_rudder.update(_now, value);
 						
 						int   left, right;

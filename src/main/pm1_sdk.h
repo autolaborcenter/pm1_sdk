@@ -8,7 +8,6 @@
 
 #include <string>
 #include <vector>
-#include "internal/chassis.hh"
 
 namespace autolabor {
 	namespace pm1 {
@@ -122,11 +121,6 @@ namespace autolabor {
 		 * @return 里程计值
 		 */
 		odometry get_odometry();
-		
-		/**
-		 * 电机数据
-		 */
-		std::vector<motor_t<>> get_motors();
 	}
 }
 
