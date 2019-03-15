@@ -43,6 +43,10 @@ add_library(pm1_sdk
         internal/can/parse_engine.hh
         internal/can/parse_engine.cc
         # --------------------------
+        internal/control_model/chassis_config_t.h
+        internal/control_model/model.h
+        internal/control_model/model.c
+        # --------------------------
         internal/chassis.hh
         internal/chassis.cc
 
@@ -56,15 +60,15 @@ add_library(pm1_sdk
 install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out)
 install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out)
 
-if (MSVC)
-    set(CompilerFlags
-            CMAKE_CXX_FLAGS
-            CMAKE_CXX_FLAGS_DEBUG
-            CMAKE_CXX_FLAGS_RELEASE
-            CMAKE_C_FLAGS
-            CMAKE_C_FLAGS_DEBUG
-            CMAKE_C_FLAGS_RELEASE)
-    foreach (CompilerFlag ${CompilerFlags})
-        string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-    endforeach ()
-endif (MSVC)
+#if (MSVC)
+#    set(CompilerFlags
+#            CMAKE_CXX_FLAGS
+#            CMAKE_CXX_FLAGS_DEBUG
+#            CMAKE_CXX_FLAGS_RELEASE
+#            CMAKE_C_FLAGS
+#            CMAKE_C_FLAGS_DEBUG
+#            CMAKE_C_FLAGS_RELEASE)
+#    foreach (CompilerFlag ${CompilerFlags})
+#        string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+#    endforeach ()
+#endif (MSVC)

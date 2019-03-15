@@ -4,6 +4,10 @@
 
 #include "adjust_rudder.h"
 
+extern "C" {
+#include "../main/internal/control_model/chassis_config_t.h"
+}
+
 int main() {
-	autolabor::pm1::adjust_rudder();
+	std::cout << default_config.length << std::endl;
 }

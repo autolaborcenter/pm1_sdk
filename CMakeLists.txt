@@ -3,4 +3,3 @@ project(pm1_sdk)
 
 add_subdirectory(src/main)
 add_subdirectory(src/sample)
-add_subdirectory(src/test)

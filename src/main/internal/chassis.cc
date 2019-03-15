@@ -61,8 +61,8 @@ chassis::chassis(const std::string &port_name)
 			if (!buffer.empty()) parser(*buffer.begin());
 		}
 		
-		//		if (!ecu0 || !ecu1 || !tcu0)
-		//			throw std::exception("it's not a pm1 chassis");
+		if (!ecu0 || !ecu1 || !tcu0)
+			throw std::exception("it's not a pm1 chassis");
 	}
 	// endregion
 	
