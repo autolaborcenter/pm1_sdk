@@ -12,6 +12,10 @@
 #include "odometry_t.hh"
 #include "time_extensions.h"
 
+extern "C" {
+#include "control_model/model.h"
+}
+
 namespace autolabor {
 	/** 电机信息 */
 	template<class time_t = decltype(now())>
@@ -76,8 +80,7 @@ namespace autolabor {
 			/** 更新里程计 */
 			mutable std::mutex lock;
 			
-			/** 电机指令 */
-			mutable std::shared_ptr<mechanical::state> target;
+			mutable physical _physical{};
 			
 			/** 最后一次请求的时间 */
 			mutable decltype(autolabor::now()) request_time;

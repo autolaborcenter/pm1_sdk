@@ -20,10 +20,10 @@
    LENGTH, \
    DIAMETER, \
    WHEEL_SPEED \
-) { \
- (WIDTH),                     \
- (LENGTH),                    \
- (DIAMETER) / 2,              \
+) {                          \
+ (WIDTH),                    \
+ (LENGTH),                   \
+ (DIAMETER) / 2,             \
  PI_F*(DIAMETER)*WHEEL_SPEED \
 }
 

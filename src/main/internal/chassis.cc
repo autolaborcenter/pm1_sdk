@@ -15,7 +15,7 @@ using namespace autolabor::pm1;
 constexpr double optimize_limit = mechanical::pi / 3;
 
 /** 连续控制优化 */
-inline mechanical::state optimize(const mechanical::state &target, double rudder);
+inline physical optimize(const physical &target, double rudder);
 
 chassis::chassis(const std::string &port_name)
 		: port(new serial::Serial(port_name, 115200,
@@ -169,10 +169,11 @@ chassis::chassis(const std::string &port_name)
 						
 						if (now() - request_time < std::chrono::milliseconds(200)) {
 							// 200 ms 内，优化
-							auto optimized = optimize(*target, _rudder.position);
-							left   = static_cast<int>(optimized.left / mechanical::radius / mechanical::wheel_k);
-							right  = static_cast<int>(optimized.right / mechanical::radius / mechanical::wheel_k);
-							rudder = static_cast<short>(target->rudder / mechanical::rudder_k);
+							auto optimized = optimize(_physical, _rudder.position);
+							auto wheels    = physical_to_wheels(&optimized, &default_config);
+							left   = static_cast<int>(wheels.left / mechanical::radius / mechanical::wheel_k);
+							right  = static_cast<int>(wheels.right / mechanical::radius / mechanical::wheel_k);
+							rudder = static_cast<short>(optimized.rudder / mechanical::rudder_k);
 						} else {
 							// 停机
 							left   = 0;
@@ -219,12 +220,13 @@ odometry_t chassis::odometry() const {
 
 void chassis::set_state(double rho, double rudder) const {
 	request_time = now();
-	target       = mechanical::state::make_shared(rho, rudder);
+	_physical    = {static_cast<float>(rho), static_cast<float>(rudder)};
 }
 
 void chassis::set_target(double v, double w) const {
 	request_time = now();
-	target       = mechanical::state::from_target(v, w);
+	wheels wheels = {static_cast<float>(v), static_cast<float>(w)};
+	_physical = wheels_to_physical(&wheels, &default_config);
 }
 
 void chassis::clear_odometry() {
@@ -233,7 +235,8 @@ void chassis::clear_odometry() {
 	_odometry  = {};
 }
 
-inline mechanical::state optimize(const mechanical::state &target, double rudder) {
+inline physical optimize(const physical &target, double rudder) {
 	const auto difference = std::abs(target.rudder - rudder);
-	return {difference > optimize_limit ? 0 : (1 - difference / optimize_limit) * target.rho, rudder};
+	return {static_cast<float>(difference > optimize_limit ? 0 : (1 - difference / optimize_limit) * target.speed),
+	        static_cast<float>(rudder)};
 }
