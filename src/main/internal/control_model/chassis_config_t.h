@@ -13,7 +13,6 @@
  * 轴间距
  * 轮直径
  * 最大轮速（圈/秒）
- * 后轮死区（弧度）
  */
 #define CHASSIS_CONFIG(\
    WIDTH, \
@@ -27,18 +26,17 @@
  PI_F*(DIAMETER)*WHEEL_SPEED \
 }
 
-const float pi_f = PI_F;
+const float pi_f           = PI_F;
 
 struct chassis_config_t {
 	float width,
 	      length,
 	      radius,
 	      max_wheel_speed;
-} const     default_config
-                 = CHASSIS_CONFIG(0.4205f,
-                                  0.3170f,
-                                  0.2074f,
-                                  3);
+} const     default_config = CHASSIS_CONFIG(0.4205f,
+                                            0.3170f,
+                                            0.2074f,
+                                            3);
 
 
 #endif // PM1_SDK_CHASSIS_CONFIG_T_H

@@ -92,11 +92,11 @@ namespace block {
 		else {
 			auto rudder_target = v == 0
 			                     ? w > 0
-			                       ? -mechanical::pi / 2
-			                       : +mechanical::pi / 2
-			                     : -std::atan(w * mechanical::length / v);
+			                       ? -pi_f / 2
+			                       : +pi_f / 2
+			                     : -std::atan(w * default_config.length / v);
 			
-			if (std::abs(ptr()->rudder().position - rudder_target) > mechanical::pi / 36)
+			if (std::abs(ptr()->rudder().position - rudder_target) > pi_f / 36)
 				ptr()->set_state(0, rudder_target);
 			else
 				ptr()->set_target(v, w);

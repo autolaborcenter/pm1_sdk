@@ -72,15 +72,17 @@ namespace autolabor {
 			          _right{},
 			          _rudder{};
 			
+			/** 里程计清零标记 */
 			bool clear_flag = true;
 			
-			/** 状态 */
+			/** 里程计 */
 			odometry_t _odometry{};
 			
-			/** 更新里程计 */
+			/** 里程计更新锁 */
 			mutable std::mutex lock;
 			
-			mutable physical _physical{};
+			/** 目标运动 */
+			mutable physical target{};
 			
 			/** 最后一次请求的时间 */
 			mutable decltype(autolabor::now()) request_time;

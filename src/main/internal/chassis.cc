@@ -169,7 +169,7 @@ chassis::chassis(const std::string &port_name)
 						
 						if (now() - request_time < std::chrono::milliseconds(200)) {
 							// 200 ms 内，优化
-							auto optimized = optimize(_physical, _rudder.position);
+							auto optimized = optimize(target, _rudder.position);
 							auto wheels    = physical_to_wheels(&optimized, &default_config);
 							left   = static_cast<int>(wheels.left / mechanical::radius / mechanical::wheel_k);
 							right  = static_cast<int>(wheels.right / mechanical::radius / mechanical::wheel_k);
@@ -220,13 +220,13 @@ odometry_t chassis::odometry() const {
 
 void chassis::set_state(double rho, double rudder) const {
 	request_time = now();
-	_physical    = {static_cast<float>(rho), static_cast<float>(rudder)};
+	target       = {static_cast<float>(rho), static_cast<float>(rudder)};
 }
 
 void chassis::set_target(double v, double w) const {
+	velocity velocity = {static_cast<float>(v), static_cast<float>(w)};
 	request_time = now();
-	wheels wheels = {static_cast<float>(v), static_cast<float>(w)};
-	_physical = wheels_to_physical(&wheels, &default_config);
+	target       = velocity_to_physical(&velocity, &default_config);
 }
 
 void chassis::clear_odometry() {
