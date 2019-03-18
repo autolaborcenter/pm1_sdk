@@ -13,10 +13,12 @@ speed_controller::speed_controller(
 		double dead_area,
 		double min_speed,
 		double max_speed) : k(k),
-                            dead_area(std::fmax(0, dead_area)),
+                            dead_area(dead_area),
                             min_speed(min_speed),
                             max_speed(max_speed) {
-	if (min_speed > max_speed)
+	if (dead_area < 0
+	    || min_speed < 0
+	    || max_speed < min_speed)
 		throw std::exception("illegal speed range");
 }
 

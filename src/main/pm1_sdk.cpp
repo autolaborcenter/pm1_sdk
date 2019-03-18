@@ -165,14 +165,14 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 	if (speed == 0 && distance != 0) return {"this action will never complete"};
 	return run([speed, distance] {
 		const auto             o = ptr()->odometry().s;
-		const speed_controller speed_up(-0.5, 0, 0, speed),
-		                       speed_down(2.0 / 3, 0.5, 0.05, speed);
+		const speed_controller speed_up(0.5, 0, 0, std::abs(speed)),
+		                       speed_down(2.0 / 3, 0.5, 0.05, std::abs(speed));
 		
 		while (true) {
 			auto current = std::abs(ptr()->odometry().s - o),
 			     rest    = distance - current;
 			if (rest < 0) break;
-			auto actual = std::fmin(speed_up(current), speed_down(rest));
+			auto actual = std::fmin(std::max(0.1, speed_up(current)), speed_down(rest));
 			block::wait_or_drive(speed > 0 ? actual : -actual, 0);
 			loop_delay();
 		}
