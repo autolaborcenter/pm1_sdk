@@ -4,17 +4,14 @@
 
 #include <thread>
 #include <iostream>
-#include "../main/pm1_sdk.h"
 
-using namespace autolabor::pm1;
+extern "C" {
+#include <math.h>
+#include "../main/internal/control_model/model.h"
+}
 
 int main() {
-	initialize();
-	
-	//	std::thread([] {
-	//		while (true)
-	//			std::cout << get_odometry().x << std::endl;
-	//	}).detach();
-	
-	go_straight(0.1, 1);
+	physical x{1, 0};
+	physical_to_wheels(&x, &default_config);
+	// std::cout << atanf(-0.317 / -0.21);
 }

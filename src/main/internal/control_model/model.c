@@ -10,29 +10,34 @@ struct wheels physical_to_wheels(
 		const struct chassis_config_t *config) {
 	struct wheels result;
 	
+	float wheel_speed = physical->speed * config->max_wheel_speed;
+	
 	if (physical->speed == 0) {
 		// 对于舵轮来说是奇点，无法恢复
-		result.left = result.right = 0;
+		result.left  = 0;
+		result.right = 0;
 		
 	} else if (physical->rudder > 0) {
 		// 右转，左轮速度快
 		float r = -config->length / tanf(physical->rudder);
 		float k = (r + config->width / 2) / (r - config->width / 2);
 		
-		result.left  = physical->speed * config->max_wheel_speed;
-		result.right = physical->speed * config->max_wheel_speed * k;
+		result.left  = wheel_speed;
+		result.right = wheel_speed * k;
 		
 	} else if (physical->rudder < 0) {
 		// 左转，右轮速度快
 		float r = -config->length / tanf(physical->rudder);
 		float k = (r - config->width / 2) / (r + config->width / 2);
 		
-		result.left  = physical->speed * config->max_wheel_speed * k;
-		result.right = physical->speed * config->max_wheel_speed;
+		result.left  = wheel_speed * k;
+		result.right = wheel_speed;
 		
-	} else
+	} else {
 		// 直走
-		result.left = result.right = physical->speed;
+		result.left  = wheel_speed;
+		result.right = wheel_speed;
+	}
 	
 	return result;
 }
