@@ -75,15 +75,15 @@ struct physical wheels_to_physical(
 			float r = config->width / 2 * (k + 1) / (k - 1);
 			
 			result.speed  = wheels->left / config->max_wheel_speed;
-			result.rudder = atanf(-config->length / r);
+			result.rudder = -atanf(config->length / r);
 			
 		} else {
 			// 左转，右轮速度快
 			float k = wheels->left / wheels->right;
-			float r = config->width / 2 * (k - 1) / (k + 1);
+			float r = config->width / 2 * (1 + k) / (1 - k);
 			
 			result.speed  = wheels->right / config->max_wheel_speed;
-			result.rudder = atanf(-config->length / r);
+			result.rudder = -atanf(config->length / r);
 		}
 	}
 	
