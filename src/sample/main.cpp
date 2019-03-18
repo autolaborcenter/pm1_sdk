@@ -2,16 +2,19 @@
 // Created by ydrml on 2019/2/22.
 //
 
-#include "adjust_rudder.h"
+#include <thread>
+#include <iostream>
+#include "../main/pm1_sdk.h"
 
-extern "C" {
-#include "../main/internal/control_model/model.h"
-}
+using namespace autolabor::pm1;
 
 int main() {
-	for (float i = -pi_f / 2; i < pi_f / 2; i += 0.01f) {
-		physical p{0.5, i};
-		auto     result = physical_to_wheels(&p, &default_config);
-		std::cout << result.left << ',' << result.right << std::endl;
-	}
+	initialize();
+	
+	//	std::thread([] {
+	//		while (true)
+	//			std::cout << get_odometry().x << std::endl;
+	//	}).detach();
+	
+	go_straight(0.1, 1);
 }

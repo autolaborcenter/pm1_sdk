@@ -18,7 +18,7 @@ void odometry_t::operator+=(const odometry_update_info<> &info) {
 		dx = info.d_left;
 		dy = 0;
 	} else {
-		auto r = (info.d_rigth + info.d_left) / 2 / theta;
+		auto r = (info.d_rigth + info.d_left) / 2 / d_theta;
 		dx = r * std::sin(d_theta);
 		dy = r * (1 - std::cos(d_theta));
 	}

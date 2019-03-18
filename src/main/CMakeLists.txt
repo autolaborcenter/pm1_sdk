@@ -52,9 +52,6 @@ add_library(pm1_sdk
 
         internal/odometry_t.hh
         internal/odometry_t.cc
-
-        internal/control/speed_controller.hh
-        internal/control/speed_controller.cc
         # --------------------------
         internal/rudder_controller.hh
         internal/rudder_controller.cc)
