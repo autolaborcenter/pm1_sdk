@@ -176,8 +176,8 @@ chassis::chassis(const std::string &port_name)
 							          << pack_big_endian<tcu<0>::target_position, short>(rudder);
 						} else {
 							// 停机
-							*port_ptr << autolabor::can::pack<ecu<0>::target_speed>({})
-							          << autolabor::can::pack<ecu<1>::target_speed>({});
+							*port_ptr << autolabor::can::pack<ecu<0>::target_speed>({0, 0})
+							          << autolabor::can::pack<ecu<1>::target_speed>({0, 0});
 						}
 					}
 				});
