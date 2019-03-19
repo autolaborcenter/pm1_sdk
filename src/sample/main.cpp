@@ -5,7 +5,6 @@
 #include <thread>
 #include <iostream>
 #include "../main/pm1_sdk.h"
-#include "../main/internal/mechanical.h"
 
 using namespace autolabor::pm1;
 
@@ -21,7 +20,7 @@ int main() {
 		}
 	}).detach();
 	
-	turn_around(0.2, mechanical::pi * 2);
+	turn_around(0.2, 6.28);
 	delay(1);
 }
 

@@ -5,7 +5,6 @@
 #include <cmath>
 #include <tuple>
 #include "odometry_t.hh"
-#include "mechanical.h"
 
 using namespace autolabor::pm1;
 

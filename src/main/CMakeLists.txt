@@ -29,7 +29,6 @@ add_library(pm1_sdk
         internal/time_extensions.h
         internal/serial_extension.h
 
-        internal/mechanical.h
         internal/can_define.h
         # --------------------------
         internal/can/pack.h

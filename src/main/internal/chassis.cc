@@ -11,8 +11,16 @@
 
 using namespace autolabor::pm1;
 
+namespace mechanical {
+	constexpr int encoder_wheel  = +32000;
+	constexpr int encoder_rudder = -16384;
+	
+	constexpr double wheel_k  = 2 * PI_F / encoder_wheel;
+	constexpr double rudder_k = 2 * PI_F / encoder_rudder;
+}
+
 /** 控制优化参数 */
-constexpr double optimize_limit = mechanical::pi / 3;
+constexpr double optimize_limit = PI_F / 3;
 
 /** 连续控制优化 */
 inline physical optimize(const physical &target, double rudder);
@@ -26,6 +34,7 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
+	constexpr static auto control_timeout   = std::chrono::milliseconds(200);
 	
 	_left.time = _right.time = _rudder.time = now();
 	
@@ -167,21 +176,27 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 						auto value = get_big_endian<short>(msg) * mechanical::rudder_k;
 						_rudder.update(_now, value);
 						
-						if (!std::isnan(target.rudder) && now() - request_time < std::chrono::milliseconds(200)) {
+						int   left, right;
+						short rudder;
+						
+						if (!std::isnan(target.rudder) && now() - request_time < control_timeout) {
 							// 200 ms 内，参数有效
 							auto optimized = optimize(target, _rudder.position);
 							auto wheels    = physical_to_wheels(&optimized, &copy);
-							auto left      = static_cast<int>(wheels.left / copy.radius / mechanical::wheel_k);
-							auto right     = static_cast<int>(wheels.right / copy.radius / mechanical::wheel_k);
-							auto rudder    = static_cast<short>(target.rudder / mechanical::rudder_k);
-							*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
-							          << pack_big_endian<ecu<1>::target_speed, int>(right)
-							          << pack_big_endian<tcu<0>::target_position, short>(rudder);
+							left   = static_cast<int>(wheels.left / copy.radius / mechanical::wheel_k);
+							right  = static_cast<int>(wheels.right / copy.radius / mechanical::wheel_k);
+							rudder = static_cast<short>(target.rudder / mechanical::rudder_k);
+							
 						} else {
 							// 停机
-							*port_ptr << autolabor::can::pack<ecu<0>::target_speed>({0, 0})
-							          << autolabor::can::pack<ecu<1>::target_speed>({0, 0});
+							left   = 0;
+							right  = 0;
+							rudder = static_cast<short>(value / mechanical::rudder_k);
 						}
+						
+						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
+						          << pack_big_endian<ecu<1>::target_speed, int>(right)
+						          << pack_big_endian<tcu<0>::target_position, short>(rudder);
 					}
 				});
 		

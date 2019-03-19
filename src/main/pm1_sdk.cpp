@@ -12,7 +12,6 @@
 #include <thread>
 #include "internal/time_extensions.h"
 #include "internal/chassis.hh"
-#include "internal/mechanical.h"
 
 using namespace autolabor::pm1;
 
@@ -40,10 +39,10 @@ inline result run(const std::function<void()> &code,
 	return {};
 }
 
-struct process_controlller {
+struct process_controller {
 	double x0, y0, x1, y1, k;
 	
-	constexpr process_controlller(
+	constexpr process_controller(
 			double x0, double y0, double x1, double y1)
 			: x0(x0), y0(y0),
 			  x1(x1), y1(y1),
@@ -63,7 +62,7 @@ struct process_controlller {
 const auto max_v = default_config.max_wheel_speed,
            max_w = 2 * default_config.max_wheel_speed / default_config.width;
 
-const process_controlller
+const process_controller
 		move_up(0, 0.05, 0.5, max_v),                  // NOLINT(cert-err58-cpp)
 		move_down(0.05, 0.05, 3, max_v),               // NOLINT(cert-err58-cpp)
 		rotate_up(0, pi_f / 18, pi_f / 4, max_w),      // NOLINT(cert-err58-cpp)

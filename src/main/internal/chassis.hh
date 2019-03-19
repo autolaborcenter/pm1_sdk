@@ -8,7 +8,6 @@
 #include <mutex>
 #include "serial/serial.h"
 #include "can_define.h"
-#include "mechanical.h"
 #include "odometry_t.hh"
 #include "time_extensions.h"
 
