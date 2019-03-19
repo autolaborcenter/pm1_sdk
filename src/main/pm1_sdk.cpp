@@ -50,7 +50,7 @@ struct move_down {
 struct rotate_down {
 	constexpr static auto x0 = mechanical::pi / 9,
 	                      x1 = mechanical::pi,
-	                      y0 = x0 / 2,
+	                      y0 = x0 / 4,
 	                      y1 = mechanical::max_w;
 };
 

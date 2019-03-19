@@ -4,14 +4,25 @@
 
 #include <thread>
 #include <iostream>
+#include "../main/pm1_sdk.h"
+#include "../main/internal/mechanical.h"
 
-extern "C" {
-#include <math.h>
-#include "../main/internal/control_model/model.h"
-}
+using namespace autolabor::pm1;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 int main() {
-	physical x{1, 0};
-	physical_to_wheels(&x, &default_config);
-	// std::cout << atanf(-0.317 / -0.21);
+	initialize();
+	
+	std::thread([] {
+		while (true) {
+			std::cout << get_odometry().yaw << std::endl;
+		}
+	}).detach();
+	
+	turn_around(0.2, mechanical::pi * 2);
+	delay(1);
 }
+
+#pragma clang diagnostic pop
