@@ -40,49 +40,34 @@ inline result run(const std::function<void()> &code,
 	return {};
 }
 
-struct move_down {
-	constexpr static auto x0 = 0.05,
-	                      x1 = 3.00,
-	                      y0 = x0,
-	                      y1 = mechanical::max_v;
-};
-
-struct rotate_down {
-	constexpr static auto x0 = mechanical::pi / 9,
-	                      x1 = mechanical::pi,
-	                      y0 = x0 / 4,
-	                      y1 = mechanical::max_w;
-};
-
-struct move_up {
-	constexpr static auto x0 = 0.0,
-	                      x1 = 0.5,
-	                      y0 = 0.05,
-	                      y1 = mechanical::max_v;
-};
-
-struct rotate_up {
-	constexpr static auto x0 = 0.0,
-	                      x1 = mechanical::pi / 4,
-	                      y0 = mechanical::pi / 18,
-	                      y1 = mechanical::max_w;
-};
-
-template<class t>
-inline double max_speed_when(double x) {
-	constexpr static auto k = (t::y1 - t::y0) / (t::x1 - t::x0);
+struct process_controlller {
+	double x0, y0, x1, y1, k;
 	
-	return x < t::x0 ? t::y0
-	                 : x > t::x1 ? t::y1
-	                             : k * (x - t::x0) + t::y0;
-}
+	constexpr process_controlller(
+			double x0, double y0, double x1, double y1)
+			: x0(x0), y0(y0),
+			  x1(x1), y1(y1),
+			  k((y1 - y0) / (x1 - x0)) {
+		if (x0 < 0 || x1 < x0 ||
+		    y0 < 0 || y1 < y0)
+			throw std::exception("illegal parameters");
+	}
+	
+	inline double operator()(double x) const {
+		return x < x0 ? y0
+		              : x > x1 ? y1
+		                       : k * (x - x0) + y0;
+	}
+};
 
-/** 求目标速度下实际应有的速度 */
-template<class t>
-inline double actual_speed(double target, double x) {
-	const auto actual = std::min(std::abs(target), max_speed_when<t>(x));
-	return target > 0 ? +actual : -actual;
-}
+const auto max_v = default_config.max_wheel_speed,
+           max_w = 2 * default_config.max_wheel_speed / default_config.width;
+
+const process_controlller
+		move_up(0, 0.05, 0.5, max_v),                  // NOLINT(cert-err58-cpp)
+		move_down(0.05, 0.05, 3, max_v),               // NOLINT(cert-err58-cpp)
+		rotate_up(0, pi_f / 18, pi_f / 4, max_w),      // NOLINT(cert-err58-cpp)
+		rotate_down(pi_f / 9, pi_f / 36, pi_f, max_w); // NOLINT(cert-err58-cpp)
 
 namespace block {
 	/** 阻塞等待后轮转动 */
@@ -170,8 +155,8 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 			     rest    = distance - current;
 			if (rest < 0) break;
 			auto actual = std::min({std::abs(speed),
-			                        max_speed_when<move_up>(current),
-			                        max_speed_when<move_down>(rest)});
+			                        move_up(current),
+			                        move_down(rest)});
 			block::wait_or_drive(speed > 0 ? actual : -actual, 0);
 			loop_delay();
 		}
@@ -193,8 +178,8 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 			     rest    = d - current;
 			if (rest < 0) break;
 			auto actual    = std::min({std::abs(speed),
-			                           max_speed_when<move_up>(current),
-			                           max_speed_when<move_down>(rest)}),
+			                           move_up(current),
+			                           move_down(rest)}),
 			     available = speed > 0 ? actual : -actual;
 			block::wait_or_drive(available, available / r);
 			loop_delay();
@@ -215,8 +200,8 @@ result autolabor::pm1::turn_around(double speed, double rad) {
 			     rest    = rad - current;
 			if (rest < 0) break;
 			auto actual = std::min({std::abs(speed),
-			                        max_speed_when<rotate_up>(current),
-			                        max_speed_when<rotate_down>(rest)});
+			                        rotate_up(current),
+			                        rotate_down(rest)});
 			block::wait_or_drive(0, speed > 0 ? actual : -actual);
 			loop_delay();
 		}

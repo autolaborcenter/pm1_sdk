@@ -33,9 +33,9 @@ struct chassis_config_t {
 	      length,
 	      radius,
 	      max_wheel_speed;
-} const     default_config = CHASSIS_CONFIG(0.4205f,
-                                            0.3170f,
-                                            0.2074f,
+} const     default_config = CHASSIS_CONFIG(0.41f,
+                                            0.317f,
+                                            0.20f,
                                             3);
 
 

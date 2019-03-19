@@ -12,7 +12,7 @@ using namespace autolabor::pm1;
 void odometry_t::operator+=(const odometry_update_info<> &info) {
 	s += (info.d_left + info.d_rigth) / 2;
 	
-	double dx, dy, d_theta = (info.d_rigth - info.d_left) / mechanical::width;
+	double dx, dy, d_theta = (info.d_rigth - info.d_left) / parameters.width;
 	
 	if (d_theta == 0) {
 		dx = info.d_left;
@@ -36,4 +36,8 @@ void odometry_t::operator+=(const odometry_update_info<> &info) {
 	vx = dx / info.d_t.count();
 	vy = dy / info.d_t.count();
 	w  = d_theta / info.d_t.count();
+}
+
+void odometry_t::clear() {
+	s = x = y = theta = vx = vy = w = 0;
 }

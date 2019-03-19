@@ -8,6 +8,10 @@
 
 #include "time_extensions.h"
 
+extern "C" {
+#include "control_model/chassis_config_t.h"
+}
+
 namespace autolabor {
 	namespace pm1 {
 		/** 里程计更新信息 */
@@ -16,9 +20,13 @@ namespace autolabor {
 		
 		/** 里程计信息 */
 		struct odometry_t {
+			chassis_config_t parameters;
+			
 			double s, x, y, theta, vx, vy, w;
 			
 			void operator+=(const odometry_update_info<> &);
+			
+			void clear();
 		};
 	}
 }

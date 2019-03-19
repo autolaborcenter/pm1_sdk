@@ -38,7 +38,7 @@ namespace autolabor {
 		class chassis final {
 		public:
 			/** 绑定特定串口 */
-			explicit chassis(const std::string &);
+			explicit chassis(const std::string &, const chassis_config_t & = default_config);
 			
 			/** 析构 */
 			~chassis();
@@ -72,11 +72,14 @@ namespace autolabor {
 			          _right{},
 			          _rudder{};
 			
+			/** 底盘参数 */
+			chassis_config_t parameters;
+			
 			/** 里程计清零标记 */
 			bool clear_flag = true;
 			
 			/** 里程计 */
-			odometry_t _odometry{};
+			odometry_t _odometry;
 			
 			/** 里程计更新锁 */
 			mutable std::mutex lock;

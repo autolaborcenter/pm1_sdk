@@ -17,9 +17,11 @@ constexpr double optimize_limit = mechanical::pi / 3;
 /** 连续控制优化 */
 inline physical optimize(const physical &target, double rudder);
 
-chassis::chassis(const std::string &port_name)
+chassis::chassis(const std::string &port_name, const chassis_config_t &parameters)
 		: port(new serial::Serial(port_name, 115200,
-		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))) {
+		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
+		  parameters(parameters),
+		  _odometry({parameters}) {
 	using result_t = autolabor::can::parser::result_type;
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
@@ -105,6 +107,7 @@ chassis::chassis(const std::string &port_name)
 		auto delta_left  = .0,
 		     delta_right = .0;
 		auto time        = now();
+		auto copy        = this->parameters;
 		
 		autolabor::can::parse_engine parser(
 				[&](const autolabor::can::parser::result &result) {
@@ -127,8 +130,8 @@ chassis::chassis(const std::string &port_name)
 							else {
 								{
 									std::lock_guard<std::mutex> _(lock);
-									_odometry += {delta_left * mechanical::radius,
-									              delta_right * mechanical::radius,
+									_odometry += {delta_left * copy.radius,
+									              delta_right * copy.radius,
 									              _now - time};
 								}
 								right_ready = false;
@@ -149,8 +152,8 @@ chassis::chassis(const std::string &port_name)
 							else {
 								{
 									std::lock_guard<std::mutex> _(lock);
-									_odometry += {delta_left * mechanical::radius,
-									              delta_right * mechanical::radius,
+									_odometry += {delta_left * copy.radius,
+									              delta_right * copy.radius,
 									              _now - time};
 								}
 								left_ready = false;
@@ -167,9 +170,9 @@ chassis::chassis(const std::string &port_name)
 						if (!std::isnan(target.rudder) && now() - request_time < std::chrono::milliseconds(200)) {
 							// 200 ms 内，参数有效
 							auto optimized = optimize(target, _rudder.position);
-							auto wheels    = physical_to_wheels(&optimized, &default_config);
-							auto left      = static_cast<int>(wheels.left / mechanical::radius / mechanical::wheel_k);
-							auto right     = static_cast<int>(wheels.right / mechanical::radius / mechanical::wheel_k);
+							auto wheels    = physical_to_wheels(&optimized, &copy);
+							auto left      = static_cast<int>(wheels.left / copy.radius / mechanical::wheel_k);
+							auto right     = static_cast<int>(wheels.right / copy.radius / mechanical::wheel_k);
 							auto rudder    = static_cast<short>(target.rudder / mechanical::rudder_k);
 							*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
 							          << pack_big_endian<ecu<1>::target_speed, int>(right)
@@ -221,13 +224,13 @@ void chassis::set_state(double rho, double rudder) const {
 void chassis::set_target(double v, double w) const {
 	velocity velocity = {static_cast<float>(v), static_cast<float>(w)};
 	request_time = now();
-	target       = velocity_to_physical(&velocity, &default_config);
+	target       = velocity_to_physical(&velocity, &parameters);
 }
 
 void chassis::clear_odometry() {
 	std::lock_guard<std::mutex> _(lock);
 	clear_flag = true;
-	_odometry  = {};
+	_odometry  = odometry_t{parameters};
 }
 
 inline physical optimize(const physical &target, double rudder) {
