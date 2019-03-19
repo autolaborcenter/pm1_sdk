@@ -216,15 +216,9 @@ odometry_t chassis::odometry() const {
 	return _odometry;
 }
 
-void chassis::set_state(double rho, double rudder) const {
+void chassis::set_target(const physical &t) const {
 	request_time = now();
-	target       = {static_cast<float>(rho), static_cast<float>(rudder)};
-}
-
-void chassis::set_target(double v, double w) const {
-	velocity velocity = {static_cast<float>(v), static_cast<float>(w)};
-	request_time = now();
-	target       = velocity_to_physical(&velocity, &parameters);
+	target       = t;
 }
 
 void chassis::clear_odometry() {
@@ -234,7 +228,7 @@ void chassis::clear_odometry() {
 }
 
 inline physical optimize(const physical &target, double rudder) {
-	const auto difference = std::abs(target.rudder - rudder);
+	auto difference = std::abs(target.rudder - rudder);
 	return {static_cast<float>(difference > optimize_limit ? 0 : (1 - difference / optimize_limit) * target.speed),
 	        static_cast<float>(rudder)};
 }

@@ -72,19 +72,11 @@ const process_controlller
 namespace block {
 	/** 阻塞等待后轮转动 */
 	inline void wait_or_drive(double v, double w) {
-		if ((v == 0 && w == 0) || paused)
-			ptr()->set_state(0, ptr()->rudder().position);
+		if (paused)
+			ptr()->set_target({0, NAN});
 		else {
-			auto rudder_target = v == 0
-			                     ? w > 0
-			                       ? -pi_f / 2
-			                       : +pi_f / 2
-			                     : -std::atan(w * default_config.length / v);
-			
-			if (std::abs(ptr()->rudder().position - rudder_target) > pi_f / 36)
-				ptr()->set_state(0, rudder_target);
-			else
-				ptr()->set_target(v, w);
+			velocity temp = {static_cast<float>(v), static_cast<float>(w)};
+			ptr()->set_target(velocity_to_physical(&temp, &default_config));
 		}
 	}
 	
@@ -92,7 +84,7 @@ namespace block {
 	autolabor::seconds_floating inhibit() {
 		return autolabor::measure_time([] {
 			while (paused) {
-				wait_or_drive(0, 0);
+				ptr()->set_target({0, NAN});
 				loop_delay();
 			}
 		});
@@ -242,7 +234,10 @@ autolabor::pm1::odometry autolabor::pm1::get_odometry() {
 }
 
 result autolabor::pm1::drive(double v, double w) {
-	return run([v, w] { ptr()->set_target(v, w); });
+	return run([v, w] {
+		velocity temp = {static_cast<float>(v), static_cast<float>(w)};
+		ptr()->set_target(velocity_to_physical(&temp, &default_config));
+	});
 }
 
 result autolabor::pm1::reset_odometry() {

@@ -55,9 +55,7 @@ namespace autolabor {
 			
 			motor_t<> rudder() const;
 			
-			void set_state(double, double) const;
-			
-			void set_target(double, double) const;
+			void set_target(const physical &) const;
 			
 			odometry_t odometry() const;
 			
