@@ -41,50 +41,50 @@ namespace autolabor {
 		/**
 		 * 走直线
 		 *
-		 * @param speed    线速度（m/s）
-		 * @param distance 行驶距离（m，非负）
+		 * @param speed    线速度
+		 * @param distance 行驶距离
 		 */
 		result go_straight(double speed, double distance);
 		
 		/**
 		 * 走直线
 		 *
-		 * @param speed 线速度（m/s）
-		 * @param time  行驶时间（s，非负）
+		 * @param speed 线速度
+		 * @param time  行驶时间
 		 */
 		result go_straight_timing(double speed, double time);
 		
 		/**
 		 * 走圆弧
 		 *
-		 * @param speed 线速度（m/s）
-		 * @param r     转弯半径（m，非负）
-		 * @param rad   行驶时间（s，非负）
+		 * @param speed 线速度
+		 * @param r     转弯半径
+		 * @param rad   行驶时间
 		 */
 		result go_arc(double speed, double r, double rad);
 		
 		/**
 		 * 走圆弧
 		 *
-		 * @param speed 线速度（m/s）
-		 * @param r     转弯半径（m，非负）
-		 * @param time  行驶时间（s，非负）
+		 * @param speed 线速度
+		 * @param r     转弯半径
+		 * @param time  行驶时间
 		 */
 		result go_arc_timing(double speed, double r, double time);
 		
 		/**
 		 * 原地转
 		 *
-		 * @param speed 角速度（rad/s）
-		 * @param rad   弧度（rad，非负）
+		 * @param speed 角速度
+		 * @param rad   弧度
 		 */
 		result turn_around(double speed, double rad);
 		
 		/**
 		 * 原地转
 		 *
-		 * @param speed 角速度（rad/s）
-		 * @param time  时间（s，非负）
+		 * @param speed 角速度
+		 * @param time  时间
 		 */
 		result turn_around_timing(double speed, double time);
 		
@@ -101,15 +101,15 @@ namespace autolabor {
 		/**
 		 * 控制机器人运行
 		 *
-		 * @param v 线速度（m/s）
-		 * @param w 角速度（rad/s）
+		 * @param v 线速度
+		 * @param w 角速度
 		 */
 		result drive(double v, double w);
 		
 		/**
 	     * 延时
 	     *
-	     * @param time 时间（s，非负）
+	     * @param time 时间
 	     */
 		void delay(double time);
 		
@@ -121,6 +121,11 @@ namespace autolabor {
 		 * @return 里程计值
 		 */
 		odometry get_odometry();
+		
+		/**
+		 * 清除里程计累计值
+		 */
+		result reset_odometry();
 	}
 }
 

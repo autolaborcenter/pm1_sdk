@@ -259,3 +259,7 @@ autolabor::pm1::odometry autolabor::pm1::get_odometry() {
 result autolabor::pm1::drive(double v, double w) {
 	return run([v, w] { ptr()->set_target(v, w); });
 }
+
+result autolabor::pm1::reset_odometry() {
+	return run([] { ptr()->clear_odometry(); });
+}
