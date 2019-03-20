@@ -5,7 +5,7 @@
 #ifndef PM1_SDK_CHASSIS_CONFIG_T_H
 #define PM1_SDK_CHASSIS_CONFIG_T_H
 
-#define PI_F 3.141592653589793238462643383279502884f
+#include "pi.h"
 
 /**
  * 参数：

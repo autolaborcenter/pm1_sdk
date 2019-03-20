@@ -42,7 +42,12 @@ add_library(pm1_sdk
         internal/can/parse_engine.hh
         internal/can/parse_engine.cc
         # --------------------------
+        internal/control_model/pi.h
+
         internal/control_model/chassis_config_t.h
+
+        internal/control_model/motor_map.h
+
         internal/control_model/model.h
         internal/control_model/model.c
         # --------------------------
