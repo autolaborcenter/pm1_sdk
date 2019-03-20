@@ -5,10 +5,14 @@
 #ifndef PM1_SDK_INFO_H
 #define PM1_SDK_INFO_H
 
+#include <array>
 #include "pack.h"
 
 namespace autolabor {
 	namespace can {
+		using sgn = autolabor::can::union_no_data;   // 信号，无数据
+		using msg = autolabor::can::union_with_data; // 消息，有数据
+		
 		/**
          * CAN 包信息定义
          *

@@ -7,12 +7,9 @@
 
 #include "can/info.h"
 
-#include <array>
+using namespace autolabor::can;
 
 namespace autolabor {
-	using sgn = autolabor::can::union_no_data;   // 信号，无数据
-	using msg = autolabor::can::union_with_data; // 消息，有数据
-	
 	namespace pm1 {
 		/**
 		 * 广播地址常量
@@ -34,8 +31,8 @@ namespace autolabor {
 			
 			template<uint8_t msg_type_id>
 			struct pack_info_pair {
-				using tx = autolabor::can::info<sgn, 0, 0, type_id, node_index, msg_type_id>;
-				using rx = autolabor::can::info<msg, 0, 0, type_id, node_index, msg_type_id>;
+				using tx = info<sgn, 0, 0, type_id, node_index, msg_type_id>;
+				using rx = info<msg, 0, 0, type_id, node_index, msg_type_id>;
 			};
 			
 			// 状态
@@ -74,17 +71,17 @@ namespace autolabor {
 			constexpr static uint8_t type_id    = 0x11;
 			constexpr static uint8_t node_index = _node_index;
 			// 目标速度
-			using target_speed        = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x1>;
+			using target_speed        = info<msg, 0, 0, type_id, node_index, 0x1>;
 			// 当前速度
-			using current_speed_tx    = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x5>;
-			using current_speed_rx    = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x5>;
+			using current_speed_tx    = info<sgn, 0, 0, type_id, node_index, 0x5>;
+			using current_speed_rx    = info<msg, 0, 0, type_id, node_index, 0x5>;
 			// 当前编码器读数
-			using current_position_tx = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x6>;
-			using current_position_rx = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x6>;
+			using current_position_tx = info<sgn, 0, 0, type_id, node_index, 0x6>;
+			using current_position_rx = info<msg, 0, 0, type_id, node_index, 0x6>;
 			// 编码器清零
-			using clear               = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x7>;
+			using clear               = info<sgn, 0, 0, type_id, node_index, 0x7>;
 			// 超时时间
-			using timeout             = autolabor::can::info<msg, 0, 0, type_id, node_index, 0xa>;
+			using timeout             = info<msg, 0, 0, type_id, node_index, 0xa>;
 		};
 		
 		/** 动力控制器包信息协议 */
@@ -94,36 +91,36 @@ namespace autolabor {
 			constexpr static uint8_t type_id    = 0x12;
 			constexpr static uint8_t node_index = _node_index;
 			// 目标角度
-			using target_position     = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x1>;
+			using target_position     = info<msg, 0, 0, type_id, node_index, 0x1>;
 			// 目标角度增量
-			using target_difference   = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x2>;
+			using target_difference   = info<msg, 0, 0, type_id, node_index, 0x2>;
 			// 当前角度
-			using current_position_tx = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x3>;
-			using current_position_rx = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x3>;
+			using current_position_tx = info<sgn, 0, 0, type_id, node_index, 0x3>;
+			using current_position_rx = info<msg, 0, 0, type_id, node_index, 0x3>;
 			// 当前速度
-			using current_speed_tx    = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x5>;
-			using current_speed_rx    = autolabor::can::info<msg, 0, 0, type_id, node_index, 0x5>;
+			using current_speed_tx    = info<sgn, 0, 0, type_id, node_index, 0x5>;
+			using current_speed_rx    = info<msg, 0, 0, type_id, node_index, 0x5>;
 			// 编码器复位
-			using encoder_reset       = autolabor::can::info<sgn, 0, 0, type_id, node_index, 0x6>;
+			using encoder_reset       = info<sgn, 0, 0, type_id, node_index, 0x6>;
 		};
 		
 		template<class data_t>
-		inline data_t get_big_endian(const autolabor::can::union_with_data &msg) {
-			autolabor::can::msg_union<data_t> buffer{};
+		inline data_t get_big_endian(const union_with_data &msg) {
+			msg_union<data_t> buffer{};
 			std::reverse_copy(msg.data.data, msg.data.data + sizeof(data_t), buffer.bytes);
 			return buffer.data;
 		}
 		
 		template<class pack_info_t, class data_t>
 		inline auto pack_big_endian(data_t value)
-		-> decltype(autolabor::can::pack<pack_info_t>()) {
-			autolabor::can::msg_union<data_t> buffer1{};
+		-> decltype(pack<pack_info_t>()) {
+			msg_union<data_t>                 buffer1{};
 			std::array<uint8_t, 8>            buffer2{};
 			
 			buffer1.data = value;
 			std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(data_t), buffer2.data());
 			
-			return autolabor::can::pack<pack_info_t>(buffer2);
+			return pack<pack_info_t>(buffer2);
 		}
 	}
 }

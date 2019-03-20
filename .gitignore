@@ -6,3 +6,7 @@
 out/
 cmake-build-debug/
 cmake-build-release/
+
+# vs
+vs_project/pm1_sdk/Debug/
+vs_project/pm1_sdk/Release/
