@@ -8,16 +8,9 @@
 #include "serial_extension.h"
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
+#include "control_model/motor_map.h"
 
 using namespace autolabor::pm1;
-
-namespace mechanical {
-	constexpr int encoder_wheel  = +32000;
-	constexpr int encoder_rudder = -16384;
-	
-	constexpr double wheel_k  = 2 * PI_F / encoder_wheel;
-	constexpr double rudder_k = 2 * PI_F / encoder_rudder;
-}
 
 /** 控制优化参数 */
 constexpr double optimize_limit = PI_F / 3;
@@ -129,7 +122,7 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
 						
-						auto value = get_big_endian<int>(msg) * mechanical::wheel_k;
+						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_left = value - _left.position;
 						
 						_left.update(_now, value);
@@ -151,7 +144,7 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 						
 					} else if (ecu<1>::current_position_rx::match(msg)) {
 						
-						auto value = get_big_endian<int>(msg) * mechanical::wheel_k;
+						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_right = value - _right.position;
 						
 						_right.update(_now, value);
@@ -173,7 +166,7 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						auto value = get_big_endian<short>(msg) * mechanical::rudder_k;
+						auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
 						_rudder.update(_now, value);
 						
 						int   left, right;
@@ -183,15 +176,15 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 							// 200 ms 内，参数有效
 							auto optimized = optimize(target, _rudder.position);
 							auto wheels    = physical_to_wheels(&optimized, &copy);
-							left   = static_cast<int>(wheels.left / copy.radius / mechanical::wheel_k);
-							right  = static_cast<int>(wheels.right / copy.radius / mechanical::wheel_k);
-							rudder = static_cast<short>(target.rudder / mechanical::rudder_k);
+							left   = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
+							right  = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
+							rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
 							
 						} else {
 							// 停机
 							left   = 0;
 							right  = 0;
-							rudder = static_cast<short>(value / mechanical::rudder_k);
+							rudder = static_cast<short>(PULSES_OF(value, default_rudder_k));
 						}
 						
 						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)

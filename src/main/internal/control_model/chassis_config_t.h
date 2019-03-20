@@ -19,11 +19,11 @@
    LENGTH, \
    DIAMETER, \
    WHEEL_SPEED \
-) {                          \
- (WIDTH),                    \
- (LENGTH),                   \
- (DIAMETER) / 2,             \
- PI_F*(DIAMETER)*WHEEL_SPEED \
+) {                     \
+ (WIDTH),               \
+ (LENGTH),              \
+ (DIAMETER) / 2,        \
+ 2 * PI_F * WHEEL_SPEED \
 }
 
 const float pi_f           = PI_F;

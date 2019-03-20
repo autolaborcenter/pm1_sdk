@@ -7,9 +7,9 @@
 
 #include "chassis_config_t.h"
 
-struct wheels { float left, right; };     // 两轮线速度（m/s）
+struct wheels { float left, right; };     // 两轮线速度（rad/s）
 struct velocity { float v, w; };          // 速度空间（标准单位）
-struct physical { float speed, rudder; }; // 物理模型
+struct physical { float speed, rudder; }; // 物理模型（speed := 归一化速度，rudder := 后轮转角）
 
 struct wheels physical_to_wheels(
 		const struct physical *,
