@@ -12,22 +12,22 @@
 
 using namespace autolabor::pm1;
 
-/** 控制优化参数 */
-constexpr double optimize_limit = PI_F / 3;
-
-/** 连续控制优化 */
-inline physical optimize(const physical &target, double rudder);
-
-chassis::chassis(const std::string &port_name, const chassis_config_t &parameters)
+chassis::chassis(const std::string &port_name,
+                 double acceleration,
+                 const chassis_config_t &config)
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
-		  parameters(parameters),
-		  _odometry({parameters}) {
+		  parameters(config),
+		  _odometry({config}) {
 	using result_t = autolabor::can::parser::result_type;
 	
+	constexpr static auto optimize_limit    = PI_F / 4;
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
 	constexpr static auto control_timeout   = std::chrono::milliseconds(200);
+	
+	auto frequency = 1000.0 / rudder_interval.count();
+	acceleration = std::isinf(acceleration) ? 1.0 : acceleration / frequency;
 	
 	_left.time = _right.time = _rudder.time = now();
 	
@@ -101,7 +101,7 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 	// endregion
 	
 	// region receive
-	std::thread([port_ptr, this] {
+	std::thread([port_ptr, acceleration, this] {
 		std::string buffer;
 		
 		auto left_ready  = false,
@@ -115,7 +115,8 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 				[&](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
-					auto _now = now();
+					auto _now  = now();
+					auto speed = .0f;
 					
 					// 处理
 					const auto msg = result.message;
@@ -173,9 +174,13 @@ chassis::chassis(const std::string &port_name, const chassis_config_t &parameter
 						short rudder;
 						
 						if (!std::isnan(target.rudder) && now() - request_time < control_timeout) {
+							auto difference = std::abs(target.rudder - value);
+							auto optimized  = difference > optimize_limit ? 0 : (1 - difference / optimize_limit) * target.speed;
+							speed = optimized > speed ? std::fmin(speed + acceleration, optimized)
+							                          : std::fmax(speed - acceleration, optimized);
+							auto _physical = physical{static_cast<float>(speed), value};
 							// 200 ms 内，参数有效
-							auto optimized = optimize(target, _rudder.position);
-							auto wheels    = physical_to_wheels(&optimized, &copy);
+							auto wheels    = physical_to_wheels(&_physical, &copy);
 							left   = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
 							right  = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
 							rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
@@ -233,10 +238,4 @@ void chassis::clear_odometry() {
 	std::lock_guard<std::mutex> _(lock);
 	clear_flag = true;
 	_odometry  = odometry_t{parameters};
-}
-
-inline physical optimize(const physical &target, double rudder) {
-	auto difference = std::abs(target.rudder - rudder);
-	return {static_cast<float>(difference > optimize_limit ? 0 : (1 - difference / optimize_limit) * target.speed),
-	        static_cast<float>(rudder)};
 }

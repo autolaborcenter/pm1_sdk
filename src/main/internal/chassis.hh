@@ -36,8 +36,15 @@ namespace autolabor {
 		/** 底盘 */
 		class chassis final {
 		public:
-			/** 绑定特定串口 */
-			explicit chassis(const std::string &, const chassis_config_t & = default_config);
+			/**
+			 *
+			 * @param port         串口名字
+			 * @param acceleration 加速度（比例/秒）
+			 * @param config       底盘配置
+			 */
+			explicit chassis(const std::string &port,
+			                 double acceleration = INFINITY,
+			                 const chassis_config_t &config = default_config);
 			
 			/** 析构 */
 			~chassis();
