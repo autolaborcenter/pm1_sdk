@@ -11,4 +11,7 @@ add_library(pm1_control_model
         motor_map.h
 
         model.h
-        model.c)
+        model.c
+
+        optimization.h
+        optimization.c)

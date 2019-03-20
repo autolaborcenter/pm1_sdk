@@ -50,6 +50,9 @@ add_library(pm1_sdk
 
         internal/control_model/model.h
         internal/control_model/model.c
+
+        internal/control_model/optimization.h
+        internal/control_model/optimization.c
         # --------------------------
         internal/chassis.hh
         internal/chassis.cc
