@@ -8,7 +8,11 @@
 #include "serial_extension.h"
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
+
+extern "C" {
 #include "control_model/motor_map.h"
+#include "control_model/optimization.h"
+}
 
 using namespace autolabor::pm1;
 
@@ -21,13 +25,18 @@ chassis::chassis(const std::string &port_name,
 		  _odometry({config}) {
 	using result_t = autolabor::can::parser::result_type;
 	
-	constexpr static auto optimize_limit    = PI_F / 4;
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
 	constexpr static auto control_timeout   = std::chrono::milliseconds(200);
 	
 	auto frequency = 1000.0 / rudder_interval.count();
-	acceleration = std::isinf(acceleration) ? 1.0 : acceleration / frequency;
+	
+	optimize_config_t optimize_config{
+			PI_F / 4,
+			static_cast<float>( acceleration / frequency),
+			INFINITY,
+			INFINITY
+	};
 	
 	_left.time = _right.time = _rudder.time = now();
 	
@@ -101,7 +110,7 @@ chassis::chassis(const std::string &port_name,
 	// endregion
 	
 	// region receive
-	std::thread([port_ptr, acceleration, this] {
+	std::thread([port_ptr, optimize_config, this] {
 		std::string buffer;
 		
 		auto left_ready  = false,
@@ -174,13 +183,10 @@ chassis::chassis(const std::string &port_name,
 						short rudder;
 						
 						if (!std::isnan(target.rudder) && now() - request_time < control_timeout) {
-							auto difference = std::abs(target.rudder - value);
-							auto optimized  = difference > optimize_limit ? 0 : (1 - difference / optimize_limit) * target.speed;
-							speed = optimized > speed ? std::fmin(speed + acceleration, optimized)
-							                          : std::fmax(speed - acceleration, optimized);
-							auto _physical = physical{static_cast<float>(speed), value};
+							physical current{speed, value};
+							auto     optimized = optimize(&target, &current, &copy, &optimize_config);
 							// 200 ms 内，参数有效
-							auto wheels    = physical_to_wheels(&_physical, &copy);
+							auto     wheels    = physical_to_wheels(&optimized, &copy);
 							left   = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
 							right  = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
 							rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
