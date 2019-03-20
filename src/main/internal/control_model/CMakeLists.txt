@@ -7,6 +7,7 @@ add_library(pm1_control_model
         pi.h
 
         chassis_config_t.h
+        chassis_config_t.c
 
         motor_map.h
 

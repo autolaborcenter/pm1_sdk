@@ -27,7 +27,7 @@ chassis::chassis(const std::string &port_name,
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
-	constexpr static auto control_timeout   = std::chrono::milliseconds(200);
+	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
 	
 	auto frequency = 1000.0 / rudder_interval.count();
 	
@@ -179,18 +179,18 @@ chassis::chassis(const std::string &port_name,
 						auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
 						_rudder.update(_now, value);
 						
-						int   left, right;
-						short rudder;
+						int   left   = 0,
+						      right  = 0;
+						short rudder = 0;
 						
 						if (!std::isnan(target.rudder) && now() - request_time < control_timeout) {
 							physical current{speed, value};
 							auto     optimized = optimize(&target, &current, &copy, &optimize_config);
-							// 200 ms 内，参数有效
 							auto     wheels    = physical_to_wheels(&optimized, &copy);
 							left   = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
 							right  = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
 							rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-							
+							speed  = optimized.speed;
 						} else {
 							// 停机
 							left   = 0;

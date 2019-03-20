@@ -45,6 +45,7 @@ add_library(pm1_sdk
         internal/control_model/pi.h
 
         internal/control_model/chassis_config_t.h
+        internal/control_model/chassis_config_t.c
 
         internal/control_model/motor_map.h
 

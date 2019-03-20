@@ -59,8 +59,8 @@ struct process_controller {
 	}
 };
 
-const auto max_v = default_config.max_wheel_speed,
-           max_w = 2 * default_config.max_wheel_speed / default_config.width;
+const auto max_v = 3 * 2 * pi_f,
+           max_w = max_v / default_config.width;
 
 const process_controller
 		move_up(0, 0.05, 0.5, max_v),                  // NOLINT(cert-err58-cpp)

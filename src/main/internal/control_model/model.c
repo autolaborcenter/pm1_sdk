@@ -10,8 +10,6 @@ struct wheels physical_to_wheels(
 		const struct chassis_config_t *config) {
 	struct wheels result;
 	
-	float wheel_speed = physical->speed * config->max_wheel_speed;
-	
 	if (physical->speed == 0) {
 		// 对于舵轮来说是奇点，无法恢复
 		result.left  = 0;
@@ -22,21 +20,21 @@ struct wheels physical_to_wheels(
 		float r = -config->length / tanf(physical->rudder);
 		float k = (r + config->width / 2) / (r - config->width / 2);
 		
-		result.left  = wheel_speed;
-		result.right = wheel_speed * k;
+		result.left  = physical->speed;
+		result.right = physical->speed * k;
 		
 	} else if (physical->rudder < 0) {
 		// 左转，右轮速度快
 		float r = -config->length / tanf(physical->rudder);
 		float k = (r - config->width / 2) / (r + config->width / 2);
 		
-		result.left  = wheel_speed * k;
-		result.right = wheel_speed;
+		result.left  = physical->speed * k;
+		result.right = physical->speed;
 		
 	} else {
 		// 直走
-		result.left  = wheel_speed;
-		result.right = wheel_speed;
+		result.left  = physical->speed;
+		result.right = physical->speed;
 	}
 	
 	return result;
@@ -59,17 +57,17 @@ struct physical wheels_to_physical(
 			
 		} else if (wheels->left > wheels->right) {
 			// 副对角线
-			result.speed  = left / config->max_wheel_speed;
+			result.speed  = left;
 			result.rudder = +pi_f / 2;
 			
 		} else if (wheels->left < wheels->right) {
 			// 副对角线
-			result.speed  = right / config->max_wheel_speed;
+			result.speed  = right;
 			result.rudder = -pi_f / 2;
 			
 		} else {
 			// 主对角线
-			result.speed  = wheels->left / config->max_wheel_speed;
+			result.speed  = wheels->left;
 			result.rudder = 0;
 		}
 		
@@ -79,7 +77,7 @@ struct physical wheels_to_physical(
 			float k = wheels->right / wheels->left;
 			float r = config->width / 2 * (k + 1) / (k - 1);
 			
-			result.speed  = wheels->left / config->max_wheel_speed;
+			result.speed  = wheels->left;
 			result.rudder = -atanf(config->length / r);
 			
 		} else {
@@ -87,7 +85,7 @@ struct physical wheels_to_physical(
 			float k = wheels->left / wheels->right;
 			float r = config->width / 2 * (1 + k) / (1 - k);
 			
-			result.speed  = wheels->right / config->max_wheel_speed;
+			result.speed  = wheels->right;
 			result.rudder = -atanf(config->length / r);
 		}
 	}
@@ -113,8 +111,8 @@ struct wheels velocity_to_wheels(
 		const struct velocity *velocity,
 		const struct chassis_config_t *config) {
 	struct wheels result = {
-			velocity->v - config->width / 2 * velocity->w,
-			velocity->v + config->width / 2 * velocity->w
+			(velocity->v - config->width / 2 * velocity->w) / config->radius,
+			(velocity->v + config->width / 2 * velocity->w) / config->radius
 	};
 	return result;
 }
@@ -123,8 +121,8 @@ struct velocity wheels_to_velocity(
 		const struct wheels *wheels,
 		const struct chassis_config_t *config) {
 	struct velocity result = {
-			(wheels->right + wheels->left) / 2,
-			(wheels->right - wheels->left) / config->width
+			config->radius * (wheels->right + wheels->left) / 2,
+			config->radius * (wheels->right - wheels->left) / config->width
 	};
 	return result;
 }

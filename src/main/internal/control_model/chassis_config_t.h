@@ -17,26 +17,20 @@
 #define CHASSIS_CONFIG(\
    WIDTH, \
    LENGTH, \
-   DIAMETER, \
-   WHEEL_SPEED \
-) {                     \
- (WIDTH),               \
- (LENGTH),              \
- (DIAMETER) / 2,        \
- 2 * PI_F * WHEEL_SPEED \
+   DIAMETER \
+) {             \
+ (WIDTH),       \
+ (LENGTH),      \
+ (DIAMETER) / 2 \
 }
-
-const float pi_f           = PI_F;
 
 struct chassis_config_t {
 	float width,
 	      length,
-	      radius,
-	      max_wheel_speed;
-} const     default_config = CHASSIS_CONFIG(0.41f,
-                                            0.317f,
-                                            0.20f,
-                                            3);
+	      radius;
+};
 
+extern const float                   pi_f;
+extern const struct chassis_config_t default_config;
 
 #endif // PM1_SDK_CHASSIS_CONFIG_T_H
