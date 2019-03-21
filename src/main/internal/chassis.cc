@@ -220,6 +220,7 @@ odometry_t chassis::odometry() const {
 void chassis::set_target(const physical &t) const {
 	request_time = now();
 	target       = t;
+	legalize_physical(&target, 6 * pi_f);
 }
 
 void chassis::clear_odometry() {
