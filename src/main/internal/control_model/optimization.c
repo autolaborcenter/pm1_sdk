@@ -10,13 +10,9 @@ struct physical optimize(const struct physical *target,
                          const struct chassis_config_t *chassis,
                          const struct optimize_config_t *config) {
 	struct physical result = {0, current->rudder};
-	// 若不完备，放弃调整
-	if (isnan(target->rudder)) return result;
 	// 等待后轮转动
-	float difference = fabsf(target->rudder - current->rudder);
-	result.speed = difference > config->optimize_width
-	               ? 0
-	               : (1 - difference / config->optimize_width) * target->speed;
+	if (!isnan(target->rudder))
+		result.speed = target->speed * fmaxf(0, 1 - fabsf(target->rudder - current->rudder) / config->optimize_width);
 	// 在速度空间中限速
 	struct velocity temp = physical_to_velocity(&result, chassis);
 	
