@@ -7,14 +7,6 @@
 
 #include "model.h"
 
-/** 优化参数 */
-struct optimize_config_t {
-	float optimize_width, // 优化宽度
-	      acceleration,   // 加速度
-	      max_v,          // 最大线速度
-	      max_w;          // 最大角速度
-};
-
 /**
  * 控制量优化
  * @param target  目标控制量
@@ -25,7 +17,7 @@ struct optimize_config_t {
  */
 struct physical optimize(const struct physical *target,
                          const struct physical *current,
-                         const struct chassis_config_t *,
-                         const struct optimize_config_t *);
+                         float optimize_width,
+                         float acceleration);
 
 #endif //PM1_SDK_OPTIMIZATION_H

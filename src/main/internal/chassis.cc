@@ -18,7 +18,8 @@ using namespace autolabor::pm1;
 
 chassis::chassis(const std::string &port_name,
                  const chassis_config_t &chassis_config,
-                 const optimize_config_t &optimize_config)
+                 float optimize_width,
+                 float acceleration)
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
 		  parameters(chassis_config),
@@ -100,7 +101,7 @@ chassis::chassis(const std::string &port_name,
 	// endregion
 	
 	// region receive
-	std::thread([port_ptr, optimize_config, this] {
+	std::thread([port_ptr, optimize_width, acceleration, this] {
 		std::string buffer;
 		
 		auto left_ready  = false,
@@ -173,7 +174,7 @@ chassis::chassis(const std::string &port_name,
 							target         = {0, value};
 						
 						physical current{speed, value};
-						auto     optimized = optimize(&target, &current, &copy, &optimize_config);
+						auto     optimized = optimize(&target, &current, optimize_width, acceleration);
 						auto     wheels    = physical_to_wheels(&optimized, &copy);
 						auto     left      = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
 						auto     right     = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));

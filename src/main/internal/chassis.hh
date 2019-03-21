@@ -45,7 +45,8 @@ namespace autolabor {
 			 */
 			explicit chassis(const std::string &port_name,
 			                 const chassis_config_t & = default_config,
-			                 const optimize_config_t & = {pi_f / 4, INFINITY, INFINITY, INFINITY});
+			                 float optimize_width = pi_f / 4,
+			                 float acceleration = INFINITY);
 			
 			/** 析构 */
 			~chassis();
