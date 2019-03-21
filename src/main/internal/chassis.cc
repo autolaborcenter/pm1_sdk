@@ -23,7 +23,9 @@ chassis::chassis(const std::string &port_name,
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
 		  parameters(chassis_config),
-		  _odometry({chassis_config}) {
+		  _odometry({chassis_config}),
+		  optimize_width(optimize_width),
+		  acceleration(acceleration) {
 	using result_t = autolabor::can::parser::result_type;
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
@@ -101,7 +103,7 @@ chassis::chassis(const std::string &port_name,
 	// endregion
 	
 	// region receive
-	std::thread([port_ptr, optimize_width, acceleration, this] {
+	std::thread([port_ptr, this] {
 		std::string buffer;
 		
 		auto left_ready  = false,
@@ -110,13 +112,14 @@ chassis::chassis(const std::string &port_name,
 		     delta_right = .0;
 		auto time        = now();
 		auto copy        = this->parameters;
+		auto paused      = false;
+		auto speed       = .0f;
 		
 		autolabor::can::parse_engine parser(
 				[&](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
-					auto _now  = now();
-					auto speed = .0f;
+					auto _now = now();
 					
 					// 处理
 					const auto msg = result.message;
@@ -167,23 +170,33 @@ chassis::chassis(const std::string &port_name,
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
+						auto value  = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
 						_rudder.update(_now, value);
 						
-						if (std::isnan(target.rudder) || now() - request_time > control_timeout)
-							target         = {0, value};
+						wheels wheels{};
+						auto   stop = std::isnan(target.rudder) || now() - request_time > control_timeout;
 						
-						physical current{speed, value};
-						auto     optimized = optimize(&target, &current, optimize_width, acceleration);
-						auto     wheels    = physical_to_wheels(&optimized, &copy);
-						auto     left      = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
-						auto     right     = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
-						auto     rudder    = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-						speed = optimized.speed;
+						if (stop) {
+							if (paused) return;
+							
+							target = {0, value};
+							speed  = 0;
+							wheels = {0, 0};
+						} else {
+							physical current{speed, value};
+							auto     optimized = optimize(&target, &current, this->optimize_width, this->acceleration);
+							speed  = optimized.speed;
+							wheels = physical_to_wheels(&optimized, &copy);
+						}
 						
-						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
-						          << pack_big_endian<ecu<1>::target_speed, int>(right)
-						          << pack_big_endian<tcu<0>::target_position, short>(rudder);
+						paused = stop;
+						
+						auto left   = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
+						auto right  = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
+						auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
+						*port_ptr << pack_big_endian<ecu<0>::target_speed, decltype(left)>(left)
+						          << pack_big_endian<ecu<1>::target_speed, decltype(right)>(right)
+						          << pack_big_endian<tcu<0>::target_position, decltype(rudder)>(rudder);
 					}
 				});
 		

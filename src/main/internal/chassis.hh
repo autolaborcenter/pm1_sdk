@@ -37,12 +37,6 @@ namespace autolabor {
 		/** 底盘 */
 		class chassis final {
 		public:
-			/**
-			 *
-			 * @param port         串口名字
-			 * @param acceleration 加速度（比例/秒）
-			 * @param chassis_config       底盘配置
-			 */
 			explicit chassis(const std::string &port_name,
 			                 const chassis_config_t & = default_config,
 			                 float optimize_width = pi_f / 4,
@@ -80,6 +74,10 @@ namespace autolabor {
 			
 			/** 底盘参数 */
 			chassis_config_t parameters;
+			
+			/** 优化参数 */
+			float optimize_width,
+			      acceleration;
 			
 			/** 里程计清零标记 */
 			bool clear_flag = true;
