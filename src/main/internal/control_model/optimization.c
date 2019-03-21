@@ -13,15 +13,15 @@ struct physical optimize(const struct physical *target,
 	// 等待后轮转动
 	if (!isnan(target->rudder))
 		result.speed = target->speed * fmaxf(0, 1 - fabsf(target->rudder - current->rudder) / config->optimize_width);
+	
 	// 在速度空间中限速
 	struct velocity temp = physical_to_velocity(&result, chassis);
+	result.speed *= fminf(1, fminf(config->max_v / fabsf(temp.v),
+	                               config->max_w / fabsf(temp.w)));
 	
-	float ratio_v = config->max_v / fabsf(temp.v);
-	float ratio_w = config->max_w / fabsf(temp.w);
-	result.speed *= fminf(fminf(ratio_v, ratio_w), 1);
 	// 动态调速
-	result.speed  = result.speed > current->speed
-	                ? fminf(current->speed + config->acceleration, result.speed)
-	                : fmaxf(current->speed - config->acceleration, result.speed);
+	result.speed = result.speed > current->speed
+	               ? fminf(current->speed + config->acceleration, result.speed)
+	               : fmaxf(current->speed - config->acceleration, result.speed);
 	return result;
 }
