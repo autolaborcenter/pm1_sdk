@@ -126,3 +126,23 @@ struct velocity wheels_to_velocity(
 	};
 	return result;
 }
+
+void legalize_physical(struct physical *data, float max_wheel_speed) {
+	data->speed *= fminf(1, max_wheel_speed / fabsf(data->speed));
+}
+
+void legalize_wheels(struct wheels *data, float max_wheel_speed) {
+	float ratio = fminf(1, fminf(max_wheel_speed / fabsf(data->left),
+	                             max_wheel_speed / fabsf(data->right)));
+	data->left *= ratio;
+	data->right *= ratio;
+}
+
+void legalize_velocity(struct velocity *data,
+                       const struct chassis_config_t *chassis,
+                       float max_wheel_speed) {
+	struct physical temp  = velocity_to_physical(data, chassis);
+	float           ratio = fminf(1, max_wheel_speed / fabsf(temp.speed));
+	data->v *= ratio;
+	data->w *= ratio;
+}
