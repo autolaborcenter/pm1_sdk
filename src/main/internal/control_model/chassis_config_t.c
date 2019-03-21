@@ -3,10 +3,11 @@
 //
 
 #include "chassis_config_t.h"
+#include "pi.h"
 
-const float pi_f = PI_F;
+const float pi_f = M_PI;
 
 const struct chassis_config_t
-		default_config = CHASSIS_CONFIG(0.41f,
-		                                0.317f,
-		                                0.20f);
+		default_config = {0.41f,
+		                  0.317f,
+		                  0.20f / 2};

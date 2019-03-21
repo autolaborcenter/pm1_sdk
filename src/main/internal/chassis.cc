@@ -27,6 +27,7 @@ chassis::chassis(const std::string &port_name,
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
+	constexpr static auto connect_timeout   = std::chrono::milliseconds(500);
 	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
 	
 	_left.time = _right.time = _rudder.time = now();
@@ -45,19 +46,17 @@ chassis::chassis(const std::string &port_name,
 				[&ecu0, &ecu1, &tcu0](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
-					const auto msg = result.message;
-					
-					if (unit<ecu<0>>::state_rx::match(msg))
-						ecu0 = *msg.data.data;
-					else if (unit<ecu<1>>::state_rx::match(msg))
-						ecu1 = *msg.data.data;
-					else if (unit<tcu<0>>::state_rx::match(msg))
-						tcu0 = *msg.data.data;
+					if (unit<ecu<0>>::state_rx::match(result.message))
+						ecu0 = *result.message.data.data;
+					else if (unit<ecu<1>>::state_rx::match(result.message))
+						ecu1 = *result.message.data.data;
+					else if (unit<tcu<0>>::state_rx::match(result.message))
+						tcu0 = *result.message.data.data;
 				});
 		
 		while (port->isOpen()
 		       && !(ecu0 && ecu1 && tcu0)
-		       && now() - time < seconds_duration(1)) {
+		       && now() - time < connect_timeout) {
 			
 			try { buffer = port->read(); }
 			catch (std::exception &) { buffer = ""; }
@@ -170,24 +169,16 @@ chassis::chassis(const std::string &port_name,
 						auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
 						_rudder.update(_now, value);
 						
-						int   left   = 0,
-						      right  = 0;
-						short rudder = 0;
+						if (std::isnan(target.rudder) || now() - request_time > control_timeout)
+							target         = {0, value};
 						
-						if (!std::isnan(target.rudder) && now() - request_time < control_timeout) {
-							physical current{speed, value};
-							auto     optimized = optimize(&target, &current, &copy, &optimize_config);
-							auto     wheels    = physical_to_wheels(&optimized, &copy);
-							left   = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
-							right  = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
-							rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-							speed  = optimized.speed;
-						} else {
-							// 停机
-							left   = 0;
-							right  = 0;
-							rudder = static_cast<short>(PULSES_OF(value, default_rudder_k));
-						}
+						physical current{speed, value};
+						auto     optimized = optimize(&target, &current, &copy, &optimize_config);
+						auto     wheels    = physical_to_wheels(&optimized, &copy);
+						auto     left      = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
+						auto     right     = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
+						auto     rudder    = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
+						speed = optimized.speed;
 						
 						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
 						          << pack_big_endian<ecu<1>::target_speed, int>(right)
