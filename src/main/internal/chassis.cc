@@ -17,26 +17,17 @@ extern "C" {
 using namespace autolabor::pm1;
 
 chassis::chassis(const std::string &port_name,
-                 double acceleration,
-                 const chassis_config_t &config)
+                 const chassis_config_t &chassis_config,
+                 const optimize_config_t &optimize_config)
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
-		  parameters(config),
-		  _odometry({config}) {
+		  parameters(chassis_config),
+		  _odometry({chassis_config}) {
 	using result_t = autolabor::can::parser::result_type;
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
 	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
-	
-	auto frequency = 1000.0 / rudder_interval.count();
-	
-	optimize_config_t optimize_config{
-			PI_F / 4,
-			static_cast<float>( acceleration / frequency),
-			INFINITY,
-			INFINITY
-	};
 	
 	_left.time = _right.time = _rudder.time = now();
 	

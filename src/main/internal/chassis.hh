@@ -13,6 +13,7 @@
 
 extern "C" {
 #include "control_model/model.h"
+#include "control_model/optimization.h"
 }
 
 namespace autolabor {
@@ -40,11 +41,11 @@ namespace autolabor {
 			 *
 			 * @param port         串口名字
 			 * @param acceleration 加速度（比例/秒）
-			 * @param config       底盘配置
+			 * @param chassis_config       底盘配置
 			 */
-			explicit chassis(const std::string &port,
-			                 double acceleration = INFINITY,
-			                 const chassis_config_t &config = default_config);
+			explicit chassis(const std::string &port_name,
+			                 const chassis_config_t & = default_config,
+			                 const optimize_config_t & = {pi_f / 4, INFINITY, INFINITY, INFINITY});
 			
 			/** 析构 */
 			~chassis();
