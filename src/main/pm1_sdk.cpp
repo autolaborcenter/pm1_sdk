@@ -133,11 +133,12 @@ result autolabor::pm1::initialize(const std::string &port) {
 }
 
 result autolabor::pm1::shutdown() {
-	return _ptr ? _ptr = nullptr, result{} : result{"chassis doesn't exist"};
+	return {_ptr ? _ptr = nullptr, "" : "chassis doesn't exist"};
 }
 
 result autolabor::pm1::go_straight(double speed, double distance) {
-	if (speed == 0 && distance != 0) return {"this action will never complete"};
+	if (speed == 0) return {distance != 0 ? "this action will never complete" : ""};
+	
 	return run([speed, distance] {
 		const auto o = ptr()->odometry().s;
 		
@@ -159,7 +160,9 @@ result autolabor::pm1::go_straight_timing(double speed, double time) {
 }
 
 result autolabor::pm1::go_arc(double speed, double r, double rad) {
-	if (speed == 0 && rad != 0) return {"this action will never complete"};
+	if (r == 0) return {"the radius can't be 0"};
+	if (speed == 0) return {rad != 0 ? "this action will never complete" : ""};
+	
 	return run([speed, r, rad] {
 		const auto o = ptr()->odometry().s;
 		const auto d = std::abs(r * rad);
@@ -179,11 +182,12 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 }
 
 result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
+	if (r == 0) return {"the radius can't be 0"};
 	return run([speed, r, time] { block::go_timing(speed, speed / r, time); });
 }
 
 result autolabor::pm1::turn_around(double speed, double rad) {
-	if (speed == 0 && rad != 0) return {"this action will never complete"};
+	if (speed == 0) return {rad != 0 ? "this action will never complete" : ""};
 	return run([speed, rad] {
 		const auto o = ptr()->odometry().theta;
 		while (true) {
