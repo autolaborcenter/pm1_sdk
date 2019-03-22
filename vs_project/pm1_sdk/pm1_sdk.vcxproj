@@ -146,6 +146,7 @@
     <ClInclude Include="..\..\src\main\internal\serial\win.h" />
     <ClInclude Include="..\..\src\main\internal\serial_extension.h" />
     <ClInclude Include="..\..\src\main\internal\time_extensions.h" />
+    <ClInclude Include="..\..\src\main\internal\utillities\logger.hh" />
     <ClInclude Include="..\..\src\main\pm1_sdk.h" />
   </ItemGroup>
   <ItemGroup>
@@ -164,6 +165,7 @@
     <ClCompile Include="..\..\src\main\internal\serial\serial.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\unix.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\win.cc" />
+    <ClCompile Include="..\..\src\main\internal\utillities\logger.cc" />
     <ClCompile Include="..\..\src\main\pm1_sdk.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
