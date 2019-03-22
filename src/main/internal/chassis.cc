@@ -78,14 +78,16 @@ chassis::chassis(const std::string &port_name,
 	
 	// region ask
 	auto port_ptr = port;
-	auto logger   = std::make_shared<std::ofstream>("log");
+	auto logger   = std::make_shared<std::ofstream>();
+	logger->open("logger");
 	
 	// 定时询问前轮
 	std::thread([port_ptr, logger] {
-		auto time = now();
+		auto time  = now();
+		auto count = 0l;
 		while (port_ptr->isOpen()) {
 			time += odometry_interval;
-			*logger << time_item::now() << "ask wheels" << std::endl;
+			*logger << time_item::now() << count++ << ", ask wheels" << std::endl;
 			try {
 				*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -95,10 +97,11 @@ chassis::chassis(const std::string &port_name,
 	
 	// 定时询问后轮
 	std::thread([port_ptr, logger] {
-		auto time = now();
+		auto time  = now();
+		auto count = 0l;
 		while (port_ptr->isOpen()) {
 			time += rudder_interval;
-			*logger << time_item::now() << "ask rudder" << std::endl;
+			*logger << time_item::now() << count++ << ", ask rudder" << std::endl;
 			try {
 				*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -119,6 +122,8 @@ chassis::chassis(const std::string &port_name,
 		auto copy        = this->parameters;
 		auto speed       = .0f;
 		
+		long count[] = {0, 0, 0};
+		
 		autolabor::can::parse_engine parser(
 				[&](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
@@ -130,7 +135,7 @@ chassis::chassis(const std::string &port_name,
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
 						
-						*logger << time_item::now() << "left received" << std::endl;
+						*logger << time_item::now() << count[0]++ << ", left received" << std::endl;
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_left = value - _left.position;
 						
@@ -153,7 +158,7 @@ chassis::chassis(const std::string &port_name,
 						
 					} else if (ecu<1>::current_position_rx::match(msg)) {
 						
-						*logger << time_item::now() << "right received" << std::endl;
+						*logger << time_item::now() << count[1]++ << ", right received" << std::endl;
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_right = value - _right.position;
 						
@@ -176,7 +181,7 @@ chassis::chassis(const std::string &port_name,
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						*logger << time_item::now() << "rudder received" << std::endl;
+						*logger << time_item::now() << count[2]++ << ", rudder received" << std::endl;
 						auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
 						_rudder.update(_now, value);
 						
@@ -203,6 +208,8 @@ chassis::chassis(const std::string &port_name,
 			
 			if (!buffer.empty()) parser(*buffer.begin());
 		}
+		
+		logger->close();
 	}).detach();
 	// endregion
 }
