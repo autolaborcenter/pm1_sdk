@@ -1,23 +1,17 @@
-//
-// Created by ydrml on 2019/2/22.
-//
-
-#include <thread>
+#include <fstream>
 #include <iostream>
-#include "../main/pm1_sdk.h"
-#include "../main/internal/chassis.hh"
-
-using namespace autolabor::pm1;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 int main() {
-	chassis chassis("com4");
-	while (true) {
-		chassis.set_target({1, 1.57});
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
+	
+	// 以写模式打开文件
+	std::ofstream outfile;
+	outfile.open("afile.dat");
+	
+	// 向文件写入用户输入的数据
+	outfile << 12345 << std::endl;
+	
+	// 关闭打开的文件
+	outfile.close();
+	
+	return 0;
 }
-
-#pragma clang diagnostic pop

@@ -5,9 +5,11 @@
 #include "chassis.hh"
 
 #include <algorithm>
+#include <fstream>
 #include "serial_extension.h"
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
+#include "utillities/logger.hh"
 
 extern "C" {
 #include "control_model/motor_map.h"
@@ -76,12 +78,14 @@ chassis::chassis(const std::string &port_name,
 	
 	// region ask
 	auto port_ptr = port;
+	auto logger   = std::make_shared<std::ofstream>("log");
 	
 	// 定时询问前轮
-	std::thread([port_ptr] {
+	std::thread([port_ptr, logger] {
 		auto time = now();
 		while (port_ptr->isOpen()) {
 			time += odometry_interval;
+			*logger << time_item::now() << "ask wheels" << std::endl;
 			try {
 				*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -90,10 +94,11 @@ chassis::chassis(const std::string &port_name,
 	}).detach();
 	
 	// 定时询问后轮
-	std::thread([port_ptr] {
+	std::thread([port_ptr, logger] {
 		auto time = now();
 		while (port_ptr->isOpen()) {
 			time += rudder_interval;
+			*logger << time_item::now() << "ask rudder" << std::endl;
 			try {
 				*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
 			} catch (std::exception &) {}
@@ -103,7 +108,7 @@ chassis::chassis(const std::string &port_name,
 	// endregion
 	
 	// region receive
-	std::thread([port_ptr, this] {
+	std::thread([port_ptr, this, logger] {
 		std::string buffer;
 		
 		auto left_ready  = false,
@@ -112,7 +117,6 @@ chassis::chassis(const std::string &port_name,
 		     delta_right = .0;
 		auto time        = now();
 		auto copy        = this->parameters;
-		auto paused      = false;
 		auto speed       = .0f;
 		
 		autolabor::can::parse_engine parser(
@@ -126,6 +130,7 @@ chassis::chassis(const std::string &port_name,
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
 						
+						*logger << time_item::now() << "left received" << std::endl;
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_left = value - _left.position;
 						
@@ -148,6 +153,7 @@ chassis::chassis(const std::string &port_name,
 						
 					} else if (ecu<1>::current_position_rx::match(msg)) {
 						
+						*logger << time_item::now() << "right received" << std::endl;
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_right = value - _right.position;
 						
@@ -170,33 +176,24 @@ chassis::chassis(const std::string &port_name,
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						auto value  = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
+						*logger << time_item::now() << "rudder received" << std::endl;
+						auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
 						_rudder.update(_now, value);
 						
-						wheels wheels{};
-						auto   stop = std::isnan(target.rudder) || now() - request_time > control_timeout;
+						if (std::isnan(target.rudder) || now() - request_time > control_timeout)
+							target         = {0, value};
 						
-						if (stop) {
-							if (paused) return;
-							
-							target = {0, value};
-							speed  = 0;
-							wheels = {0, 0};
-						} else {
-							physical current{speed, value};
-							auto     optimized = optimize(&target, &current, this->optimize_width, this->acceleration);
-							speed  = optimized.speed;
-							wheels = physical_to_wheels(&optimized, &copy);
-						}
+						physical current{speed, value};
+						auto     optimized = optimize(&target, &current, this->optimize_width, this->acceleration);
+						auto     wheels    = physical_to_wheels(&optimized, &copy);
+						speed = optimized.speed;
 						
-						paused = stop;
-						
-						auto left   = static_cast<int>(PULSES_OF(wheels.left, default_wheel_k));
-						auto right  = static_cast<int>(PULSES_OF(wheels.right, default_wheel_k));
+						auto left   = PULSES_OF(wheels.left, default_wheel_k);
+						auto right  = PULSES_OF(wheels.right, default_wheel_k);
 						auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-						*port_ptr << pack_big_endian<ecu<0>::target_speed, decltype(left)>(left)
-						          << pack_big_endian<ecu<1>::target_speed, decltype(right)>(right)
-						          << pack_big_endian<tcu<0>::target_position, decltype(rudder)>(rudder);
+						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
+						          << pack_big_endian<ecu<1>::target_speed, int>(right)
+						          << pack_big_endian<tcu<0>::target_position, short>(rudder);
 					}
 				});
 		
