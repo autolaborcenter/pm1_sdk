@@ -6,6 +6,7 @@
 #define PM1_SDK_CHASSIS_H
 
 #include <mutex>
+#include <vector>
 #include "serial/serial.h"
 #include "can_define.h"
 #include "odometry_t.hh"
@@ -102,7 +103,9 @@ namespace autolabor {
 					odometry_protector;
 			
 			std::shared_ptr<std::mutex>
-					shared_mutex;
+					mutex0,
+					mutex1,
+					mutex2;
 			
 			/** 目标运动 */
 			physical target{};

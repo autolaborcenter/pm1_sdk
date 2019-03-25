@@ -6,7 +6,7 @@
 #define PM1_SDK_SERIAL_EXTENSION_H
 
 
-#include <memory>
+#include <string>
 #include "serial/serial.h"
 #include "can/pack.h"
 
@@ -14,7 +14,13 @@ namespace autolabor {
 	template<class t>
 	inline serial::Serial &operator<<(serial::Serial &port,
 	                                  const autolabor::can::msg_union<t> &msg) {
-		port.write(msg.bytes, sizeof(t));
+		try { port.write(msg.bytes, sizeof(t)); } catch (...) {}
+		return port;
+	}
+	
+	inline serial::Serial &operator>>(serial::Serial &port,
+	                                  std::string &msg) {
+		try { msg = port.read(); } catch (...) { msg = ""; }
 		return port;
 	}
 }
