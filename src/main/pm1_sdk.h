@@ -8,14 +8,11 @@
 
 #include <string>
 #include <vector>
-#include "exception.h"
 
 namespace autolabor {
 	namespace pm1 {
 		/** 表示全局指令执行的结果 */
 		struct result {
-			uint8_t code;
-			
 			/** 错误信息 */
 			const std::string error_info;
 			

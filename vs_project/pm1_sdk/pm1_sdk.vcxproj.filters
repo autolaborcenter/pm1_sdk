@@ -75,7 +75,7 @@
     <ClInclude Include="..\..\src\main\internal\control_model\pi.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\utillities\logger.hh">
+    <ClInclude Include="..\..\src\main\exception.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -126,9 +126,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\internal\control_model\optimization.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\utillities\logger.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

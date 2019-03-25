@@ -98,8 +98,11 @@ namespace autolabor {
 			/** 里程计 */
 			odometry_t _odometry;
 			
-			/** 里程计更新锁 */
-			mutable std::mutex lock;
+			mutable std::mutex
+					odometry_protector;
+			
+			std::shared_ptr<std::mutex>
+					shared_mutex;
 			
 			/** 目标运动 */
 			physical target{};
