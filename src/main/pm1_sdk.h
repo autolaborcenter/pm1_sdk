@@ -8,11 +8,14 @@
 
 #include <string>
 #include <vector>
+#include "exception.h"
 
 namespace autolabor {
 	namespace pm1 {
 		/** 表示全局指令执行的结果 */
 		struct result {
+			uint8_t code;
+			
 			/** 错误信息 */
 			const std::string error_info;
 			
@@ -126,6 +129,21 @@ namespace autolabor {
 		 * 清除里程计累计值
 		 */
 		result reset_odometry();
+		
+		/**
+		 * 检查状态
+		 */
+		result check_state();
+		
+		/**
+		 * 锁定底盘
+		 */
+		result lock();
+		
+		/**
+		 * 解锁底盘
+		 */
+		result unlock();
 	}
 }
 

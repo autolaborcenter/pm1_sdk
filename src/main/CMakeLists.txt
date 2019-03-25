@@ -9,6 +9,7 @@ add_subdirectory(internal/control_model)
 
 add_library(pm1_sdk
         # --------------------------
+        exception.h
         pm1_sdk.h
         pm1_sdk.cpp
         # --------------------------

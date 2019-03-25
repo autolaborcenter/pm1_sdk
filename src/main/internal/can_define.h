@@ -125,6 +125,25 @@ namespace autolabor {
 			
 			return pack<pack_info_t>(buffer2);
 		}
+		
+		/** 节点状态 */
+		enum class node_state_t : uint8_t {
+			unknown  = 0x00,
+			enabled  = 0x01,
+			disabled = 0xff
+		};
+		
+		/** 判断节点状态 */
+		inline node_state_t parse_state(uint8_t data) {
+			switch (data) {
+				case 0x01:
+					return node_state_t::enabled;
+				case 0xff:
+					return node_state_t::disabled;
+				default:
+					return node_state_t::unknown;
+			}
+		}
 	}
 }
 

@@ -18,6 +18,9 @@ extern "C" {
 
 using namespace autolabor::pm1;
 
+constexpr static auto check_timeout = std::chrono::milliseconds(1000);
+
+
 chassis::chassis(const std::string &port_name,
                  const chassis_config_t &chassis_config,
                  float optimize_width,
@@ -32,46 +35,44 @@ chassis::chassis(const std::string &port_name,
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
-	constexpr static auto connect_timeout   = std::chrono::milliseconds(500);
 	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
 	
 	_left.time = _right.time = _rudder.time = now();
 	
 	// region check nodes
 	{
-		*port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff)
-		      << autolabor::can::pack<unit<>::state_tx>();
+		*port << autolabor::can::pack<unit<>::state_tx>();
 		
 		std::string buffer;
 		const auto  time = now();
-		auto        ecu0 = false,
-		            ecu1 = false,
-		            tcu0 = false;
 		
 		autolabor::can::parse_engine parser(
-				[&ecu0, &ecu1, &tcu0](const autolabor::can::parser::result &result) {
+				[this](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
+					auto state = parse_state(*result.message.data.data);
+					
 					if (unit<ecu<0>>::state_rx::match(result.message))
-						ecu0 = *result.message.data.data;
+						_left.state = state;
 					else if (unit<ecu<1>>::state_rx::match(result.message))
-						ecu1 = *result.message.data.data;
+						_right.state = state;
 					else if (unit<tcu<0>>::state_rx::match(result.message))
-						tcu0 = *result.message.data.data;
+						_rudder.state = state;
 				});
 		
 		while (port->isOpen()
-		       && !(ecu0 && ecu1 && tcu0)
-		       && now() - time < connect_timeout) {
+		       && _left.state != node_state_t::unknown
+		       && _right.state != node_state_t::unknown
+		       && _rudder.state != node_state_t::unknown) {
 			
 			try { buffer = port->read(); }
 			catch (std::exception &) { buffer = ""; }
 			
 			if (!buffer.empty()) parser(*buffer.begin());
+			
+			if (now() - time > check_timeout)
+				throw std::exception("it's not a pm1 chassis");
 		}
-		
-		if (!ecu0 || !ecu1 || !tcu0)
-			throw std::exception("it's not a pm1 chassis");
 	}
 	// endregion
 	
@@ -231,12 +232,27 @@ autolabor::motor_t<> chassis::rudder() const {
 	return _rudder;
 }
 
+void chassis::check_state() {
+	_left.state   = node_state_t::unknown;
+	_right.state  = node_state_t::unknown;
+	_rudder.state = node_state_t::unknown;
+	*port << autolabor::can::pack<unit<>::state_tx>();
+}
+
+void chassis::enable() {
+	*port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
+}
+
+void chassis::disable() {
+	*port << autolabor::can::pack<unit<>::emergency_stop>();
+}
+
 odometry_t chassis::odometry() const {
 	std::lock_guard<std::mutex> _(lock);
 	return _odometry;
 }
 
-void chassis::set_target(const physical &t) const {
+void chassis::set_target(const physical &t) {
 	request_time = now();
 	target       = t;
 	legalize_physical(&target, 6 * pi_f);

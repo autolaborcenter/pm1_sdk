@@ -33,8 +33,7 @@ volatile bool paused = false;
 inline void loop_delay() { delay(0.01); }
 
 /** 检查并执行 */
-inline result run(const std::function<void()> &code,
-                  const std::function<void()> &recover = [] {}) {
+inline result run(const std::function<void()> &code) {
 	try { code(); } catch (std::exception &e) { return {e.what()}; }
 	return {};
 }
@@ -245,4 +244,16 @@ result autolabor::pm1::drive(double v, double w) {
 
 result autolabor::pm1::reset_odometry() {
 	return run([] { ptr()->clear_odometry(); });
+}
+
+result autolabor::pm1::check_state() {
+	return result();
+}
+
+result autolabor::pm1::lock() {
+	return result();
+}
+
+result autolabor::pm1::unlock() {
+	return result();
 }
