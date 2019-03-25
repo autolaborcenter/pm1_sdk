@@ -3,63 +3,38 @@
 
 <head>
     <title>PM1 入门指南</title>
-    <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <meta charset="UTF-8">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/bootstrap.min.js"></script>
 </head>
 
-<body>
-<div id='vm'>
-    <h1>PM1 SDK 入门指南</h1>
-    <p>从这里开始你的 Autolabor PM1 开发之路！</p>
+<body class="container">
 
-    <p>如果你想...</p>
-    <p>... 测试 PM1 底盘，点击<a href="https://github.com/autolaborcenter/pm1_demo">这里</a>。</p>
-    <p>... 使用 ROS + PM1 Node 开发，点击<a href="https://github.com/autolaborcenter/pm1_driver_ros" target="_blank">这里</a>。
-    </p>
-    <p>... 开发 PM1 底盘控制程序：</p>
-    <form>
-        <p>选择你的开发环境</p>
-        <label><input name="IDE" type="radio" v-on:click="set_ide('Visual Studio')"/> Visual Studio </label>
-        <label><input name="IDE" type="radio" v-on:click="set_ide('CLion')"/> CLion </label>
-        <label><input name="IDE" type="radio" v-on:click="set_ide('Text-Editor')"/> A Text-Editor </label>
+<h1 class="text-center" style="margin-top: 40px">PM1 SDK 入门指南</h1>
+<p class="text-center">从这里开始你的 Autolabor PM1 开发之路！</p>
 
-        <p>选择你的工具链</p>
-        <label><input name="Tool-Chain" type="radio" v-on:click="set_tool_chain('gcc')"/> (Linux) gcc </label>
-        <label><input name="Tool-Chain" type="radio" v-on:click="set_tool_chain('cl.exe')"/> (Windows) cl.exe </label>
+<p>如果你想...</p>
+<p>... 测试 PM1 底盘，点击<a href="https://github.com/autolaborcenter/pm1_demo">这里</a>。</p>
+<p>... 使用 ROS + PM1 Node 开发，点击<a href="https://github.com/autolaborcenter/pm1_driver_ros" target="_blank">这里</a>。</p>
+<p>... 开发 PM1 底盘控制程序：</p>
+<form>
+    <p>选择你的开发环境</p>
+    <label><input name="IDE" type="radio"/> Visual Studio </label>
+    <label><input name="IDE" type="radio"/> CLion </label>
+    <label><input name="IDE" type="radio"/> A Text-Editor </label>
 
-        <br/>
-        <br/>
-        <button>{{ environment }}</button>
-    </form>
-    <hr/>
-    <p>... 访问客服平台，微信关注公众号 Autolabor。</p>
-    <p>... 购买其他产品，点击<a href="https://lidar.taobao.com/?spm=a1z10.3-c.0.0.1e5720e7oQ3M0Y">这里</a>。</p>
-</div>
+    <p>选择你的工具链</p>
+    <label><input name="Tool-Chain" type="radio"/> (Linux) GCC </label>
+    <label><input name="Tool-Chain" type="radio"/> (Windows) cl.exe </label>
 
-<script>
-    let vm = new Vue({
-        el: '#vm',
-        data: {
-            ide: '',
-            tool_chain: '',
-        },
-        computed: {
-            environment: function () {
-                return this.ide === '' || this.tool_chain === ''
-                    ? '请选择工具'
-                    : '获取 ' + this.ide + ' + ' + this.tool_chain + ' 教程'
-            }
-        },
-        methods: {
-            set_ide: function (what) {
-                this.ide = what
-            },
-            set_tool_chain: function (what) {
-                this.tool_chain = what
-            }
-        }
-    });
-</script>
+    <br/>
+    <br/>
+    <button class="btn btn-primary" type="submit">获取教程</button>
+</form>
+<hr/>
+<p>... 访问客服平台，微信关注公众号 Autolabor。</p>
+<p>... 购买其他产品，点击<a href="https://lidar.taobao.com/?spm=a1z10.3-c.0.0.1e5720e7oQ3M0Y">这里</a>。</p>
 
 </body>
 
