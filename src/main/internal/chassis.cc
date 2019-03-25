@@ -39,7 +39,8 @@ chassis::chassis(const std::string &port_name,
 	
 	// region check nodes
 	{
-		*port << autolabor::can::pack<unit<>::state_tx>();
+		*port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff)
+		      << autolabor::can::pack<unit<>::state_tx>();
 		
 		std::string buffer;
 		const auto  time = now();
