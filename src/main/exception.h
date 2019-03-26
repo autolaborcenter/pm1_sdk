@@ -10,16 +10,20 @@
 namespace autolabor {
 	namespace pm1 {
 		union union_error_code {
-			uint8_t code;
-			
 			struct error_code {
-				bool serial : 1,
-				     ecu0 : 1,
-				     ecu1 : 1,
-				     tcu0 : 1,
-				     vcu0 : 1,
-				     mcu0 : 1;
-			}       bits;
+				bool no_serial          : 1, // 无可用串口
+				     serial_error       : 1, // 串口通信错误
+				     not_initialized : 1, // 未初始化的执行
+				     ecu0_offline       : 1, // 子控制器下线
+				     ecu1_offline       : 1, // 子控制器下线
+				     tcu0_offline       : 1, // 子控制器下线
+				     vcu0_offline       : 1, // 子控制器下线
+				     mcu0_offline       : 1, // 子控制器下线
+				     illegal_argument   : 1, // 错误参数
+				     others             : 1; // 其他
+			} bits;
+			
+			uint16_t code;
 		};
 	}
 }

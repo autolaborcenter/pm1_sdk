@@ -12,6 +12,7 @@
 #include <thread>
 #include "internal/time_extensions.h"
 #include "internal/chassis.hh"
+#include "exception.h"
 
 using namespace autolabor::pm1;
 
@@ -19,10 +20,15 @@ result::operator bool() const { return error_info.empty(); }
 
 std::shared_ptr<chassis> _ptr;
 
+constexpr auto serial_error_prefix     = "IO Exception";
+constexpr auto chassis_not_initialized = "chassis has not been initialized";
+constexpr auto action_cannot_complete  = "this action will never complete";
+constexpr auto illegal_target          = "target state should greater than 0";
+
 /** 空安全检查 */
 inline std::shared_ptr<chassis> ptr() {
 	auto copy = _ptr;
-	if (!copy) throw std::exception("chassis has not been initialized!");
+	if (!copy) throw std::exception(chassis_not_initialized);
 	return copy;
 }
 
@@ -34,7 +40,31 @@ inline void loop_delay() { delay(0.01); }
 
 /** 检查并执行 */
 inline result run(const std::function<void()> &code) {
-	try { code(); } catch (std::exception &e) { return {e.what()}; }
+	union_error_code error{};
+	
+	try { code(); }
+	catch (std::exception &e) {
+		const auto what = std::string(e.what());
+		
+		if (what.find_first_of(serial_error_prefix) == 0) {
+			error.bits.serial_error = true;
+			return {error.code, e.what()};
+		}
+		
+		if (what == chassis_not_initialized) {
+			error.bits.not_initialized = true;
+			return {error.code, e.what()};
+		}
+		
+		if (what == action_cannot_complete || what == illegal_target) {
+			error.bits.illegal_argument = true;
+			return {error.code, e.what()};
+		}
+	}
+	catch (...) {
+		error.bits.others = true;
+		return {error.code, "unknown and not-exception error"};
+	}
 	return {};
 }
 
@@ -116,9 +146,12 @@ result autolabor::pm1::initialize(const std::string &port) {
 			if (result) return {};
 			builder << item << ": " << result.error_info << std::endl;
 		}
-		auto              msg = builder.str();
-		return msg.empty() ? result{"no available port"}
-		                   : result{msg};
+		
+		union_error_code error{};
+		error.bits.no_serial = true;
+		auto msg = builder.str();
+		
+		return {error.code, msg.empty() ? "no available port" : msg};
 	} else {
 		try {
 			_ptr = std::make_shared<chassis>(port);
@@ -126,19 +159,33 @@ result autolabor::pm1::initialize(const std::string &port) {
 		}
 		catch (std::exception &e) {
 			_ptr = nullptr;
-			return {e.what()};
+			union_error_code error{};
+			error.bits.no_serial = true;
+			return {error.code, e.what()};
 		}
 	}
 }
 
 result autolabor::pm1::shutdown() {
-	return {_ptr ? _ptr = nullptr, "" : "chassis doesn't exist"};
+	if (_ptr) {
+		_ptr = nullptr;
+		return {};
+	} else {
+		union_error_code error{};
+		error.bits.not_initialized = true;
+		return {error.code, chassis_not_initialized};
+	}
 }
 
 result autolabor::pm1::go_straight(double speed, double distance) {
-	if (speed == 0) return {distance != 0 ? "this action will never complete" : ""};
-	
 	return run([speed, distance] {
+		if (speed == 0) {
+			if (distance == 0) return;
+			throw std::exception(action_cannot_complete);
+		}
+		if (distance <= 0)
+			throw std::exception(illegal_target);
+		
 		const auto o = ptr()->odometry().s;
 		
 		while (true) {
@@ -159,10 +206,14 @@ result autolabor::pm1::go_straight_timing(double speed, double time) {
 }
 
 result autolabor::pm1::go_arc(double speed, double r, double rad) {
-	if (r == 0) return {"the radius can't be 0"};
-	if (speed == 0) return {rad != 0 ? "this action will never complete" : ""};
-	
 	return run([speed, r, rad] {
+		if (speed == 0) {
+			if (rad == 0) return;
+			throw std::exception(action_cannot_complete);
+		}
+		if (rad <= 0)
+			throw std::exception(illegal_target);
+		
 		const auto o = ptr()->odometry().s;
 		const auto d = std::abs(r * rad);
 		
@@ -181,13 +232,21 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 }
 
 result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
-	if (r == 0) return {"the radius can't be 0"};
-	return run([speed, r, time] { block::go_timing(speed, speed / r, time); });
+	return run([speed, r, time] {
+		if (r == 0) throw std::exception(illegal_target);
+		block::go_timing(speed, speed / r, time);
+	});
 }
 
 result autolabor::pm1::turn_around(double speed, double rad) {
-	if (speed == 0) return {rad != 0 ? "this action will never complete" : ""};
 	return run([speed, rad] {
+		if (speed == 0) {
+			if (rad == 0) return;
+			throw std::exception(action_cannot_complete);
+		}
+		if (rad <= 0)
+			throw std::exception(illegal_target);
+		
 		const auto o = ptr()->odometry().theta;
 		while (true) {
 			auto current = std::abs(ptr()->odometry().theta - o),
@@ -247,13 +306,15 @@ result autolabor::pm1::reset_odometry() {
 }
 
 result autolabor::pm1::check_state() {
-	return result();
+	return run([] {
+		ptr()->check_state();
+	});
 }
 
 result autolabor::pm1::lock() {
-	return result();
+	return run([] { ptr()->disable(); });
 }
 
 result autolabor::pm1::unlock() {
-	return result();
+	return run([] { ptr()->enable(); });
 }
