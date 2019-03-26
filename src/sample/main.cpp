@@ -21,7 +21,7 @@ int main() {
 		}
 	}).detach();
 	
-	go_arc(-0.1, 1, 2);
+	turn_around(0.157, 1.57);
 	delay(1);
 	return 0;
 }

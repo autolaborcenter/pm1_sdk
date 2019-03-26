@@ -130,11 +130,6 @@ namespace autolabor {
 		result reset_odometry();
 		
 		/**
-		 * 检查状态
-		 */
-		result check_state();
-		
-		/**
 		 * 锁定底盘
 		 */
 		result lock();

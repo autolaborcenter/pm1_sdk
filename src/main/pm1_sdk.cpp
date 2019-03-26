@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <stdexcept>
 #include <thread>
-#include <iostream>
 #include "internal/time_extensions.h"
 #include "internal/chassis.hh"
 #include "exception.h"
@@ -35,9 +34,6 @@ inline std::shared_ptr<chassis> ptr() {
 
 /** 记录暂停状态 */
 volatile bool paused = false;
-
-/** 循环的间隔 */
-inline void loop_delay() { delay(0.01); }
 
 /** 检查并执行 */
 inline result run(const std::function<void()> &code) {
@@ -94,9 +90,9 @@ const auto max_v = 3 * 2 * pi_f,
 
 const process_controller
 		move_up(0, 0.01, 0.5, max_v),                  // NOLINT(cert-err58-cpp)
-		move_down(0.01, 0.01, 3, max_v),               // NOLINT(cert-err58-cpp)
-		rotate_up(0, pi_f / 18, pi_f / 4, max_w),      // NOLINT(cert-err58-cpp)
-		rotate_down(pi_f / 9, pi_f / 36, pi_f, max_w); // NOLINT(cert-err58-cpp)
+		move_down(0.05, 0.01, 10, max_v),              // NOLINT(cert-err58-cpp)
+		rotate_up(0, pi_f / 180, pi_f / 4, max_w),      // NOLINT(cert-err58-cpp)
+		rotate_down(pi_f / 9, pi_f / 90, pi_f, max_w); // NOLINT(cert-err58-cpp)
 
 namespace block {
 	/** 阻塞等待后轮转动 */
@@ -114,7 +110,7 @@ namespace block {
 		return autolabor::measure_time([] {
 			while (paused) {
 				ptr()->set_target({0, NAN});
-				loop_delay();
+				std::this_thread::yield();
 			}
 		});
 	}
@@ -125,8 +121,7 @@ namespace block {
 		while (autolabor::now() < ending) {
 			if (paused) ending += inhibit();
 			else wait_or_drive(v, w);
-			
-			loop_delay();
+			std::this_thread::yield();
 		}
 	}
 }
@@ -197,7 +192,7 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 			                        move_up(current),
 			                        move_down(rest)});
 			block::wait_or_drive(speed > 0 ? actual : -actual, 0);
-			loop_delay();
+			std::this_thread::yield();
 		}
 	});
 }
@@ -228,9 +223,7 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 			                           move_down(rest)}),
 			     available = speed > 0 ? actual : -actual;
 			block::wait_or_drive(available, available / r);
-			loop_delay();
-			
-			std::cout << available << std::endl;
+			std::this_thread::yield();
 		}
 	});
 }
@@ -260,7 +253,7 @@ result autolabor::pm1::turn_around(double speed, double rad) {
 			                        rotate_up(current),
 			                        rotate_down(rest)});
 			block::wait_or_drive(0, speed > 0 ? actual : -actual);
-			loop_delay();
+			std::this_thread::yield();
 		}
 	});
 }
@@ -307,10 +300,6 @@ result autolabor::pm1::drive(double v, double w) {
 
 result autolabor::pm1::reset_odometry() {
 	return run([] { ptr()->clear_odometry(); });
-}
-
-result autolabor::pm1::check_state() {
-	return run([] { ptr()->check_state(); });
 }
 
 result autolabor::pm1::lock() {

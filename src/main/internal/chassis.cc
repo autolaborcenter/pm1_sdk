@@ -25,13 +25,13 @@ chassis::chassis(const std::string &port_name,
 		  _odometry({chassis_config}),
 		  optimize_width(optimize_width),
 		  acceleration(acceleration),
-		  mutex0(std::make_shared<std::mutex>()),
-		  mutex1(std::make_shared<std::mutex>()),
-		  mutex2(std::make_shared<std::mutex>()) {
+		  send_mutex(std::make_shared<std::mutex>()),
+		  receive_mutex(std::make_shared<std::mutex>()) {
 	using result_t = autolabor::can::parser::result_type;
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
+	constexpr static auto state_interval    = std::chrono::milliseconds(1000);
 	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
 	constexpr static auto check_timeout     = std::chrono::milliseconds(500);
 	
@@ -51,17 +51,17 @@ chassis::chassis(const std::string &port_name,
 					auto state = parse_state(*result.message.data.data);
 					
 					if (unit<ecu<0>>::state_rx::match(result.message))
-						_left.state = state;
+						_ecu0 = state;
 					else if (unit<ecu<1>>::state_rx::match(result.message))
-						_right.state = state;
+						_ecu1 = state;
 					else if (unit<tcu<0>>::state_rx::match(result.message))
-						_rudder.state = state;
+						_tcu = state;
 				});
 		
 		while (port->isOpen()
-		       && (_left.state == node_state_t::unknown
-		           || _right.state == node_state_t::unknown
-		           || _rudder.state == node_state_t::unknown)) {
+		       && (_ecu0 == node_state_t::unknown
+		           || _ecu1 == node_state_t::unknown
+		           || _tcu == node_state_t::unknown)) {
 			
 			*port >> buffer;
 			if (!buffer.empty()) parser(*buffer.begin());
@@ -77,42 +77,40 @@ chassis::chassis(const std::string &port_name,
 	// region ask
 	auto port_ptr = port;
 	
-	// 定时询问前轮
-	auto mutex_ptr = mutex0;
+	// 定时任务
+	auto mutex_ptr = send_mutex;
 	std::thread([port_ptr, mutex_ptr] {
-		auto time = now();
+		auto           _now        = now();
+		decltype(_now) task_time[] = {_now, _now, _now};
+		
 		while (port_ptr->isOpen()) {
 			{
 				std::lock_guard<std::mutex> _(*mutex_ptr);
 				if (!port_ptr->isOpen()) break;
 				
-				time += odometry_interval;
-				*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
+				_now = now();
+				
+				if (_now - task_time[0] > odometry_interval) {
+					*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
+					task_time[0] = _now;
+				}
+				if (_now - task_time[1] > rudder_interval) {
+					*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
+					task_time[1] = _now;
+				}
+				if (_now - task_time[2] > state_interval) {
+					*port_ptr << autolabor::can::pack<unit<>::state_tx>();
+					task_time[2] = _now;
+				}
 			}
 			
-			std::this_thread::sleep_until(time);
-		}
-	}).detach();
-	
-	// 定时询问后轮
-	mutex_ptr = mutex1;
-	std::thread([port_ptr, mutex_ptr] {
-		auto time = now();
-		while (port_ptr->isOpen()) {
-			{
-				std::lock_guard<std::mutex> _(*mutex_ptr);
-				if (!port_ptr->isOpen()) break;
-				
-				time += rudder_interval;
-				*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
-			}
-			std::this_thread::sleep_until(time);
+			std::this_thread::yield();
 		}
 	}).detach();
 	// endregion
 	
 	// region receive
-	mutex_ptr = mutex2;
+	mutex_ptr = receive_mutex;
 	std::thread([port_ptr, mutex_ptr, this] {
 		std::string buffer;
 		
@@ -133,7 +131,16 @@ chassis::chassis(const std::string &port_name,
 					// 处理
 					const auto msg = result.message;
 					
-					if (ecu<0>::current_position_rx::match(msg)) {
+					if (unit<ecu<0>>::state_rx::match(msg))
+						_ecu0 = parse_state(*msg.data.data);
+					
+					else if (unit<ecu<1>>::state_rx::match(msg))
+						_ecu1 = parse_state(*msg.data.data);
+					
+					else if (unit<tcu<0>>::state_rx::match(msg))
+						_tcu = parse_state(*msg.data.data);
+					
+					else if (ecu<0>::current_position_rx::match(msg)) {
 						
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_left = value - _left.position;
@@ -208,7 +215,7 @@ chassis::chassis(const std::string &port_name,
 				
 				if (!buffer.empty()) parser(*buffer.begin());
 			}
-			if (buffer.empty()) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			if (buffer.empty()) std::this_thread::yield();
 		}
 	}).detach();
 	// endregion
@@ -216,9 +223,8 @@ chassis::chassis(const std::string &port_name,
 
 chassis::~chassis() {
 	std::lock_guard<std::mutex>
-			_0(*mutex0),
-			_1(*mutex1),
-			_2(*mutex2);
+			_t(*send_mutex),
+			_r(*receive_mutex);
 	port->close();
 }
 
@@ -232,13 +238,6 @@ autolabor::motor_t<> chassis::right() const {
 
 autolabor::motor_t<> chassis::rudder() const {
 	return _rudder;
-}
-
-void chassis::check_state() {
-	_left.state   = node_state_t::unknown;
-	_right.state  = node_state_t::unknown;
-	_rudder.state = node_state_t::unknown;
-	*port << autolabor::can::pack<unit<>::state_tx>();
 }
 
 void chassis::enable() {
