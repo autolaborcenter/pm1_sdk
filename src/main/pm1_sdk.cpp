@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <thread>
+#include <iostream>
 #include "internal/time_extensions.h"
 #include "internal/chassis.hh"
 #include "exception.h"
@@ -92,8 +93,8 @@ const auto max_v = 3 * 2 * pi_f,
            max_w = max_v / default_config.width;
 
 const process_controller
-		move_up(0, 0.05, 0.5, max_v),                  // NOLINT(cert-err58-cpp)
-		move_down(0.05, 0.05, 3, max_v),               // NOLINT(cert-err58-cpp)
+		move_up(0, 0.01, 0.5, max_v),                  // NOLINT(cert-err58-cpp)
+		move_down(0.01, 0.01, 3, max_v),               // NOLINT(cert-err58-cpp)
 		rotate_up(0, pi_f / 18, pi_f / 4, max_w),      // NOLINT(cert-err58-cpp)
 		rotate_down(pi_f / 9, pi_f / 36, pi_f, max_w); // NOLINT(cert-err58-cpp)
 
@@ -227,6 +228,8 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 			     available = speed > 0 ? actual : -actual;
 			block::wait_or_drive(available, available / r);
 			loop_delay();
+			
+			std::cout << available << std::endl;
 		}
 	});
 }

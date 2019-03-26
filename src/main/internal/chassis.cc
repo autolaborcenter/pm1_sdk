@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include "serial_extension.h"
-#include "can/parser.hh"
 #include "can/parse_engine.hh"
 
 extern "C" {
