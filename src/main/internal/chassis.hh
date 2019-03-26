@@ -6,6 +6,7 @@
 #define PM1_SDK_CHASSIS_H
 
 #include <mutex>
+#include <vector>
 #include "serial/serial.h"
 #include "can_define.h"
 #include "odometry_t.hh"
@@ -64,6 +65,12 @@ namespace autolabor {
 			
 			/** 解锁 */
 			void disable();
+			
+			/** 检查状态 */
+			bool is_enabled() const;
+			
+			/** 检查状态 */
+			std::vector<node_state_t> get_states() const;
 			
 			/** 设置目标控制量 */
 			void set_target(const physical &);
