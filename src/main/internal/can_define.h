@@ -62,6 +62,9 @@ namespace autolabor {
 			// 累计运行时间
 			using uptime_tx      = typename pack_info_pair<0x88>::tx;
 			using uptime_rx      = typename pack_info_pair<0x88>::rx;
+			// 紧急停止
+			using emergency_stop = typename pack_info_pair<0xff>::tx;
+			using release_stop   = typename pack_info_pair<0xff>::rx;
 		};
 		
 		/** 动力控制器包信息协议 */
@@ -114,13 +117,32 @@ namespace autolabor {
 		template<class pack_info_t, class data_t>
 		inline auto pack_big_endian(data_t value)
 		-> decltype(pack<pack_info_t>()) {
-			msg_union<data_t>                 buffer1{};
-			std::array<uint8_t, 8>            buffer2{};
+			msg_union<data_t>      buffer1{};
+			std::array<uint8_t, 8> buffer2{};
 			
 			buffer1.data = value;
 			std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(data_t), buffer2.data());
 			
 			return pack<pack_info_t>(buffer2);
+		}
+		
+		/** 节点状态 */
+		enum class node_state_t : uint8_t {
+			unknown  = 0x00,
+			enabled  = 0x01,
+			disabled = 0xff
+		};
+		
+		/** 判断节点状态 */
+		inline node_state_t parse_state(uint8_t data) {
+			switch (data) {
+				case 0x01:
+					return node_state_t::enabled;
+				case 0xff:
+					return node_state_t::disabled;
+				default:
+					return node_state_t::unknown;
+			}
 		}
 	}
 }

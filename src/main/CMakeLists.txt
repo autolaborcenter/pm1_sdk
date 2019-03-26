@@ -9,6 +9,7 @@ add_subdirectory(internal/control_model)
 
 add_library(pm1_sdk
         # --------------------------
+        exception.h
         pm1_sdk.h
         pm1_sdk.cpp
         # --------------------------
@@ -62,10 +63,7 @@ add_library(pm1_sdk
         internal/odometry_t.cc
         # --------------------------
         internal/rudder_controller.hh
-        internal/rudder_controller.cc
-        # --------------------------
-        internal/utillities/logger.hh
-        internal/utillities/logger.cc)
+        internal/rudder_controller.cc)
 
 # 指定安装路径
 install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out)

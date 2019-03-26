@@ -9,7 +9,6 @@
 #include "serial_extension.h"
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
-#include "utillities/logger.hh"
 
 extern "C" {
 #include "control_model/motor_map.h"
@@ -27,13 +26,16 @@ chassis::chassis(const std::string &port_name,
 		  parameters(chassis_config),
 		  _odometry({chassis_config}),
 		  optimize_width(optimize_width),
-		  acceleration(acceleration) {
+		  acceleration(acceleration),
+		  mutex0(std::make_shared<std::mutex>()),
+		  mutex1(std::make_shared<std::mutex>()),
+		  mutex2(std::make_shared<std::mutex>()) {
 	using result_t = autolabor::can::parser::result_type;
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
-	constexpr static auto connect_timeout   = std::chrono::milliseconds(500);
 	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
+	constexpr static auto check_timeout     = std::chrono::milliseconds(500);
 	
 	_left.time = _right.time = _rudder.time = now();
 	
@@ -43,34 +45,32 @@ chassis::chassis(const std::string &port_name,
 		
 		std::string buffer;
 		const auto  time = now();
-		auto        ecu0 = false,
-		            ecu1 = false,
-		            tcu0 = false;
 		
 		autolabor::can::parse_engine parser(
-				[&ecu0, &ecu1, &tcu0](const autolabor::can::parser::result &result) {
+				[this](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
+					auto state = parse_state(*result.message.data.data);
+					
 					if (unit<ecu<0>>::state_rx::match(result.message))
-						ecu0 = *result.message.data.data;
+						_left.state = state;
 					else if (unit<ecu<1>>::state_rx::match(result.message))
-						ecu1 = *result.message.data.data;
+						_right.state = state;
 					else if (unit<tcu<0>>::state_rx::match(result.message))
-						tcu0 = *result.message.data.data;
+						_rudder.state = state;
 				});
 		
 		while (port->isOpen()
-		       && !(ecu0 && ecu1 && tcu0)
-		       && now() - time < connect_timeout) {
+		       && _left.state != node_state_t::unknown
+		       && _right.state != node_state_t::unknown
+		       && _rudder.state != node_state_t::unknown) {
 			
-			try { buffer = port->read(); }
-			catch (std::exception &) { buffer = ""; }
-			
+			*port >> buffer;
 			if (!buffer.empty()) parser(*buffer.begin());
+			
+			if (now() - time > check_timeout)
+				throw std::exception("it's not a pm1 chassis");
 		}
-		
-		if (!ecu0 || !ecu1 || !tcu0)
-			throw std::exception("it's not a pm1 chassis");
 	}
 	// endregion
 	
@@ -78,40 +78,47 @@ chassis::chassis(const std::string &port_name,
 	
 	// region ask
 	auto port_ptr = port;
-	auto logger   = std::make_shared<std::ofstream>();
-	logger->open("logger");
 	
-	// 定时询问前轮
-	std::thread([port_ptr, logger] {
-		auto time  = now();
-		auto count = 0l;
-		while (port_ptr->isOpen()) {
-			time += odometry_interval;
-			*logger << time_item::now() << count++ << ", ask wheels" << std::endl;
-			try {
-				*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
-			} catch (std::exception &) {}
-			std::this_thread::sleep_until(time);
-		}
-	}).detach();
+	{   // 定时询问前轮
+		auto mutex_ptr = mutex0;
+		std::thread([port_ptr, mutex_ptr] {
+			auto time = now();
+			while (port_ptr->isOpen()) {
+				{
+					std::lock_guard<std::mutex> _(*mutex_ptr);
+					if (!port_ptr->isOpen()) break;
+					
+					time += odometry_interval;
+					*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
+				}
+				
+				std::this_thread::sleep_until(time);
+			}
+		}).detach();
+	}
 	
-	// 定时询问后轮
-	std::thread([port_ptr, logger] {
-		auto time  = now();
-		auto count = 0l;
-		while (port_ptr->isOpen()) {
-			time += rudder_interval;
-			*logger << time_item::now() << count++ << ", ask rudder" << std::endl;
-			try {
-				*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
-			} catch (std::exception &) {}
-			std::this_thread::sleep_until(time);
-		}
-	}).detach();
+	
+	{// 定时询问后轮
+		auto mutex_ptr = mutex1;
+		std::thread([port_ptr, mutex_ptr] {
+			auto time = now();
+			while (port_ptr->isOpen()) {
+				{
+					std::lock_guard<std::mutex> _(*mutex_ptr);
+					if (!port_ptr->isOpen()) break;
+					
+					time += rudder_interval;
+					*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
+				}
+				std::this_thread::sleep_until(time);
+			}
+		}).detach();
+	}
 	// endregion
 	
 	// region receive
-	std::thread([port_ptr, this, logger] {
+	auto mutex_ptr = mutex2;
+	std::thread([port_ptr, mutex_ptr, this] {
 		std::string buffer;
 		
 		auto left_ready  = false,
@@ -121,8 +128,6 @@ chassis::chassis(const std::string &port_name,
 		auto time        = now();
 		auto copy        = this->parameters;
 		auto speed       = .0f;
-		
-		long count[] = {0, 0, 0};
 		
 		autolabor::can::parse_engine parser(
 				[&](const autolabor::can::parser::result &result) {
@@ -135,7 +140,6 @@ chassis::chassis(const std::string &port_name,
 					
 					if (ecu<0>::current_position_rx::match(msg)) {
 						
-						*logger << time_item::now() << count[0]++ << ", left received" << std::endl;
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_left = value - _left.position;
 						
@@ -145,7 +149,7 @@ chassis::chassis(const std::string &port_name,
 							if (clear_flag) clear_flag = false;
 							else {
 								{
-									std::lock_guard<std::mutex> _(lock);
+									std::lock_guard<std::mutex> _(odometry_protector);
 									_odometry += {delta_left * copy.radius,
 									              delta_right * copy.radius,
 									              _now - time};
@@ -158,7 +162,6 @@ chassis::chassis(const std::string &port_name,
 						
 					} else if (ecu<1>::current_position_rx::match(msg)) {
 						
-						*logger << time_item::now() << count[1]++ << ", right received" << std::endl;
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_right = value - _right.position;
 						
@@ -168,7 +171,7 @@ chassis::chassis(const std::string &port_name,
 							if (clear_flag) clear_flag = false;
 							else {
 								{
-									std::lock_guard<std::mutex> _(lock);
+									std::lock_guard<std::mutex> _(odometry_protector);
 									_odometry += {delta_left * copy.radius,
 									              delta_right * copy.radius,
 									              _now - time};
@@ -181,7 +184,6 @@ chassis::chassis(const std::string &port_name,
 						
 					} else if (tcu<0>::current_position_rx::match(msg)) {
 						
-						*logger << time_item::now() << count[2]++ << ", rudder received" << std::endl;
 						auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
 						_rudder.update(_now, value);
 						
@@ -203,18 +205,22 @@ chassis::chassis(const std::string &port_name,
 				});
 		
 		while (port_ptr->isOpen()) {
-			try { buffer = port_ptr->read(); }
-			catch (std::exception &) { buffer = ""; }
+			std::lock_guard<std::mutex> _(*mutex_ptr);
+			if (!port_ptr->isOpen()) break;
+			
+			*port_ptr >> buffer;
 			
 			if (!buffer.empty()) parser(*buffer.begin());
 		}
-		
-		logger->close();
 	}).detach();
 	// endregion
 }
 
 chassis::~chassis() {
+	std::lock_guard<std::mutex>
+			_0(*mutex0),
+			_1(*mutex1),
+			_2(*mutex2);
 	port->close();
 }
 
@@ -230,19 +236,34 @@ autolabor::motor_t<> chassis::rudder() const {
 	return _rudder;
 }
 
-odometry_t chassis::odometry() const {
-	std::lock_guard<std::mutex> _(lock);
-	return _odometry;
+void chassis::check_state() {
+	_left.state   = node_state_t::unknown;
+	_right.state  = node_state_t::unknown;
+	_rudder.state = node_state_t::unknown;
+	*port << autolabor::can::pack<unit<>::state_tx>();
 }
 
-void chassis::set_target(const physical &t) const {
+void chassis::enable() {
+	*port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
+}
+
+void chassis::disable() {
+	*port << autolabor::can::pack<unit<>::emergency_stop>();
+}
+
+void chassis::set_target(const physical &t) {
 	request_time = now();
 	target       = t;
 	legalize_physical(&target, 6 * pi_f);
 }
 
+odometry_t chassis::odometry() const {
+	std::lock_guard<std::mutex> _(odometry_protector);
+	return _odometry;
+}
+
 void chassis::clear_odometry() {
-	std::lock_guard<std::mutex> _(lock);
+	std::lock_guard<std::mutex> _(odometry_protector);
 	clear_flag = true;
 	_odometry  = odometry_t{parameters};
 }

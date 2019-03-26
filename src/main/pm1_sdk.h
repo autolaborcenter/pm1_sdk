@@ -126,6 +126,21 @@ namespace autolabor {
 		 * 清除里程计累计值
 		 */
 		result reset_odometry();
+		
+		/**
+		 * 检查状态
+		 */
+		result check_state();
+		
+		/**
+		 * 锁定底盘
+		 */
+		result lock();
+		
+		/**
+		 * 解锁底盘
+		 */
+		result unlock();
 	}
 }
 
