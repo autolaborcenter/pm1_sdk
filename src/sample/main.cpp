@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include "../main/pm1_sdk.h"
 #include "../main/exception.h"
 
@@ -10,7 +11,17 @@ int main() {
 		std::cout << result.error_info << std::endl;
 		return 1;
 	}
-	go_straight(-0.1, 0.3);
-	std::cout << "Hello world!" << std::endl;
+	
+	std::thread([] {
+		while (true) {
+			std::cout << get_odometry().x << ", "
+			          << get_odometry().y << ", "
+			          << get_odometry().yaw << std::endl;
+			delay(0.1);
+		}
+	}).detach();
+	
+	go_arc(-0.1, 1, 2);
+	delay(1);
 	return 0;
 }

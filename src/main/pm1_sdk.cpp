@@ -309,9 +309,7 @@ result autolabor::pm1::reset_odometry() {
 }
 
 result autolabor::pm1::check_state() {
-	return run([] {
-		ptr()->check_state();
-	});
+	return run([] { ptr()->check_state(); });
 }
 
 result autolabor::pm1::lock() {
