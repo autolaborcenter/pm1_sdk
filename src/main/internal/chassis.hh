@@ -71,10 +71,13 @@ namespace autolabor {
 			/** 解锁 */
 			void disable();
 			
+			/** 设置目标控制量 */
 			void set_target(const physical &);
 			
+			/** 读取里程计 */
 			odometry_t odometry() const;
 			
+			/** 清零里程计 */
 			void clear_odometry();
 		
 		private:

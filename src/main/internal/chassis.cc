@@ -79,45 +79,42 @@ chassis::chassis(const std::string &port_name,
 	// region ask
 	auto port_ptr = port;
 	
-	{   // 定时询问前轮
-		auto mutex_ptr = mutex0;
-		std::thread([port_ptr, mutex_ptr] {
-			auto time = now();
-			while (port_ptr->isOpen()) {
-				{
-					std::lock_guard<std::mutex> _(*mutex_ptr);
-					if (!port_ptr->isOpen()) break;
-					
-					time += odometry_interval;
-					*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
-				}
+	// 定时询问前轮
+	auto mutex_ptr = mutex0;
+	std::thread([port_ptr, mutex_ptr] {
+		auto time = now();
+		while (port_ptr->isOpen()) {
+			{
+				std::lock_guard<std::mutex> _(*mutex_ptr);
+				if (!port_ptr->isOpen()) break;
 				
-				std::this_thread::sleep_until(time);
+				time += odometry_interval;
+				*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
 			}
-		}).detach();
-	}
+			
+			std::this_thread::sleep_until(time);
+		}
+	}).detach();
 	
-	
-	{// 定时询问后轮
-		auto mutex_ptr = mutex1;
-		std::thread([port_ptr, mutex_ptr] {
-			auto time = now();
-			while (port_ptr->isOpen()) {
-				{
-					std::lock_guard<std::mutex> _(*mutex_ptr);
-					if (!port_ptr->isOpen()) break;
-					
-					time += rudder_interval;
-					*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
-				}
-				std::this_thread::sleep_until(time);
+	// 定时询问后轮
+	mutex_ptr = mutex1;
+	std::thread([port_ptr, mutex_ptr] {
+		auto time = now();
+		while (port_ptr->isOpen()) {
+			{
+				std::lock_guard<std::mutex> _(*mutex_ptr);
+				if (!port_ptr->isOpen()) break;
+				
+				time += rudder_interval;
+				*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
 			}
-		}).detach();
-	}
+			std::this_thread::sleep_until(time);
+		}
+	}).detach();
 	// endregion
 	
 	// region receive
-	auto mutex_ptr = mutex2;
+	mutex_ptr = mutex2;
 	std::thread([port_ptr, mutex_ptr, this] {
 		std::string buffer;
 		
