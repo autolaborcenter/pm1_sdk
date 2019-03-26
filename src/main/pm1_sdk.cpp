@@ -89,10 +89,10 @@ const auto max_v = 3 * 2 * pi_f,
            max_w = max_v / default_config.width;
 
 const process_controller
-		move_up(0, 0.01, 0.5, max_v),                  // NOLINT(cert-err58-cpp)
-		move_down(0.05, 0.01, 10, max_v),              // NOLINT(cert-err58-cpp)
-		rotate_up(0, pi_f / 180, pi_f / 4, max_w),      // NOLINT(cert-err58-cpp)
-		rotate_down(pi_f / 9, pi_f / 90, pi_f, max_w); // NOLINT(cert-err58-cpp)
+		move_up(0, 0.01, 0.5, max_v),                     // NOLINT(cert-err58-cpp)
+		move_down(0.02, 0.01, 10, max_v),                 // NOLINT(cert-err58-cpp)
+		rotate_up(0, pi_f / 90, pi_f / 4, max_w),         // NOLINT(cert-err58-cpp)
+		rotate_down(pi_f / 900, pi_f / 180, pi_f, max_w); // NOLINT(cert-err58-cpp)
 
 namespace block {
 	/** 阻塞等待后轮转动 */
@@ -194,6 +194,7 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 			block::wait_or_drive(speed > 0 ? actual : -actual, 0);
 			std::this_thread::yield();
 		}
+		ptr()->set_target({0, NAN});
 	});
 }
 
@@ -225,6 +226,7 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 			block::wait_or_drive(available, available / r);
 			std::this_thread::yield();
 		}
+		ptr()->set_target({0, NAN});
 	});
 }
 
@@ -232,6 +234,7 @@ result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	return run([speed, r, time] {
 		if (r == 0) throw std::exception(illegal_target);
 		block::go_timing(speed, speed / r, time);
+		ptr()->set_target({0, NAN});
 	});
 }
 
@@ -244,10 +247,13 @@ result autolabor::pm1::turn_around(double speed, double rad) {
 		if (rad <= 0)
 			throw std::exception(illegal_target);
 		
+		if (rad < 0.01) return;
+		auto temp = rad - 0.01;
+		
 		const auto o = ptr()->odometry().theta;
 		while (true) {
 			auto current = std::abs(ptr()->odometry().theta - o),
-			     rest    = rad - current;
+			     rest    = temp - current;
 			if (rest < 0) break;
 			auto actual = std::min({std::abs(speed),
 			                        rotate_up(current),
@@ -255,11 +261,15 @@ result autolabor::pm1::turn_around(double speed, double rad) {
 			block::wait_or_drive(0, speed > 0 ? actual : -actual);
 			std::this_thread::yield();
 		}
+		ptr()->set_target({0, NAN});
 	});
 }
 
 result autolabor::pm1::turn_around_timing(double speed, double time) {
-	return run([speed, time] { block::go_timing(0, speed, time); });
+	return run([speed, time] {
+		block::go_timing(0, speed, time);
+		ptr()->set_target({0, NAN});
+	});
 }
 
 result autolabor::pm1::pause() {
