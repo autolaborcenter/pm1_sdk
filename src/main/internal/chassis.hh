@@ -6,7 +6,6 @@
 #define PM1_SDK_CHASSIS_H
 
 #include <mutex>
-#include <vector>
 #include "serial/serial.h"
 #include "can_define.h"
 #include "odometry_t.hh"
@@ -14,7 +13,6 @@
 
 extern "C" {
 #include "control_model/model.h"
-#include "control_model/optimization.h"
 }
 
 namespace autolabor {
