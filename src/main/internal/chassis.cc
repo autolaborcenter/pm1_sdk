@@ -60,9 +60,9 @@ chassis::chassis(const std::string &port_name,
 				});
 		
 		while (port->isOpen()
-		       && _left.state != node_state_t::unknown
-		       && _right.state != node_state_t::unknown
-		       && _rudder.state != node_state_t::unknown) {
+		       && (_left.state == node_state_t::unknown
+		           || _right.state == node_state_t::unknown
+		           || _rudder.state == node_state_t::unknown)) {
 			
 			*port >> buffer;
 			if (!buffer.empty()) parser(*buffer.begin());
