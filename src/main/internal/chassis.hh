@@ -19,9 +19,8 @@ namespace autolabor {
 	/** 电机信息 */
 	template<class time_t = decltype(now())>
 	struct motor_t {
-		pm1::node_state_t state;
-		double            position, speed;
-		time_t            time;
+		double position, speed;
+		time_t time;
 		
 		void update(time_t _now, double value) {
 			auto delta = value - position;
@@ -60,9 +59,6 @@ namespace autolabor {
 			/** 舵轮状态 */
 			motor_t<> rudder() const;
 			
-			/** 查询状态 */
-			void check_state();
-			
 			/** 锁定 */
 			void enable();
 			
@@ -82,10 +78,17 @@ namespace autolabor {
 			/** 串口引用 */
 			std::shared_ptr<serial::Serial> port;
 			
+			/** 节点状态 */
+			node_state_t _ecu0{node_state_t::unknown},
+			             _ecu1{node_state_t::unknown},
+			             _tcu{node_state_t::unknown},
+			             _vcu{node_state_t::unknown},
+			             _mcu{node_state_t::unknown};
+			
 			/** 电机数据 */
-			motor_t<> _left{node_state_t::unknown},
-			          _right{node_state_t::unknown},
-			          _rudder{node_state_t::unknown};
+			motor_t<> _left{},
+			          _right{},
+			          _rudder{};
 			
 			/** 底盘参数 */
 			chassis_config_t parameters;
@@ -104,9 +107,8 @@ namespace autolabor {
 					odometry_protector;
 			
 			std::shared_ptr<std::mutex>
-					mutex0,
-					mutex1,
-					mutex2;
+					send_mutex,
+					receive_mutex;
 			
 			/** 目标运动 */
 			physical target{};
