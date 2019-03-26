@@ -5,7 +5,6 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <fstream>
 #include "serial_extension.h"
 #include "can/parser.hh"
 #include "can/parse_engine.hh"
@@ -202,12 +201,15 @@ chassis::chassis(const std::string &port_name,
 				});
 		
 		while (port_ptr->isOpen()) {
-			std::lock_guard<std::mutex> _(*mutex_ptr);
-			if (!port_ptr->isOpen()) break;
-			
-			*port_ptr >> buffer;
-			
-			if (!buffer.empty()) parser(*buffer.begin());
+			{
+				std::lock_guard<std::mutex> _(*mutex_ptr);
+				if (!port_ptr->isOpen()) break;
+				
+				*port_ptr >> buffer;
+				
+				if (!buffer.empty()) parser(*buffer.begin());
+			}
+			if (buffer.empty()) std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 	}).detach();
 	// endregion

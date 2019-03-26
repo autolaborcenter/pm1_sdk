@@ -5,8 +5,8 @@
 using namespace autolabor::pm1;
 
 int main() {
-	union_error_code code{};
-	code.bits.ecu1_offline = true;
-	std::cout << +code.code << std::endl;
+	initialize();
+	go_straight(-0.1, 0.3);
+	std::cout << "Hello world!" << std::endl;
 	return 0;
 }
