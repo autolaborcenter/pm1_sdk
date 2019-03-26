@@ -208,6 +208,7 @@ result autolabor::pm1::go_straight_timing(double speed, double time) {
 
 result autolabor::pm1::go_arc(double speed, double r, double rad) {
 	return run([speed, r, rad] {
+		if (r == 0) throw std::exception(illegal_target);
 		if (speed == 0) {
 			if (rad == 0) return;
 			throw std::exception(action_cannot_complete);
