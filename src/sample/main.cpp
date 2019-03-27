@@ -21,7 +21,8 @@ int main() {
 		}
 	}).detach();
 	
-	turn_around(0.157, 1.57);
+	//	go_straight(0.2, 0.4);
+	turn_around(0.157, 0.45);
 	delay(1);
 	return 0;
 }

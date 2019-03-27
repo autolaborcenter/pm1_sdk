@@ -32,6 +32,7 @@ chassis::chassis(const std::string &port_name,
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
 	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
 	constexpr static auto state_interval    = std::chrono::milliseconds(1000);
+	constexpr static auto state_timeout     = state_interval * 2;
 	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
 	constexpr static auto check_timeout     = std::chrono::milliseconds(500);
 	
@@ -122,25 +123,39 @@ chassis::chassis(const std::string &port_name,
 		auto copy        = this->parameters;
 		auto speed       = .0f;
 		
+		decltype(time) reply_time[] = {time, time, time};
+		
 		autolabor::can::parse_engine parser(
 				[&](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
 					auto _now = now();
 					
+					if (_now - reply_time[0] > state_timeout)
+						_ecu0 = node_state_t::unknown;
+					
+					if (_now - reply_time[1] > state_timeout)
+						_ecu1 = node_state_t::unknown;
+					
+					if (_now - reply_time[2] > state_timeout)
+						_tcu = node_state_t::unknown;
+					
 					// 处理
 					const auto msg = result.message;
 					
-					if (unit<ecu<0>>::state_rx::match(msg))
+					if (unit<ecu<0>>::state_rx::match(msg)) {
 						_ecu0 = parse_state(*msg.data.data);
-					
-					else if (unit<ecu<1>>::state_rx::match(msg))
+						reply_time[0] = _now;
+						
+					} else if (unit<ecu<1>>::state_rx::match(msg)) {
 						_ecu1 = parse_state(*msg.data.data);
-					
-					else if (unit<tcu<0>>::state_rx::match(msg))
+						reply_time[1] = _now;
+						
+					} else if (unit<tcu<0>>::state_rx::match(msg)) {
 						_tcu = parse_state(*msg.data.data);
-					
-					else if (ecu<0>::current_position_rx::match(msg)) {
+						reply_time[2] = _now;
+						
+					} else if (ecu<0>::current_position_rx::match(msg)) {
 						
 						auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
 						delta_left = value - _left.position;
@@ -246,6 +261,16 @@ void chassis::enable() {
 
 void chassis::disable() {
 	*port << autolabor::can::pack<unit<>::emergency_stop>();
+}
+
+bool chassis::is_enabled() const {
+	return _ecu0 == node_state_t::enabled
+	       && _ecu1 == node_state_t::enabled
+	       && _tcu == node_state_t::enabled;
+}
+
+std::vector<node_state_t> chassis::get_states() const {
+	return {_ecu0, _ecu1, _tcu};
 }
 
 void chassis::set_target(const physical &t) {
