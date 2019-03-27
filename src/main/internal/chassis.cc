@@ -30,7 +30,6 @@ chassis::chassis(const std::string &port_name,
 		  parameters(chassis_config),
 		  optimize_width(optimize_width),
 		  acceleration(acceleration),
-		  _odometry({chassis_config.width}),
 		  send_mutex(std::make_shared<std::mutex>()),
 		  receive_mutex(std::make_shared<std::mutex>()) {
 	using result_t = autolabor::can::parser::result_type;
@@ -278,10 +277,13 @@ void chassis::set_target(const physical &t) {
 
 autolabor::odometry_t chassis::odometry() const {
 	std::lock_guard<std::mutex> _(odometry_protector);
+	return _odometry - odometry_mark;
+}
+
+autolabor::odometry_t chassis::steady_odometry() const {
 	return _odometry;
 }
 
 void chassis::clear_odometry() {
-	std::lock_guard<std::mutex> _(odometry_protector);
-	_odometry.clear();
+	odometry_mark = _odometry;
 }

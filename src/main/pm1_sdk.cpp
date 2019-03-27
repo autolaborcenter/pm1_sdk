@@ -199,10 +199,10 @@ result<void> autolabor::pm1::go_straight(double speed, double distance) {
 		if (distance <= 0)
 			throw std::exception(illegal_target);
 		
-		const auto o = ptr()->odometry().s;
+		const auto o = ptr()->steady_odometry().s;
 		
 		while (true) {
-			auto current = std::abs(ptr()->odometry().s - o),
+			auto current = std::abs(ptr()->steady_odometry().s - o),
 			     rest    = distance - current;
 			if (rest < 0) break;
 			auto actual = std::min({std::abs(speed),
@@ -229,11 +229,11 @@ result<void> autolabor::pm1::go_arc(double speed, double r, double rad) {
 		if (rad <= 0)
 			throw std::exception(illegal_target);
 		
-		const auto o = ptr()->odometry().s;
+		const auto o = ptr()->steady_odometry().s;
 		const auto d = std::abs(r * rad);
 		
 		while (true) {
-			auto current = std::abs(ptr()->odometry().s - o),
+			auto current = std::abs(ptr()->steady_odometry().s - o),
 			     rest    = d - current;
 			if (rest < 0) break;
 			auto actual    = std::min({std::abs(speed),
@@ -267,9 +267,9 @@ result<void> autolabor::pm1::turn_around(double speed, double rad) {
 		if (rad < 0.01) return;
 		auto temp = rad - 0.01;
 		
-		const auto o = ptr()->odometry().theta;
+		const auto o = ptr()->steady_odometry().theta;
 		while (true) {
-			auto current = std::abs(ptr()->odometry().theta - o),
+			auto current = std::abs(ptr()->steady_odometry().theta - o),
 			     rest    = temp - current;
 			if (rest < 0) break;
 			auto actual = std::min({std::abs(speed),

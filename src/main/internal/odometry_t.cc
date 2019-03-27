@@ -12,23 +12,30 @@ void odometry_t::clear() {
 	s = x = y = theta = vx = vy = w = 0;
 }
 
-odometry_t odometry_t::operator+(const odometry_t &delta) {
+odometry_t odometry_t::operator+(const odometry_t &delta) const {
 	auto sin = std::sin(theta);
 	auto cos = std::cos(theta);
-	auto dx  = delta.x * cos - delta.y * sin;
-	auto dy  = delta.x * sin + delta.y * cos;
 	
 	return {s + delta.s,
-	        x + dx,
-	        y + dy,
+	        x + delta.x * cos - delta.y * sin,
+	        y + delta.x * sin + delta.y * cos,
 	        theta + delta.theta,
 	        delta.vx,
 	        delta.vy,
 	        delta.w};
 }
 
-odometry_t odometry_t::operator-(const odometry_t &others) {
-	return *this;
+odometry_t odometry_t::operator-(const odometry_t &absolute) const {
+	auto sin = std::sin(-theta);
+	auto cos = std::cos(-theta);
+	
+	return {s - absolute.s,
+	        (x - absolute.x) * cos - (y - absolute.y) * sin,
+	        (x - absolute.x) * sin + (y - absolute.y) * cos,
+	        theta - absolute.theta,
+	        vx,
+	        vy,
+	        w};
 }
 
 delta_differential_t::operator odometry_t() {

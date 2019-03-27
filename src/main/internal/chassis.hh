@@ -82,6 +82,9 @@ namespace autolabor {
 			/** 读取里程计 */
 			odometry_t odometry() const;
 			
+			/** 读取单增里程计 */
+			odometry_t steady_odometry() const;
+			
 			/** 清零里程计 */
 			void clear_odometry();
 		
@@ -105,7 +108,8 @@ namespace autolabor {
 			      acceleration;
 			
 			/** 里程计 */
-			odometry_t _odometry;
+			odometry_t _odometry{},
+			           odometry_mark{};
 			
 			mutable std::mutex
 					odometry_protector;

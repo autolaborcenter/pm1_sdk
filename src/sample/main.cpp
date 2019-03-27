@@ -24,8 +24,12 @@ int main() {
 		}
 	}).detach();
 	
-	//	go_straight(0.2, 0.4);
-	//	go_straight(-0.2, 1.2);
+	go_straight(0.2, 0.5);
+	
+	reset_odometry();
+	
+	go_straight(-0.2, 0.4);
+	
 	delay(10);
 	return 0;
 }

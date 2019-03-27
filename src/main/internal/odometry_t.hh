@@ -17,9 +17,9 @@ namespace autolabor {
 	struct odometry_t {
 		double s, x, y, theta, vx, vy, w;
 		
-		odometry_t operator+(const odometry_t &);
+		odometry_t operator+(const odometry_t &) const;
 		
-		odometry_t operator-(const odometry_t &);
+		odometry_t operator-(const odometry_t &) const;
 		
 		void operator+=(const odometry_t &delta) { *this = *this + delta; }
 		
