@@ -51,7 +51,7 @@ chassis::chassis(const std::string &port_name,
 		
 		std::string buffer;
 		const auto  time = now();
-		bool        temp[3];
+		bool        temp[]{false, false, false};
 		
 		autolabor::can::parse_engine parser(
 				[&, this](const autolabor::can::parser::result &result) {
@@ -174,9 +174,10 @@ chassis::chassis(const std::string &port_name,
 						
 						if (right_ready) {
 							std::lock_guard<std::mutex> _(odometry_protector);
-							_odometry += delta_odometry_t<>{delta_left * copy.radius,
-							                                delta_right * copy.radius,
-							                                _now - time};
+							_odometry += delta_differential_t<>{copy.width,
+							                                    copy.radius * delta_left,
+							                                    copy.radius * delta_right,
+							                                    _now - time};
 							right_ready = false;
 							time        = _now;
 						} else
@@ -191,9 +192,10 @@ chassis::chassis(const std::string &port_name,
 						
 						if (left_ready) {
 							std::lock_guard<std::mutex> _(odometry_protector);
-							_odometry += delta_odometry_t<>{delta_left * copy.radius,
-							                                delta_right * copy.radius,
-							                                _now - time};
+							_odometry += delta_differential_t<>{copy.width,
+							                                    copy.radius * delta_left,
+							                                    copy.radius * delta_right,
+							                                    _now - time};
 							left_ready = false;
 							time       = _now;
 						} else
@@ -279,7 +281,7 @@ void chassis::set_target(const physical &t) {
 	legalize_physical(&target, 6 * pi_f);
 }
 
-odometry_t chassis::odometry() const {
+autolabor::odometry_t chassis::odometry() const {
 	std::lock_guard<std::mutex> _(odometry_protector);
 	return _odometry;
 }

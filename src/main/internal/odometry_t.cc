@@ -6,12 +6,15 @@
 #include <tuple>
 #include "odometry_t.hh"
 
-using namespace autolabor::pm1;
+void autolabor::odometry_t::clear() {
+	s = x = y = theta = vx = vy = w = 0;
+}
 
-odometry_t odometry_t::operator+(const delta_odometry_t<> &delta) const {
+autolabor::odometry_t operator+(const autolabor::odometry_t &odometry,
+                                const autolabor::delta_differential_t<> &delta) {
 	double ds      = (delta.left + delta.rigth) / 2,
 	       dx, dy,
-	       d_theta = (delta.rigth - delta.left) / width,
+	       d_theta = (delta.rigth - delta.left) / delta.width,
 	       dt      = 1 / delta.time.count();
 	
 	if (d_theta == 0) {
@@ -23,41 +26,17 @@ odometry_t odometry_t::operator+(const delta_odometry_t<> &delta) const {
 		dy = r * (1 - std::cos(d_theta));
 	}
 	
-	auto sin = std::sin(theta);
-	auto cos = std::cos(theta);
+	auto sin = std::sin(odometry.theta);
+	auto cos = std::cos(odometry.theta);
 	auto _   = dx * cos - dy * sin;
 	dy = dx * sin + dy * cos;
 	dx = _;
 	
-	return {width,
-	        s + ds,
-	        x + dx,
-	        y + dy,
-	        theta + d_theta,
+	return {odometry.s + ds,
+	        odometry.x + dx,
+	        odometry.y + dy,
+	        odometry.theta + d_theta,
 	        dt * dx,
 	        dt * dy,
 	        dt * d_theta};
-}
-
-void odometry_t::operator+=(const delta_odometry_t<> &others) {
-	*this = *this + others;
-}
-
-void odometry_t::clear() {
-	s = x = y = theta = vx = vy = w = 0;
-}
-
-odometry_t &odometry_t::operator=(const odometry_t &others) {
-	if (width != others.width)
-		throw std::exception("cannot assign odometry to different chassis");
-	
-	s     = others.s;
-	x     = others.x;
-	y     = others.y;
-	theta = others.theta;
-	vx    = others.vx;
-	vy    = others.vy;
-	w     = others.w;
-	
-	return *this;
 }

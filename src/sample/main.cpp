@@ -24,7 +24,7 @@ int main() {
 	unlock();
 	
 	//	go_straight(0.2, 0.4);
-	go_arc(0.1, 0.5, 1);
+	go_arc(0.1, -0.5, 0.5);
 	delay(1);
 	return 0;
 }
