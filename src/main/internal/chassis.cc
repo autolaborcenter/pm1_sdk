@@ -5,6 +5,8 @@
 #include "chassis.hh"
 
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include "serial_extension.h"
 #include "can/parse_engine.hh"
 
@@ -56,12 +58,14 @@ chassis::chassis(const std::string &port_name,
 		*port << autolabor::can::pack<ecu<>::current_position_tx>()
 		      << autolabor::can::pack<tcu<0>::current_position_tx>();
 		
-		std::string buffer;
-		const auto  time = now();
-		bool        temp[]{false, false, false};
+		std::string       buffer;
+		std::stringstream log;
+		const auto        time = now();
+		bool              temp[]{false, false, false};
 		
 		autolabor::can::parse_engine parser(
 				[&, this](const autolabor::can::parser::result &result) {
+					log << std::endl;
 					if (result.type != result_t::message) return;
 					
 					auto _now = now();
@@ -81,10 +85,16 @@ chassis::chassis(const std::string &port_name,
 		while (port->isOpen() && !(temp[0] && temp[1] && temp[2])) {
 			*port >> buffer;
 			
-			if (!buffer.empty()) parser(*buffer.begin());
+			if (!buffer.empty()) {
+				log << std::hex << std::setfill('0') << std::setw(2)
+				    << (*buffer.begin() & 0xffu) << ' ';
+				parser(*buffer.begin());
+			}
 			
-			if (now() - time > check_timeout)
-				throw std::exception("it's not a pm1 chassis");
+			if (now() - time > check_timeout) {
+				log << std::endl << temp[0] << temp[1] << temp[2] << std::endl;
+				throw std::exception(log.str().data());
+			}
 		}
 	}
 	// endregion

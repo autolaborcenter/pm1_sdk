@@ -25,14 +25,16 @@ odometry_t odometry_t::operator+(const odometry_t &delta) const {
 	        delta.w};
 }
 
-odometry_t odometry_t::operator-(const odometry_t &absolute) const {
-	auto sin = std::sin(-theta);
-	auto cos = std::cos(-theta);
+odometry_t odometry_t::operator-(const odometry_t &mark) const {
+	auto sin = std::sin(-mark.theta);
+	auto cos = std::cos(-mark.theta);
+	auto dx  = x - mark.x;
+	auto dy  = y - mark.y;
 	
-	return {s - absolute.s,
-	        (x - absolute.x) * cos - (y - absolute.y) * sin,
-	        (x - absolute.x) * sin + (y - absolute.y) * cos,
-	        theta - absolute.theta,
+	return {s - mark.s,
+	        dx * cos - dy * sin,
+	        dx * sin + dy * cos,
+	        theta - mark.theta,
 	        vx,
 	        vy,
 	        w};
