@@ -24,6 +24,21 @@ constexpr auto chassis_not_initialized = "chassis has not been initialized";
 constexpr auto action_cannot_complete  = "this action will never complete";
 constexpr auto illegal_target          = "target state should greater than 0";
 
+inline uint16_t build_code(const std::string &what) noexcept {
+	union_error_code error{};
+	
+	if (what.find_first_of(serial_error_prefix) == 0)
+		error.bits.serial_error = true;
+	
+	else if (what == chassis_not_initialized)
+		error.bits.not_initialized = true;
+	
+	else if (what == action_cannot_complete || what == illegal_target)
+		error.bits.illegal_argument = true;
+	
+	return error.code;
+}
+
 /** 空安全检查 */
 inline std::shared_ptr<chassis> ptr() {
 	auto copy = _ptr;
@@ -35,33 +50,36 @@ inline std::shared_ptr<chassis> ptr() {
 volatile bool paused = false;
 
 /** 检查并执行 */
-inline result<void> run(const std::function<void()> &code) {
-	union_error_code error{};
-	
-	try { code(); }
+template<class t>
+inline result<t> run(const std::function<t()> &code) {
+	try {
+		return {0, "", code()};
+	}
 	catch (std::exception &e) {
-		const auto what = std::string(e.what());
-		
-		if (what.find_first_of(serial_error_prefix) == 0) {
-			error.bits.serial_error = true;
-			return {error.code, e.what()};
-		}
-		
-		if (what == chassis_not_initialized) {
-			error.bits.not_initialized = true;
-			return {error.code, e.what()};
-		}
-		
-		if (what == action_cannot_complete || what == illegal_target) {
-			error.bits.illegal_argument = true;
-			return {error.code, e.what()};
-		}
+		return {build_code(e.what()), e.what()};
 	}
 	catch (...) {
+		union_error_code error{};
 		error.bits.others = true;
 		return {error.code, "unknown and not-exception error"};
 	}
-	return {};
+}
+
+/** 检查并执行 */
+template<>
+inline result<void> run(const std::function<void()> &code) {
+	try {
+		code();
+		return {};
+	}
+	catch (std::exception &e) {
+		return {build_code(e.what()), e.what()};
+	}
+	catch (...) {
+		union_error_code error{};
+		error.bits.others = true;
+		return {error.code, "unknown and not-exception error"};
+	}
 }
 
 struct process_controller {
@@ -173,7 +191,7 @@ result<void> autolabor::pm1::shutdown() {
 }
 
 result<void> autolabor::pm1::go_straight(double speed, double distance) {
-	return run([speed, distance] {
+	return run<void>([speed, distance] {
 		if (speed == 0) {
 			if (distance == 0) return;
 			throw std::exception(action_cannot_complete);
@@ -198,11 +216,11 @@ result<void> autolabor::pm1::go_straight(double speed, double distance) {
 }
 
 result<void> autolabor::pm1::go_straight_timing(double speed, double time) {
-	return run([speed, time] { block::go_timing(speed, 0, time); });
+	return run<void>([speed, time] { block::go_timing(speed, 0, time); });
 }
 
 result<void> autolabor::pm1::go_arc(double speed, double r, double rad) {
-	return run([speed, r, rad] {
+	return run<void>([speed, r, rad] {
 		if (r == 0) throw std::exception(illegal_target);
 		if (speed == 0) {
 			if (rad == 0) return;
@@ -230,7 +248,7 @@ result<void> autolabor::pm1::go_arc(double speed, double r, double rad) {
 }
 
 result<void> autolabor::pm1::go_arc_timing(double speed, double r, double time) {
-	return run([speed, r, time] {
+	return run<void>([speed, r, time] {
 		if (r == 0) throw std::exception(illegal_target);
 		block::go_timing(speed, speed / r, time);
 		ptr()->set_target({0, NAN});
@@ -238,7 +256,7 @@ result<void> autolabor::pm1::go_arc_timing(double speed, double r, double time) 
 }
 
 result<void> autolabor::pm1::turn_around(double speed, double rad) {
-	return run([speed, rad] {
+	return run<void>([speed, rad] {
 		if (speed == 0) {
 			if (rad == 0) return;
 			throw std::exception(action_cannot_complete);
@@ -265,21 +283,21 @@ result<void> autolabor::pm1::turn_around(double speed, double rad) {
 }
 
 result<void> autolabor::pm1::turn_around_timing(double speed, double time) {
-	return run([speed, time] {
+	return run<void>([speed, time] {
 		block::go_timing(0, speed, time);
 		ptr()->set_target({0, NAN});
 	});
 }
 
 result<void> autolabor::pm1::pause() {
-	return run([] {
+	return run<void>([] {
 		block::wait_or_drive(0, 0);
 		paused = true;
 	});
 }
 
 result<void> autolabor::pm1::resume() {
-	return run([] { paused = false; });
+	return run<void>([] { paused = false; });
 }
 
 void autolabor::pm1::delay(double time) {
@@ -287,35 +305,38 @@ void autolabor::pm1::delay(double time) {
 }
 
 result<odometry> autolabor::pm1::get_odometry() {
-	try {
-		auto odometry = ptr()->odometry();
-		return {0, "",
-		        {odometry.x,
-		         odometry.y,
-		         odometry.theta,
-		         odometry.vx,
-		         odometry.vy,
-		         odometry.w}};
-	} catch (std::exception &e) {
-		return {0xffff, e.what()};
-	}
+	return run<odometry>([] {
+		auto data = ptr()->odometry();
+		return odometry{data.x,
+		                data.y,
+		                data.theta,
+		                data.vx,
+		                data.vy,
+		                data.w};
+	});
 }
 
 result<void> autolabor::pm1::drive(double v, double w) {
-	return run([v, w] {
+	return run<void>([v, w] {
 		velocity temp = {static_cast<float>(v), static_cast<float>(w)};
 		ptr()->set_target(velocity_to_physical(&temp, &default_config));
 	});
 }
 
 result<void> autolabor::pm1::reset_odometry() {
-	return run([] { ptr()->clear_odometry(); });
+	return run<void>([] { ptr()->clear_odometry(); });
 }
 
 result<void> autolabor::pm1::lock() {
-	return run([] { ptr()->disable(); });
+	return run<void>([] { ptr()->disable(); });
 }
 
 result<void> autolabor::pm1::unlock() {
-	return run([] { ptr()->enable(); });
+	return run<void>([] { ptr()->enable(); });
+}
+
+result<chassis_state_t> get_nodes_state() {
+	return run<chassis_state_t>([] {
+		return ptr()->get_state();
+	});
 }

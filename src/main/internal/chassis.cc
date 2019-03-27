@@ -15,6 +15,12 @@ extern "C" {
 
 using namespace autolabor::pm1;
 
+bool chassis_state_t::everyone_online() const {
+	return _ecu0 != node_state_t::unknown
+	       && _ecu1 != node_state_t::unknown
+	       && _tcu != node_state_t::unknown;
+}
+
 chassis::chassis(const std::string &port_name,
                  const chassis_config_t &chassis_config,
                  float optimize_width,
@@ -52,19 +58,16 @@ chassis::chassis(const std::string &port_name,
 					auto state = parse_state(*result.message.data.data);
 					
 					if (unit<ecu<0>>::state_rx::match(result.message))
-						_ecu0 = state;
+						chassis_state._ecu0 = state;
 					else if (unit<ecu<1>>::state_rx::match(result.message))
-						_ecu1 = state;
+						chassis_state._ecu1 = state;
 					else if (unit<tcu<0>>::state_rx::match(result.message))
-						_tcu = state;
+						chassis_state._tcu = state;
 				});
 		
-		while (port->isOpen()
-		       && (_ecu0 == node_state_t::unknown
-		           || _ecu1 == node_state_t::unknown
-		           || _tcu == node_state_t::unknown)) {
-			
+		while (port->isOpen() && !chassis_state.everyone_online()) {
 			*port >> buffer;
+			
 			if (!buffer.empty()) parser(*buffer.begin());
 			
 			if (now() - time > check_timeout)
@@ -132,27 +135,27 @@ chassis::chassis(const std::string &port_name,
 					auto _now = now();
 					
 					if (_now - reply_time[0] > state_timeout)
-						_ecu0 = node_state_t::unknown;
+						chassis_state._ecu0 = node_state_t::unknown;
 					
 					if (_now - reply_time[1] > state_timeout)
-						_ecu1 = node_state_t::unknown;
+						chassis_state._ecu1 = node_state_t::unknown;
 					
 					if (_now - reply_time[2] > state_timeout)
-						_tcu = node_state_t::unknown;
+						chassis_state._tcu = node_state_t::unknown;
 					
 					// 处理
 					const auto msg = result.message;
 					
 					if (unit<ecu<0>>::state_rx::match(msg)) {
-						_ecu0 = parse_state(*msg.data.data);
+						chassis_state._ecu0 = parse_state(*msg.data.data);
 						reply_time[0] = _now;
 						
 					} else if (unit<ecu<1>>::state_rx::match(msg)) {
-						_ecu1 = parse_state(*msg.data.data);
+						chassis_state._ecu1 = parse_state(*msg.data.data);
 						reply_time[1] = _now;
 						
 					} else if (unit<tcu<0>>::state_rx::match(msg)) {
-						_tcu = parse_state(*msg.data.data);
+						chassis_state._tcu = parse_state(*msg.data.data);
 						reply_time[2] = _now;
 						
 					} else if (ecu<0>::current_position_rx::match(msg)) {
@@ -264,13 +267,13 @@ void chassis::disable() {
 }
 
 bool chassis::is_enabled() const {
-	return _ecu0 == node_state_t::enabled
-	       && _ecu1 == node_state_t::enabled
-	       && _tcu == node_state_t::enabled;
+	return chassis_state._ecu0 == node_state_t::enabled
+	       && chassis_state._ecu1 == node_state_t::enabled
+	       && chassis_state._tcu == node_state_t::enabled;
 }
 
-std::vector<node_state_t> chassis::get_states() const {
-	return {_ecu0, _ecu1, _tcu};
+chassis_state_t chassis::get_state() const {
+	return chassis_state;
 }
 
 void chassis::set_target(const physical &t) {

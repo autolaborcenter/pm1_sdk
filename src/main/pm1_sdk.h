@@ -18,6 +18,9 @@
 
 namespace autolabor {
 	namespace pm1 {
+		/** 节点状态 */
+		extern struct chassis_state_t;
+		
 		/** 表示全局指令执行的结果 */
 		template<class t>
 		struct result {
@@ -163,6 +166,11 @@ namespace autolabor {
 		 * 解锁底盘
 		 */
 		DllExport result<void> unlock();
+		
+		/**
+	     * 检查节点状态
+	     */
+		DllExport result<chassis_state_t> get_chassis_state();
 	}
 }
 

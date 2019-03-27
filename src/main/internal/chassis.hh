@@ -34,6 +34,13 @@ namespace autolabor {
 	};
 	
 	namespace pm1 {
+		/** 底盘状态 */
+		struct chassis_state_t {
+			node_state_t _ecu0, _ecu1, _tcu, _vcu, _mcu;
+			
+			bool everyone_online() const;
+		};
+		
 		/** 底盘 */
 		class chassis final {
 		public:
@@ -70,7 +77,7 @@ namespace autolabor {
 			bool is_enabled() const;
 			
 			/** 检查状态 */
-			std::vector<node_state_t> get_states() const;
+			chassis_state_t get_state() const;
 			
 			/** 设置目标控制量 */
 			void set_target(const physical &);
@@ -86,11 +93,7 @@ namespace autolabor {
 			std::shared_ptr<serial::Serial> port;
 			
 			/** 节点状态 */
-			node_state_t _ecu0{node_state_t::unknown},
-			             _ecu1{node_state_t::unknown},
-			             _tcu{node_state_t::unknown},
-			             _vcu{node_state_t::unknown},
-			             _mcu{node_state_t::unknown};
+			chassis_state_t chassis_state;
 			
 			/** 电机数据 */
 			motor_t<> _left{},
@@ -98,7 +101,7 @@ namespace autolabor {
 			          _rudder{};
 			
 			/** 底盘参数 */
-			chassis_config_t parameters;
+			chassis_config_t parameters{};
 			
 			/** 优化参数 */
 			float optimize_width,
