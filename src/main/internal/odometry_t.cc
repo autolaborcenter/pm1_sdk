@@ -8,16 +8,17 @@
 
 using namespace autolabor::pm1;
 
-void odometry_t::operator+=(const odometry_update_info<> &info) {
-	s += (info.d_left + info.d_rigth) / 2;
-	
-	double dx, dy, d_theta = (info.d_rigth - info.d_left) / parameters.width;
+odometry_t odometry_t::operator+(const delta_odometry_t<> &delta) const {
+	double ds      = (delta.left + delta.rigth) / 2,
+	       dx, dy,
+	       d_theta = (delta.rigth - delta.left) / width,
+	       dt      = 1 / delta.time.count();
 	
 	if (d_theta == 0) {
-		dx = info.d_left;
+		dx = delta.left;
 		dy = 0;
 	} else {
-		auto r = (info.d_rigth + info.d_left) / 2 / d_theta;
+		auto r = (delta.rigth + delta.left) / 2 / d_theta;
 		dx = r * std::sin(d_theta);
 		dy = r * (1 - std::cos(d_theta));
 	}
@@ -28,15 +29,31 @@ void odometry_t::operator+=(const odometry_update_info<> &info) {
 	dy = dx * sin + dy * cos;
 	dx = _;
 	
-	x += dx;
-	y += dy;
-	theta += d_theta;
-	
-	vx = dx / info.d_t.count();
-	vy = dy / info.d_t.count();
-	w  = d_theta / info.d_t.count();
+	return {width,
+	        s + ds,
+	        x + dx,
+	        y + dy,
+	        theta + d_theta,
+	        dt * dx,
+	        dt * dy,
+	        dt * d_theta};
 }
 
 void odometry_t::clear() {
 	s = x = y = theta = vx = vy = w = 0;
+}
+
+odometry_t &odometry_t::operator=(const odometry_t &others) {
+	if (width != others.width)
+		throw std::exception("cannot assign odometry to different chassis");
+	
+	s     = others.s;
+	x     = others.x;
+	y     = others.y;
+	theta = others.theta;
+	vx    = others.vx;
+	vy    = others.vy;
+	w     = others.w;
+	
+	return *this;
 }

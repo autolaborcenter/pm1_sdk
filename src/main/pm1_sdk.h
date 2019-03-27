@@ -18,8 +18,15 @@
 
 namespace autolabor {
 	namespace pm1 {
-		/** 节点状态 */
-		extern struct chassis_state_t;
+		enum class node_state : uint8_t {
+			unknown  = 0x00,
+			enabled  = 0x01,
+			disabled = 0xff
+		};
+		
+		struct chassis_state {
+			node_state _ecu0, _ecu1, _tcu;
+		};
 		
 		/** 表示全局指令执行的结果 */
 		template<class t>
@@ -170,7 +177,7 @@ namespace autolabor {
 		/**
 	     * 检查节点状态
 	     */
-		DllExport result<chassis_state_t> get_chassis_state();
+		DllExport result<chassis_state> get_chassis_state();
 	}
 }
 

@@ -28,9 +28,9 @@ chassis::chassis(const std::string &port_name,
 		: port(new serial::Serial(port_name, 115200,
 		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
 		  parameters(chassis_config),
-		  _odometry({chassis_config}),
 		  optimize_width(optimize_width),
 		  acceleration(acceleration),
+		  _odometry(odometry_t{chassis_config.width}),
 		  send_mutex(std::make_shared<std::mutex>()),
 		  receive_mutex(std::make_shared<std::mutex>()) {
 	using result_t = autolabor::can::parser::result_type;
@@ -170,9 +170,9 @@ chassis::chassis(const std::string &port_name,
 							else {
 								{
 									std::lock_guard<std::mutex> _(odometry_protector);
-									_odometry += {delta_left * copy.radius,
-									              delta_right * copy.radius,
-									              _now - time};
+									_odometry = _odometry + delta_odometry_t<>{delta_left * copy.radius,
+									                                           delta_right * copy.radius,
+									                                           _now - time};
 								}
 								right_ready = false;
 								time        = _now;
@@ -192,9 +192,9 @@ chassis::chassis(const std::string &port_name,
 							else {
 								{
 									std::lock_guard<std::mutex> _(odometry_protector);
-									_odometry += {delta_left * copy.radius,
-									              delta_right * copy.radius,
-									              _now - time};
+									_odometry = _odometry + delta_odometry_t<>{delta_left * copy.radius,
+									                                           delta_right * copy.radius,
+									                                           _now - time};
 								}
 								left_ready = false;
 								time       = _now;
@@ -290,5 +290,5 @@ odometry_t chassis::odometry() const {
 void chassis::clear_odometry() {
 	std::lock_guard<std::mutex> _(odometry_protector);
 	clear_flag = true;
-	_odometry  = odometry_t{parameters};
+	_odometry.clear();
 }

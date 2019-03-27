@@ -335,8 +335,11 @@ result<void> autolabor::pm1::unlock() {
 	return run<void>([] { ptr()->enable(); });
 }
 
-result<chassis_state_t> get_nodes_state() {
-	return run<chassis_state_t>([] {
-		return ptr()->get_state();
+result<chassis_state> autolabor::pm1::get_chassis_state() {
+	return run<chassis_state>([] {
+		auto temp = ptr()->get_state();
+		return chassis_state{(node_state) temp._ecu0,
+		                     (node_state) temp._ecu1,
+		                     (node_state) temp._tcu};
 	});
 }

@@ -21,7 +21,7 @@ int main() {
 		}
 	}).detach();
 	
-	unlock();
+	auto hello = get_chassis_state().data;
 	
 	//	go_straight(0.2, 0.4);
 	turn_around(0.157, 1.57);
