@@ -34,7 +34,7 @@ namespace autolabor {
 		double           width, left, rigth;
 		seconds_floating time;
 		
-		explicit operator odometry_t();
+		operator odometry_t();
 	};
 }
 

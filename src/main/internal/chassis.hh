@@ -6,6 +6,7 @@
 #define PM1_SDK_CHASSIS_H
 
 #include <mutex>
+#include <atomic>
 #include <vector>
 #include "serial/serial.h"
 #include "can_define.h"
@@ -108,11 +109,8 @@ namespace autolabor {
 			      acceleration;
 			
 			/** 里程计 */
-			odometry_t _odometry{},
-			           odometry_mark{};
-			
-			mutable std::mutex
-					odometry_protector;
+			std::atomic<odometry_t> _odometry{},
+			                        odometry_mark{};
 			
 			std::shared_ptr<std::mutex>
 					send_mutex,

@@ -21,6 +21,14 @@ bool chassis_state_t::everyone_online() const {
 	       && _tcu != node_state_t::unknown;
 }
 
+template<class t>
+inline void add(std::atomic<t> &a, const t &b) {
+	auto expected = a.load();
+	auto desired  = expected + b;
+	while (!a.compare_exchange_strong(expected, desired))
+		desired = expected + b;
+}
+
 chassis::chassis(const std::string &port_name,
                  const chassis_config_t &chassis_config,
                  float optimize_width,
@@ -172,11 +180,11 @@ chassis::chassis(const std::string &port_name,
 						_left.update(_now, value);
 						
 						if (right_ready) {
-							std::lock_guard<std::mutex> _(odometry_protector);
-							_odometry += (odometry_t) delta_differential_t{copy.width,
-							                                               copy.radius * delta_left,
-							                                               copy.radius * delta_right,
-							                                               _now - time};
+							odometry_t delta = delta_differential_t{copy.width,
+							                                        copy.radius * delta_left,
+							                                        copy.radius * delta_right,
+							                                        _now - time};
+							add(_odometry, delta);
 							right_ready = false;
 							time        = _now;
 						} else
@@ -190,11 +198,11 @@ chassis::chassis(const std::string &port_name,
 						_right.update(_now, value);
 						
 						if (left_ready) {
-							std::lock_guard<std::mutex> _(odometry_protector);
-							_odometry += (odometry_t) delta_differential_t{copy.width,
-							                                               copy.radius * delta_left,
-							                                               copy.radius * delta_right,
-							                                               _now - time};
+							odometry_t delta = delta_differential_t{copy.width,
+							                                        copy.radius * delta_left,
+							                                        copy.radius * delta_right,
+							                                        _now - time};
+							add(_odometry, delta);
 							left_ready = false;
 							time       = _now;
 						} else
@@ -276,8 +284,7 @@ void chassis::set_target(const physical &t) {
 }
 
 autolabor::odometry_t chassis::odometry() const {
-	std::lock_guard<std::mutex> _(odometry_protector);
-	return _odometry - odometry_mark;
+	return _odometry.load() - odometry_mark.load();
 }
 
 autolabor::odometry_t chassis::steady_odometry() const {
@@ -285,5 +292,5 @@ autolabor::odometry_t chassis::steady_odometry() const {
 }
 
 void chassis::clear_odometry() {
-	odometry_mark = _odometry;
+	odometry_mark.store(_odometry);
 }

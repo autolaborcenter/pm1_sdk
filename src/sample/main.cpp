@@ -14,22 +14,18 @@ int main() {
 	
 	std::thread([] {
 		while (true) {
-			std::cout << get_odometry().data.x << ", "
-			          << get_odometry().data.y << ", "
-			          << get_odometry().data.yaw << ", "
-			          << (int) get_chassis_state().data._ecu0 << ", "
+			//			std::cout << get_odometry().data.x << ", "
+			//			          << get_odometry().data.y << ", "
+			//			          << get_odometry().data.yaw << ", "
+			std::cout << (int) get_chassis_state().data._ecu0 << ", "
 			          << (int) get_chassis_state().data._ecu1 << ", "
 			          << (int) get_chassis_state().data._tcu << std::endl;
 			delay(0.1);
 		}
 	}).detach();
 	
-	go_straight(0.2, 0.5);
+	//go_arc(0.1, 0.5, 2);
 	
-	reset_odometry();
-	
-	go_straight(-0.2, 0.4);
-	
-	delay(10);
+	delay(3);
 	return 0;
 }
