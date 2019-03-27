@@ -16,15 +16,16 @@ int main() {
 		while (true) {
 			std::cout << get_odometry().data.x << ", "
 			          << get_odometry().data.y << ", "
-			          << get_odometry().data.yaw << std::endl;
+			          << get_odometry().data.yaw << ", "
+			          << (int) get_chassis_state().data._ecu0 << ", "
+			          << (int) get_chassis_state().data._ecu1 << ", "
+			          << (int) get_chassis_state().data._tcu << std::endl;
 			delay(0.1);
 		}
 	}).detach();
 	
-	unlock();
-	
 	//	go_straight(0.2, 0.4);
-	go_arc(0.1, -0.5, 0.5);
-	delay(1);
+	//	go_straight(-0.2, 1.2);
+	delay(10);
 	return 0;
 }

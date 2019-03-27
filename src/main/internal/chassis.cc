@@ -174,10 +174,10 @@ chassis::chassis(const std::string &port_name,
 						
 						if (right_ready) {
 							std::lock_guard<std::mutex> _(odometry_protector);
-							_odometry += delta_differential_t<>{copy.width,
-							                                    copy.radius * delta_left,
-							                                    copy.radius * delta_right,
-							                                    _now - time};
+							_odometry += (odometry_t) delta_differential_t{copy.width,
+							                                               copy.radius * delta_left,
+							                                               copy.radius * delta_right,
+							                                               _now - time};
 							right_ready = false;
 							time        = _now;
 						} else
@@ -192,10 +192,10 @@ chassis::chassis(const std::string &port_name,
 						
 						if (left_ready) {
 							std::lock_guard<std::mutex> _(odometry_protector);
-							_odometry += delta_differential_t<>{copy.width,
-							                                    copy.radius * delta_left,
-							                                    copy.radius * delta_right,
-							                                    _now - time};
+							_odometry += (odometry_t) delta_differential_t{copy.width,
+							                                               copy.radius * delta_left,
+							                                               copy.radius * delta_right,
+							                                               _now - time};
 							left_ready = false;
 							time       = _now;
 						} else
@@ -236,6 +236,7 @@ chassis::chassis(const std::string &port_name,
 		}
 	}).detach();
 	// endregion
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 chassis::~chassis() {
@@ -263,12 +264,6 @@ void chassis::enable() {
 
 void chassis::disable() {
 	*port << autolabor::can::pack<unit<>::emergency_stop>();
-}
-
-bool chassis::is_enabled() const {
-	return chassis_state._ecu0 == node_state_t::enabled
-	       && chassis_state._ecu1 == node_state_t::enabled
-	       && chassis_state._tcu == node_state_t::enabled;
 }
 
 chassis_state_t chassis::get_state() const {
