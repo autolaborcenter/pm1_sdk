@@ -10,13 +10,12 @@
 #include <algorithm>
 #include <stdexcept>
 #include <thread>
+#include <iostream>
 #include "internal/time_extensions.h"
 #include "internal/chassis.hh"
 #include "exception.h"
 
 using namespace autolabor::pm1;
-
-result::operator bool() const { return error_info.empty(); }
 
 std::shared_ptr<chassis> _ptr;
 
@@ -36,7 +35,7 @@ inline std::shared_ptr<chassis> ptr() {
 volatile bool paused = false;
 
 /** 检查并执行 */
-inline result run(const std::function<void()> &code) {
+inline result<void> run(const std::function<void()> &code) {
 	union_error_code error{};
 	
 	try { code(); }
@@ -134,7 +133,7 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 	return result;
 }
 
-result autolabor::pm1::initialize(const std::string &port) {
+result<void> autolabor::pm1::initialize(const std::string &port) {
 	if (port.empty()) {
 		std::stringstream builder;
 		for (const auto   &item : serial_ports()) {
@@ -162,7 +161,7 @@ result autolabor::pm1::initialize(const std::string &port) {
 	}
 }
 
-result autolabor::pm1::shutdown() {
+result<void> autolabor::pm1::shutdown() {
 	if (_ptr) {
 		_ptr = nullptr;
 		return {};
@@ -173,7 +172,7 @@ result autolabor::pm1::shutdown() {
 	}
 }
 
-result autolabor::pm1::go_straight(double speed, double distance) {
+result<void> autolabor::pm1::go_straight(double speed, double distance) {
 	return run([speed, distance] {
 		if (speed == 0) {
 			if (distance == 0) return;
@@ -198,11 +197,11 @@ result autolabor::pm1::go_straight(double speed, double distance) {
 	});
 }
 
-result autolabor::pm1::go_straight_timing(double speed, double time) {
+result<void> autolabor::pm1::go_straight_timing(double speed, double time) {
 	return run([speed, time] { block::go_timing(speed, 0, time); });
 }
 
-result autolabor::pm1::go_arc(double speed, double r, double rad) {
+result<void> autolabor::pm1::go_arc(double speed, double r, double rad) {
 	return run([speed, r, rad] {
 		if (r == 0) throw std::exception(illegal_target);
 		if (speed == 0) {
@@ -230,7 +229,7 @@ result autolabor::pm1::go_arc(double speed, double r, double rad) {
 	});
 }
 
-result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
+result<void> autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	return run([speed, r, time] {
 		if (r == 0) throw std::exception(illegal_target);
 		block::go_timing(speed, speed / r, time);
@@ -238,7 +237,7 @@ result autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	});
 }
 
-result autolabor::pm1::turn_around(double speed, double rad) {
+result<void> autolabor::pm1::turn_around(double speed, double rad) {
 	return run([speed, rad] {
 		if (speed == 0) {
 			if (rad == 0) return;
@@ -265,21 +264,21 @@ result autolabor::pm1::turn_around(double speed, double rad) {
 	});
 }
 
-result autolabor::pm1::turn_around_timing(double speed, double time) {
+result<void> autolabor::pm1::turn_around_timing(double speed, double time) {
 	return run([speed, time] {
 		block::go_timing(0, speed, time);
 		ptr()->set_target({0, NAN});
 	});
 }
 
-result autolabor::pm1::pause() {
+result<void> autolabor::pm1::pause() {
 	return run([] {
 		block::wait_or_drive(0, 0);
 		paused = true;
 	});
 }
 
-result autolabor::pm1::resume() {
+result<void> autolabor::pm1::resume() {
 	return run([] { paused = false; });
 }
 
@@ -287,35 +286,36 @@ void autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(autolabor::seconds_duration(time));
 }
 
-autolabor::pm1::odometry autolabor::pm1::get_odometry() {
+result<odometry> autolabor::pm1::get_odometry() {
 	try {
 		auto odometry = ptr()->odometry();
-		return {odometry.x,
-		        odometry.y,
-		        odometry.theta,
-		        odometry.vx,
-		        odometry.vy,
-		        odometry.w};
-	} catch (std::exception &) {
-		return {NAN, NAN, NAN, NAN, NAN, NAN};
+		return {0, "",
+		        {odometry.x,
+		         odometry.y,
+		         odometry.theta,
+		         odometry.vx,
+		         odometry.vy,
+		         odometry.w}};
+	} catch (std::exception &e) {
+		return {0xffff, e.what()};
 	}
 }
 
-result autolabor::pm1::drive(double v, double w) {
+result<void> autolabor::pm1::drive(double v, double w) {
 	return run([v, w] {
 		velocity temp = {static_cast<float>(v), static_cast<float>(w)};
 		ptr()->set_target(velocity_to_physical(&temp, &default_config));
 	});
 }
 
-result autolabor::pm1::reset_odometry() {
+result<void> autolabor::pm1::reset_odometry() {
 	return run([] { ptr()->clear_odometry(); });
 }
 
-result autolabor::pm1::lock() {
+result<void> autolabor::pm1::lock() {
 	return run([] { ptr()->disable(); });
 }
 
-result autolabor::pm1::unlock() {
+result<void> autolabor::pm1::unlock() {
 	return run([] { ptr()->enable(); });
 }

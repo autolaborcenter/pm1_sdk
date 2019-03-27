@@ -14,15 +14,17 @@ int main() {
 	
 	std::thread([] {
 		while (true) {
-			std::cout << get_odometry().x << ", "
-			          << get_odometry().y << ", "
-			          << get_odometry().yaw << std::endl;
+			std::cout << get_odometry().data.x << ", "
+			          << get_odometry().data.y << ", "
+			          << get_odometry().data.yaw << std::endl;
 			delay(0.1);
 		}
 	}).detach();
 	
+	unlock();
+	
 	//	go_straight(0.2, 0.4);
-	turn_around(0.157, 0.45);
+	turn_around(0.157, 1.57);
 	delay(1);
 	return 0;
 }
