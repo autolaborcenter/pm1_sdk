@@ -21,10 +21,10 @@ int main() {
 		}
 	}).detach();
 	
-	auto hello = get_chassis_state().data;
+	unlock();
 	
 	//	go_straight(0.2, 0.4);
-	turn_around(0.157, 1.57);
+	go_arc(0.1, 0.5, 1);
 	delay(1);
 	return 0;
 }

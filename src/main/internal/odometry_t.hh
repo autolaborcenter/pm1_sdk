@@ -26,6 +26,8 @@ namespace autolabor {
 			
 			odometry_t operator+(const delta_odometry_t<> &) const;
 			
+			void operator+=(const delta_odometry_t<> &);
+			
 			odometry_t &operator=(const odometry_t &);
 			
 			void clear();

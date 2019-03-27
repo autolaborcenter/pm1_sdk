@@ -30,7 +30,7 @@ chassis::chassis(const std::string &port_name,
 		  parameters(chassis_config),
 		  optimize_width(optimize_width),
 		  acceleration(acceleration),
-		  _odometry(odometry_t{chassis_config.width}),
+		  _odometry({chassis_config.width}),
 		  send_mutex(std::make_shared<std::mutex>()),
 		  receive_mutex(std::make_shared<std::mutex>()) {
 	using result_t = autolabor::can::parser::result_type;
@@ -46,26 +46,32 @@ chassis::chassis(const std::string &port_name,
 	
 	// region check nodes
 	{
-		*port << autolabor::can::pack<unit<>::state_tx>();
+		*port << autolabor::can::pack<ecu<>::current_position_tx>()
+		      << autolabor::can::pack<tcu<0>::current_position_tx>();
 		
 		std::string buffer;
 		const auto  time = now();
+		bool        temp[3];
 		
 		autolabor::can::parse_engine parser(
-				[this](const autolabor::can::parser::result &result) {
+				[&, this](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
 					
-					auto state = parse_state(*result.message.data.data);
-					
-					if (unit<ecu<0>>::state_rx::match(result.message))
-						chassis_state._ecu0 = state;
-					else if (unit<ecu<1>>::state_rx::match(result.message))
-						chassis_state._ecu1 = state;
-					else if (unit<tcu<0>>::state_rx::match(result.message))
-						chassis_state._tcu = state;
+					auto _now = now();
+					auto msg  = result.message;
+					if (ecu<0>::current_position_rx::match(msg)) {
+						_left.update(_now, RAD_OF(get_big_endian<int>(msg), default_wheel_k));
+						temp[0] = true;
+					} else if (ecu<1>::current_position_rx::match(msg)) {
+						_right.update(_now, RAD_OF(get_big_endian<int>(msg), default_wheel_k));
+						temp[1] = true;
+					} else if (tcu<0>::current_position_rx::match(msg)) {
+						_rudder.update(_now, RAD_OF(get_big_endian<short>(msg), default_rudder_k));
+						temp[2] = true;
+					}
 				});
 		
-		while (port->isOpen() && !chassis_state.everyone_online()) {
+		while (port->isOpen() && !(temp[0] && temp[1] && temp[2])) {
 			*port >> buffer;
 			
 			if (!buffer.empty()) parser(*buffer.begin());
@@ -76,7 +82,8 @@ chassis::chassis(const std::string &port_name,
 	}
 	// endregion
 	
-	*port << autolabor::can::pack<ecu<>::timeout>({2, 0}); // 设置超时时间：200 ms
+	*port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
+	      << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
 	
 	// region ask
 	auto port_ptr = port;
@@ -166,17 +173,12 @@ chassis::chassis(const std::string &port_name,
 						_left.update(_now, value);
 						
 						if (right_ready) {
-							if (clear_flag) clear_flag = false;
-							else {
-								{
-									std::lock_guard<std::mutex> _(odometry_protector);
-									_odometry = _odometry + delta_odometry_t<>{delta_left * copy.radius,
-									                                           delta_right * copy.radius,
-									                                           _now - time};
-								}
-								right_ready = false;
-								time        = _now;
-							}
+							std::lock_guard<std::mutex> _(odometry_protector);
+							_odometry += delta_odometry_t<>{delta_left * copy.radius,
+							                                delta_right * copy.radius,
+							                                _now - time};
+							right_ready = false;
+							time        = _now;
 						} else
 							left_ready = true;
 						
@@ -188,17 +190,12 @@ chassis::chassis(const std::string &port_name,
 						_right.update(_now, value);
 						
 						if (left_ready) {
-							if (clear_flag) clear_flag = false;
-							else {
-								{
-									std::lock_guard<std::mutex> _(odometry_protector);
-									_odometry = _odometry + delta_odometry_t<>{delta_left * copy.radius,
-									                                           delta_right * copy.radius,
-									                                           _now - time};
-								}
-								left_ready = false;
-								time       = _now;
-							}
+							std::lock_guard<std::mutex> _(odometry_protector);
+							_odometry += delta_odometry_t<>{delta_left * copy.radius,
+							                                delta_right * copy.radius,
+							                                _now - time};
+							left_ready = false;
+							time       = _now;
 						} else
 							right_ready = true;
 						
@@ -289,6 +286,5 @@ odometry_t chassis::odometry() const {
 
 void chassis::clear_odometry() {
 	std::lock_guard<std::mutex> _(odometry_protector);
-	clear_flag = true;
 	_odometry.clear();
 }

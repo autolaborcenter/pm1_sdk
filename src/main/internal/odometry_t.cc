@@ -39,6 +39,10 @@ odometry_t odometry_t::operator+(const delta_odometry_t<> &delta) const {
 	        dt * d_theta};
 }
 
+void odometry_t::operator+=(const delta_odometry_t<> &others) {
+	*this = *this + others;
+}
+
 void odometry_t::clear() {
 	s = x = y = theta = vx = vy = w = 0;
 }

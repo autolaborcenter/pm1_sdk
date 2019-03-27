@@ -93,7 +93,7 @@ namespace autolabor {
 			std::shared_ptr<serial::Serial> port;
 			
 			/** 节点状态 */
-			chassis_state_t chassis_state;
+			chassis_state_t chassis_state{};
 			
 			/** 电机数据 */
 			motor_t<> _left{},
@@ -106,9 +106,6 @@ namespace autolabor {
 			/** 优化参数 */
 			float optimize_width,
 			      acceleration;
-			
-			/** 里程计清零标记 */
-			bool clear_flag = true;
 			
 			/** 里程计 */
 			odometry_t _odometry;
