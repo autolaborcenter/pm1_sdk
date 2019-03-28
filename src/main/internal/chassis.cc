@@ -93,7 +93,8 @@ chassis::chassis(const std::string &port_name,
 			
 			if (now() - time > check_timeout) {
 				log << std::endl << temp[0] << temp[1] << temp[2] << std::endl;
-				throw std::exception(log.str().data());
+				// throw std::exception(log.str().data());
+				throw std::exception("it's not a pm1 chassis");
 			}
 		}
 	}

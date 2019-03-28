@@ -20,6 +20,7 @@ using namespace autolabor::pm1;
 std::shared_ptr<chassis> _ptr;
 
 constexpr auto serial_error_prefix     = "IO Exception";
+constexpr auto try_wrong_chassis       = "it's not a pm1 chassis";
 constexpr auto chassis_not_initialized = "chassis has not been initialized";
 constexpr auto action_cannot_complete  = "this action will never complete";
 constexpr auto illegal_target          = "target state should greater than 0";
@@ -27,7 +28,7 @@ constexpr auto illegal_target          = "target state should greater than 0";
 inline uint16_t build_code(const std::string &what) noexcept {
 	union_error_code error{};
 	
-	if (what.find_first_of(serial_error_prefix) == 0)
+	if (what.find_first_of(serial_error_prefix) == 0 || what == try_wrong_chassis)
 		error.bits.serial_error = true;
 	
 	else if (what == chassis_not_initialized)
