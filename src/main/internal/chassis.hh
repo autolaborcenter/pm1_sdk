@@ -112,9 +112,10 @@ namespace autolabor {
 			std::atomic<odometry_t> _odometry{},
 			                        odometry_mark{};
 			
-			std::shared_ptr<std::mutex>
-					send_mutex,
-					receive_mutex;
+			volatile bool running;
+			
+			std::mutex read_mutex,
+			           write_mutex;
 			
 			/** 目标运动 */
 			physical target{};

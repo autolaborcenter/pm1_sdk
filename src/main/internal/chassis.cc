@@ -36,11 +36,10 @@ chassis::chassis(const std::string &port_name,
                  float optimize_width,
                  float acceleration)
 		: port(port_name, 115200),
+		  running(true),
 		  parameters(chassis_config),
 		  optimize_width(optimize_width),
-		  acceleration(acceleration),
-		  send_mutex(std::make_shared<std::mutex>()),
-		  receive_mutex(std::make_shared<std::mutex>()) {
+		  acceleration(acceleration) {
 	using result_t = autolabor::can::parser::result_type;
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
@@ -94,10 +93,12 @@ chassis::chassis(const std::string &port_name,
 	
 	// 定时任务
 	std::thread([this] {
+		std::lock_guard<std::mutex> _(write_mutex);
+		
 		auto           _now        = now();
 		decltype(_now) task_time[] = {_now, _now, _now};
 		
-		while (true) {
+		while (running) {
 			_now = now();
 			
 			if (_now - task_time[0] > odometry_interval) {
@@ -113,12 +114,14 @@ chassis::chassis(const std::string &port_name,
 				task_time[2] = _now;
 			}
 			
-			std::this_thread::yield();
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 	}).detach();
 	
 	// region receive
 	std::thread([this] {
+		std::lock_guard<std::mutex> _(read_mutex);
+		
 		auto left_ready  = false,
 		     right_ready = false;
 		auto delta_left  = .0,
@@ -218,12 +221,9 @@ chassis::chassis(const std::string &port_name,
 				});
 		
 		std::array<uint8_t, 28> buffer{};
-		while (true) {
+		while (running) {
 			port.read(buffer.data(), buffer.size());
 			for (const auto byte : buffer) parser(byte);
-			
-			if (now() - time > check_timeout)
-				throw std::exception("it's not a pm1 chassis");
 		}
 	}).detach();
 	// endregion
@@ -231,7 +231,11 @@ chassis::chassis(const std::string &port_name,
 }
 
 chassis::~chassis() {
+	running = false;
 	port.break_read();
+	std::lock_guard<std::mutex>
+			a(read_mutex),
+			b(write_mutex);
 }
 
 autolabor::motor_t<> chassis::left() const {
