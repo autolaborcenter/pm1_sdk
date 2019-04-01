@@ -18,7 +18,8 @@
 
 using namespace autolabor::pm1;
 
-std::shared_ptr<chassis> _ptr;
+std::shared_ptr<chassis>           _ptr;
+std::atomic<autolabor::odometry_t> odometry_mark = ATOMIC_VAR_INIT({});
 
 constexpr auto serial_error_prefix     = "IO Exception";
 constexpr auto try_wrong_chassis       = "it's not a pm1 chassis";
@@ -154,6 +155,8 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 }
 
 result<std::string> autolabor::pm1::initialize(const std::string &port) {
+	odometry_mark.store({});
+	
 	if (port.empty()) {
 		std::stringstream builder;
 		for (const auto   &item : serial_ports()) {
@@ -201,10 +204,10 @@ result<void> autolabor::pm1::go_straight(double speed, double distance) {
 		if (distance <= 0)
 			throw std::exception(illegal_target);
 		
-		const auto o = ptr()->steady_odometry().s;
+		const auto o = ptr()->odometry().s;
 		
 		while (ptr()->get_state().check_all()) {
-			auto current = std::abs(ptr()->steady_odometry().s - o),
+			auto current = std::abs(ptr()->odometry().s - o),
 			     rest    = distance - current;
 			if (rest <= 0) break;
 			auto actual = std::min({std::abs(speed),
@@ -231,11 +234,11 @@ result<void> autolabor::pm1::go_arc(double speed, double r, double rad) {
 		if (rad <= 0)
 			throw std::exception(illegal_target);
 		
-		const auto o = ptr()->steady_odometry().s;
+		const auto o = ptr()->odometry().s;
 		const auto d = std::abs(r * rad);
 		
 		while (ptr()->get_state().check_all()) {
-			auto current = std::abs(ptr()->steady_odometry().s - o),
+			auto current = std::abs(ptr()->odometry().s - o),
 			     rest    = d - current;
 			if (rest <= 0) break;
 			auto actual    = std::min({std::abs(speed),
@@ -269,9 +272,9 @@ result<void> autolabor::pm1::turn_around(double speed, double rad) {
 		if (rad < 0.01) return;
 		auto temp = rad - 0.01;
 		
-		const auto o = ptr()->steady_odometry().theta;
+		const auto o = ptr()->odometry().theta;
 		while (ptr()->get_state().check_all()) {
-			auto current = std::abs(ptr()->steady_odometry().theta - o),
+			auto current = std::abs(ptr()->odometry().theta - o),
 			     rest    = temp - current;
 			if (rest <= 0) break;
 			auto actual = std::min({std::abs(speed),
@@ -306,9 +309,16 @@ void autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(autolabor::seconds_duration(time));
 }
 
+result<void> autolabor::pm1::drive(double v, double w) {
+	return run<void>([v, w] {
+		velocity temp = {static_cast<float>(v), static_cast<float>(w)};
+		ptr()->set_target(velocity_to_physical(&temp, &default_config));
+	});
+}
+
 result<odometry> autolabor::pm1::get_odometry() {
 	return run<odometry>([] {
-		auto data = ptr()->odometry();
+		auto data = ptr()->odometry() - odometry_mark.load();
 		return odometry{data.x,
 		                data.y,
 		                data.theta,
@@ -318,15 +328,8 @@ result<odometry> autolabor::pm1::get_odometry() {
 	});
 }
 
-result<void> autolabor::pm1::drive(double v, double w) {
-	return run<void>([v, w] {
-		velocity temp = {static_cast<float>(v), static_cast<float>(w)};
-		ptr()->set_target(velocity_to_physical(&temp, &default_config));
-	});
-}
-
 result<void> autolabor::pm1::reset_odometry() {
-	return run<void>([] { ptr()->clear_odometry(); });
+	return run<void>([] { odometry_mark = ptr()->odometry(); });
 }
 
 result<void> autolabor::pm1::lock() {

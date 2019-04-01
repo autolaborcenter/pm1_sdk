@@ -286,13 +286,5 @@ void chassis::set_target(const physical &t) {
 }
 
 autolabor::odometry_t chassis::odometry() const {
-	return _odometry.load() - odometry_mark.load();
-}
-
-autolabor::odometry_t chassis::steady_odometry() const {
 	return _odometry;
-}
-
-void chassis::clear_odometry() {
-	odometry_mark.store(_odometry);
 }

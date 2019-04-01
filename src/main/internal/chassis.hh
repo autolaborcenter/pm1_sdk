@@ -82,12 +82,6 @@ namespace autolabor {
 			
 			/** 读取里程计 */
 			odometry_t odometry() const;
-			
-			/** 读取单增里程计 */
-			odometry_t steady_odometry() const;
-			
-			/** 清零里程计 */
-			void clear_odometry();
 		
 		private:
 			/** 串口引用 */
@@ -109,8 +103,7 @@ namespace autolabor {
 			      acceleration;
 			
 			/** 里程计 */
-			std::atomic<odometry_t> _odometry{},
-			                        odometry_mark{};
+			std::atomic<odometry_t> _odometry{};
 			
 			std::atomic_bool running;
 			
