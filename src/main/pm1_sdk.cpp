@@ -137,7 +137,7 @@ namespace block {
 	/** 按固定控制量运行指定时间 */
 	void go_timing(double v, double w, double seconds) {
 		auto ending = autolabor::now() + autolabor::seconds_duration(seconds);
-		while (autolabor::now() < ending) {
+		while (autolabor::now() < ending && ptr()->get_state().check_all()) {
 			if (paused) ending += inhibit();
 			else wait_or_drive(v, w);
 			delay(0.02);
@@ -203,10 +203,10 @@ result<void> autolabor::pm1::go_straight(double speed, double distance) {
 		
 		const auto o = ptr()->steady_odometry().s;
 		
-		while (true) {
+		while (ptr()->get_state().check_all()) {
 			auto current = std::abs(ptr()->steady_odometry().s - o),
 			     rest    = distance - current;
-			if (rest < 0) break;
+			if (rest <= 0) break;
 			auto actual = std::min({std::abs(speed),
 			                        move_up(current),
 			                        move_down(rest)});
@@ -234,10 +234,10 @@ result<void> autolabor::pm1::go_arc(double speed, double r, double rad) {
 		const auto o = ptr()->steady_odometry().s;
 		const auto d = std::abs(r * rad);
 		
-		while (true) {
+		while (ptr()->get_state().check_all()) {
 			auto current = std::abs(ptr()->steady_odometry().s - o),
 			     rest    = d - current;
-			if (rest < 0) break;
+			if (rest <= 0) break;
 			auto actual    = std::min({std::abs(speed),
 			                           move_up(current),
 			                           move_down(rest)}),
@@ -270,10 +270,10 @@ result<void> autolabor::pm1::turn_around(double speed, double rad) {
 		auto temp = rad - 0.01;
 		
 		const auto o = ptr()->steady_odometry().theta;
-		while (true) {
+		while (ptr()->get_state().check_all()) {
 			auto current = std::abs(ptr()->steady_odometry().theta - o),
 			     rest    = temp - current;
-			if (rest < 0) break;
+			if (rest <= 0) break;
 			auto actual = std::min({std::abs(speed),
 			                        rotate_up(current),
 			                        rotate_down(rest)});

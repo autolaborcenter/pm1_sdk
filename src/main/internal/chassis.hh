@@ -39,7 +39,7 @@ namespace autolabor {
 		struct chassis_state_t {
 			node_state_t _ecu0, _ecu1, _tcu, _vcu, _mcu;
 			
-			bool everyone_online() const;
+			bool check_all(node_state_t = node_state_t::enabled) const;
 		};
 		
 		/** 底盘 */

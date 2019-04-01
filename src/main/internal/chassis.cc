@@ -15,10 +15,8 @@ extern "C" {
 
 using namespace autolabor::pm1;
 
-bool chassis_state_t::everyone_online() const {
-	return _ecu0 != node_state_t::unknown
-	       && _ecu1 != node_state_t::unknown
-	       && _tcu != node_state_t::unknown;
+bool chassis_state_t::check_all(node_state_t target) const {
+	return _ecu0 == target && _ecu1 == target && _tcu == target;
 }
 
 template<class t>
