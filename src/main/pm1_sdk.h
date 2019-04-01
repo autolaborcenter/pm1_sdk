@@ -68,7 +68,7 @@ namespace autolabor {
 		 * @param port 串口名字
 		 * @returns 是否成功
 		 */
-		DllExport result<void> initialize(const std::string &port = "");
+		DllExport result<std::string> initialize(const std::string &port = "");
 		
 		/**
 		 * 关闭

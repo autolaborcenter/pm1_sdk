@@ -153,12 +153,12 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 	return result;
 }
 
-result<void> autolabor::pm1::initialize(const std::string &port) {
+result<std::string> autolabor::pm1::initialize(const std::string &port) {
 	if (port.empty()) {
 		std::stringstream builder;
 		for (const auto   &item : serial_ports()) {
 			auto result = initialize(item);
-			if (result) return {};
+			if (result) return {0, "", item};
 			builder << item << ": " << result.error_info << std::endl;
 		}
 		
@@ -170,7 +170,7 @@ result<void> autolabor::pm1::initialize(const std::string &port) {
 	} else {
 		try {
 			_ptr = std::make_shared<chassis>(port);
-			return {};
+			return {0, "", port};
 		}
 		catch (std::exception &e) {
 			_ptr = nullptr;
