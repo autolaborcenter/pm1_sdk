@@ -129,7 +129,7 @@ namespace block {
 		return autolabor::measure_time([] {
 			while (paused) {
 				ptr()->set_target({0, NAN});
-				std::this_thread::yield();
+				delay(0.02);
 			}
 		});
 	}
@@ -140,7 +140,7 @@ namespace block {
 		while (autolabor::now() < ending) {
 			if (paused) ending += inhibit();
 			else wait_or_drive(v, w);
-			std::this_thread::yield();
+			delay(0.02);
 		}
 	}
 }
@@ -211,7 +211,7 @@ result<void> autolabor::pm1::go_straight(double speed, double distance) {
 			                        move_up(current),
 			                        move_down(rest)});
 			block::wait_or_drive(speed > 0 ? actual : -actual, 0);
-			std::this_thread::yield();
+			delay(0.02);
 		}
 		ptr()->set_target({0, NAN});
 	});
@@ -243,7 +243,7 @@ result<void> autolabor::pm1::go_arc(double speed, double r, double rad) {
 			                           move_down(rest)}),
 			     available = speed > 0 ? actual : -actual;
 			block::wait_or_drive(available, available / r);
-			std::this_thread::yield();
+			delay(0.02);
 		}
 		ptr()->set_target({0, NAN});
 	});
@@ -278,7 +278,7 @@ result<void> autolabor::pm1::turn_around(double speed, double rad) {
 			                        rotate_up(current),
 			                        rotate_down(rest)});
 			block::wait_or_drive(0, speed > 0 ? actual : -actual);
-			std::this_thread::yield();
+			delay(0.02);
 		}
 		ptr()->set_target({0, NAN});
 	});

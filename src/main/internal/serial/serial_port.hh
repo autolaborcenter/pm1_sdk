@@ -43,8 +43,8 @@ public:
 	void break_read() const;
 
 private:
-	void               *handle;
-	mutable std::mutex read_mutex;
+	std::atomic<void *> handle;
+	mutable std::mutex  read_mutex;
 };
 
 

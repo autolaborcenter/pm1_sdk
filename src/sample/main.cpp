@@ -6,7 +6,11 @@
 using namespace autolabor::pm1;
 
 int main() {
-	initialize();
+	auto temp = initialize();
+	if (!temp) {
+		std::cerr << temp.error_info << std::endl;
+		return 1;
+	}
 	
 	std::thread([] {
 		while (true) {
@@ -21,7 +25,7 @@ int main() {
 		}
 	}).detach();
 	
-	go_straight(-0.1, 0.2);
+	go_straight(0.1, 0.2);
 	
 	return 0;
 }

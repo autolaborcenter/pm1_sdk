@@ -71,8 +71,10 @@ serial_port::serial_port(const std::string &name,
 }
 
 serial_port::~serial_port() {
+	auto temp = handle.exchange(nullptr);
+	if (!temp) return;
 	break_read();
-	CloseHandle(handle);
+	CloseHandle(temp);
 }
 
 void WINAPI callback(DWORD error_code,

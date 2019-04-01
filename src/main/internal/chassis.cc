@@ -5,7 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <iomanip>
+#include <iostream>
 #include "serial_extension.h"
 #include "can/parse_engine.hh"
 
@@ -58,6 +58,11 @@ chassis::chassis(const std::string &port_name,
 		const auto time = now();
 		bool       temp[]{false, false, false};
 		
+		std::thread([time, this] {
+			std::this_thread::sleep_until(time + check_timeout);
+			port.break_read();
+		}).detach();
+		
 		autolabor::can::parse_engine parser(
 				[&, this](const autolabor::can::parser::result &result) {
 					if (result.type != result_t::message) return;
@@ -77,9 +82,10 @@ chassis::chassis(const std::string &port_name,
 				});
 		
 		uint8_t buffer[28];
-		while (!(temp[0] && temp[1] && temp[2])) {
-			auto      actual = port.read(buffer, sizeof(buffer));
-			for (auto i      = 0; i < actual; ++i) parser(buffer[i]);
+		while (!temp[0] || !temp[1] || !temp[2]) {
+			auto actual = port.read(buffer, sizeof(buffer));
+			
+			for (auto i = 0; i < actual; ++i) parser(buffer[i]);
 			
 			if (now() - time > check_timeout)
 				throw std::exception("it's not a pm1 chassis");
@@ -236,6 +242,8 @@ chassis::~chassis() {
 	std::lock_guard<std::mutex>
 			a(read_mutex),
 			b(write_mutex);
+	
+	std::cout << "destroyed" << std::endl;
 }
 
 autolabor::motor_t<> chassis::left() const {
