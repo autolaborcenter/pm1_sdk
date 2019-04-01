@@ -13,15 +13,7 @@ add_library(pm1_sdk
         pm1_sdk.h
         pm1_sdk.cpp
         # --------------------------
-        internal/serial/v8stdint.h
         internal/serial/serial.h
-        internal/serial/serial.cc
-
-        internal/serial/win.h
-        internal/serial/win.cc
-
-        internal/serial/unix.h
-        internal/serial/unix.cc
 
         internal/serial/list_ports/list_ports_win.cc
         internal/serial/list_ports/list_ports_linux.cc

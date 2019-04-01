@@ -5,8 +5,6 @@
 #ifndef PM1_SDK_EXCEPTION_H
 #define PM1_SDK_EXCEPTION_H
 
-#include "internal/serial/v8stdint.h"
-
 namespace autolabor {
 	namespace pm1 {
 		union union_error_code {
@@ -18,7 +16,7 @@ namespace autolabor {
 				     others           : 1; // 其他
 			} bits;
 			
-			uint16_t code;
+			unsigned short code;
 		};
 	}
 }
