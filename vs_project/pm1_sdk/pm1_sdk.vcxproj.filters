@@ -39,15 +39,6 @@
     <ClInclude Include="..\..\src\main\internal\serial\serial.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\serial\unix.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\serial\v8stdint.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\serial\win.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\main\internal\can_define.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -78,6 +69,9 @@
     <ClInclude Include="..\..\src\main\exception.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\main\internal\serial\serial_port.hh">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\main\internal\can\pack.cpp">
@@ -101,15 +95,6 @@
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_win.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\serial\serial.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\serial\unix.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\serial\win.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\internal\chassis.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -126,6 +111,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\internal\control_model\optimization.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

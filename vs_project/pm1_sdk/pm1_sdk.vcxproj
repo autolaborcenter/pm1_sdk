@@ -148,9 +148,7 @@
     <ClInclude Include="..\..\src\main\internal\odometry_t.hh" />
     <ClInclude Include="..\..\src\main\internal\rudder_controller.hh" />
     <ClInclude Include="..\..\src\main\internal\serial\serial.h" />
-    <ClInclude Include="..\..\src\main\internal\serial\unix.h" />
-    <ClInclude Include="..\..\src\main\internal\serial\v8stdint.h" />
-    <ClInclude Include="..\..\src\main\internal\serial\win.h" />
+    <ClInclude Include="..\..\src\main\internal\serial\serial_port.hh" />
     <ClInclude Include="..\..\src\main\internal\serial_extension.h" />
     <ClInclude Include="..\..\src\main\internal\time_extensions.h" />
     <ClInclude Include="..\..\src\main\pm1_sdk.h" />
@@ -168,9 +166,7 @@
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_linux.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_osx.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_win.cc" />
-    <ClCompile Include="..\..\src\main\internal\serial\serial.cc" />
-    <ClCompile Include="..\..\src\main\internal\serial\unix.cc" />
-    <ClCompile Include="..\..\src\main\internal\serial\win.cc" />
+    <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc" />
     <ClCompile Include="..\..\src\main\pm1_sdk.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
