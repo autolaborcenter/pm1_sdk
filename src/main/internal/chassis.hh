@@ -8,7 +8,7 @@
 #include <mutex>
 #include <atomic>
 #include <vector>
-#include "serial/serial.h"
+#include "serial/serial_port.hh"
 #include "can_define.h"
 #include "odometry_t.hh"
 #include "time_extensions.h"
@@ -91,7 +91,7 @@ namespace autolabor {
 		
 		private:
 			/** 串口引用 */
-			std::shared_ptr<serial::Serial> port;
+			serial_port port;
 			
 			/** 节点状态 */
 			chassis_state_t chassis_state{};

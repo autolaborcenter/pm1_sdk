@@ -6,7 +6,7 @@
 #define PM1_SDK_RUDDER_CONTROLLER_HH
 
 
-#include "serial/serial.h"
+#include "serial/serial_port.hh"
 
 namespace autolabor {
 	namespace pm1 {
@@ -19,8 +19,8 @@ namespace autolabor {
 			void done();
 		
 		private:
-			short          target;
-			serial::Serial port;
+			short       target;
+			serial_port port;
 		};
 	}
 }

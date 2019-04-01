@@ -10,9 +10,7 @@
 using namespace autolabor::pm1;
 
 rudder_controller::rudder_controller(const std::string &port_name)
-		: port(port_name, 115200,
-		       serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0)),
-		  target(0) {}
+		: port(port_name, 115200), target(0) {}
 
 void rudder_controller::adjust(short additional) {
 	target += additional;

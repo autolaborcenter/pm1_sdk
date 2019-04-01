@@ -14,6 +14,7 @@
 #include "internal/time_extensions.h"
 #include "internal/chassis.hh"
 #include "exception.h"
+#include "internal/serial/serial.h"
 
 using namespace autolabor::pm1;
 

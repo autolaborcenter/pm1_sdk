@@ -5,7 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <sstream>
+#include <array>
 #include <iomanip>
 #include "serial_extension.h"
 #include "can/parse_engine.hh"
@@ -35,8 +35,7 @@ chassis::chassis(const std::string &port_name,
                  const chassis_config_t &chassis_config,
                  float optimize_width,
                  float acceleration)
-		: port(new serial::Serial(port_name, 115200,
-		                          serial::Timeout(serial::Timeout::max(), 5, 0, 0, 0))),
+		: port(port_name, 115200),
 		  parameters(chassis_config),
 		  optimize_width(optimize_width),
 		  acceleration(acceleration),
@@ -55,17 +54,14 @@ chassis::chassis(const std::string &port_name,
 	
 	// region check nodes
 	{
-		*port << autolabor::can::pack<ecu<>::current_position_tx>()
-		      << autolabor::can::pack<tcu<0>::current_position_tx>();
+		port << autolabor::can::pack<ecu<>::current_position_tx>()
+		     << autolabor::can::pack<tcu<0>::current_position_tx>();
 		
-		std::string       buffer;
-		std::stringstream log;
-		const auto        time = now();
-		bool              temp[]{false, false, false};
+		const auto time = now();
+		bool       temp[]{false, false, false};
 		
 		autolabor::can::parse_engine parser(
 				[&, this](const autolabor::can::parser::result &result) {
-					log << std::endl;
 					if (result.type != result_t::message) return;
 					
 					auto _now = now();
@@ -82,67 +78,47 @@ chassis::chassis(const std::string &port_name,
 					}
 				});
 		
-		while (port->isOpen() && !(temp[0] && temp[1] && temp[2])) {
-			*port >> buffer;
+		std::array<uint8_t, 28> buffer{};
+		while (!(temp[0] && temp[1] && temp[2])) {
+			port.read(buffer.data(), buffer.size());
+			for (const auto byte : buffer) parser(byte);
 			
-			if (!buffer.empty()) {
-				log << std::hex << std::setfill('0') << std::setw(2)
-				    << (*buffer.begin() & 0xffu) << ' ';
-				parser(*buffer.begin());
-			}
-			
-			if (now() - time > check_timeout) {
-				log << std::endl << temp[0] << temp[1] << temp[2] << std::endl;
-				// throw std::exception(log.str().data());
+			if (now() - time > check_timeout)
 				throw std::exception("it's not a pm1 chassis");
-			}
 		}
 	}
 	// endregion
 	
-	*port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
-	      << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
-	
-	// region ask
-	auto port_ptr = port;
+	port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
+	     << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
 	
 	// 定时任务
-	auto mutex_ptr = send_mutex;
-	std::thread([port_ptr, mutex_ptr] {
+	std::thread([this] {
 		auto           _now        = now();
 		decltype(_now) task_time[] = {_now, _now, _now};
 		
-		while (port_ptr->isOpen()) {
-			{
-				std::lock_guard<std::mutex> _(*mutex_ptr);
-				if (!port_ptr->isOpen()) break;
-				
-				_now = now();
-				
-				if (_now - task_time[0] > odometry_interval) {
-					*port_ptr << autolabor::can::pack<ecu<>::current_position_tx>();
-					task_time[0] = _now;
-				}
-				if (_now - task_time[1] > rudder_interval) {
-					*port_ptr << autolabor::can::pack<tcu<0>::current_position_tx>();
-					task_time[1] = _now;
-				}
-				if (_now - task_time[2] > state_interval) {
-					*port_ptr << autolabor::can::pack<unit<>::state_tx>();
-					task_time[2] = _now;
-				}
+		while (true) {
+			_now = now();
+			
+			if (_now - task_time[0] > odometry_interval) {
+				port << autolabor::can::pack<ecu<>::current_position_tx>();
+				task_time[0] = _now;
+			}
+			if (_now - task_time[1] > rudder_interval) {
+				port << autolabor::can::pack<tcu<0>::current_position_tx>();
+				task_time[1] = _now;
+			}
+			if (_now - task_time[2] > state_interval) {
+				port << autolabor::can::pack<unit<>::state_tx>();
+				task_time[2] = _now;
 			}
 			
 			std::this_thread::yield();
 		}
 	}).detach();
-	// endregion
 	
 	// region receive
-	mutex_ptr = receive_mutex;
-	std::thread([port_ptr, mutex_ptr, this] {
-		std::string buffer;
-		
+	std::thread([this] {
 		auto left_ready  = false,
 		     right_ready = false;
 		auto delta_left  = .0,
@@ -235,22 +211,19 @@ chassis::chassis(const std::string &port_name,
 						auto left   = PULSES_OF(wheels.left, default_wheel_k);
 						auto right  = PULSES_OF(wheels.right, default_wheel_k);
 						auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-						*port_ptr << pack_big_endian<ecu<0>::target_speed, int>(left)
-						          << pack_big_endian<ecu<1>::target_speed, int>(right)
-						          << pack_big_endian<tcu<0>::target_position, short>(rudder);
+						port << pack_big_endian<ecu<0>::target_speed, int>(left)
+						     << pack_big_endian<ecu<1>::target_speed, int>(right)
+						     << pack_big_endian<tcu<0>::target_position, short>(rudder);
 					}
 				});
 		
-		while (port_ptr->isOpen()) {
-			{
-				std::lock_guard<std::mutex> _(*mutex_ptr);
-				if (!port_ptr->isOpen()) break;
-				
-				*port_ptr >> buffer;
-				
-				if (!buffer.empty()) parser(*buffer.begin());
-			}
-			if (buffer.empty()) std::this_thread::yield();
+		std::array<uint8_t, 28> buffer{};
+		while (true) {
+			port.read(buffer.data(), buffer.size());
+			for (const auto byte : buffer) parser(byte);
+			
+			if (now() - time > check_timeout)
+				throw std::exception("it's not a pm1 chassis");
 		}
 	}).detach();
 	// endregion
@@ -258,10 +231,7 @@ chassis::chassis(const std::string &port_name,
 }
 
 chassis::~chassis() {
-	std::lock_guard<std::mutex>
-			_t(*send_mutex),
-			_r(*receive_mutex);
-	port->close();
+	port.break_read();
 }
 
 autolabor::motor_t<> chassis::left() const {
@@ -277,11 +247,11 @@ autolabor::motor_t<> chassis::rudder() const {
 }
 
 void chassis::enable() {
-	*port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
+	port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
 }
 
 void chassis::disable() {
-	*port << autolabor::can::pack<unit<>::emergency_stop>();
+	port << autolabor::can::pack<unit<>::emergency_stop>();
 }
 
 chassis_state_t chassis::get_state() const {
