@@ -112,7 +112,7 @@ namespace autolabor {
 			std::atomic<odometry_t> _odometry{},
 			                        odometry_mark{};
 			
-			volatile bool running;
+			std::atomic_bool running;
 			
 			std::mutex read_mutex,
 			           write_mutex;

@@ -5,7 +5,6 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <array>
 #include <iomanip>
 #include "serial_extension.h"
 #include "can/parse_engine.hh"
@@ -77,10 +76,10 @@ chassis::chassis(const std::string &port_name,
 					}
 				});
 		
-		std::array<uint8_t, 28> buffer{};
+		uint8_t buffer[28];
 		while (!(temp[0] && temp[1] && temp[2])) {
-			port.read(buffer.data(), buffer.size());
-			for (const auto byte : buffer) parser(byte);
+			auto      actual = port.read(buffer, sizeof(buffer));
+			for (auto i      = 0; i < actual; ++i) parser(buffer[i]);
 			
 			if (now() - time > check_timeout)
 				throw std::exception("it's not a pm1 chassis");
@@ -114,7 +113,7 @@ chassis::chassis(const std::string &port_name,
 				task_time[2] = _now;
 			}
 			
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::yield();
 		}
 	}).detach();
 	
@@ -220,10 +219,10 @@ chassis::chassis(const std::string &port_name,
 					}
 				});
 		
-		std::array<uint8_t, 28> buffer{};
+		uint8_t buffer[28];
 		while (running) {
-			port.read(buffer.data(), buffer.size());
-			for (const auto byte : buffer) parser(byte);
+			auto      actual = port.read(buffer, sizeof(buffer));
+			for (auto i      = 0; i < actual; ++i) parser(buffer[i]);
 		}
 	}).detach();
 	// endregion
@@ -231,7 +230,8 @@ chassis::chassis(const std::string &port_name,
 }
 
 chassis::~chassis() {
-	running = false;
+	if (!running.exchange(false)) return;
+	
 	port.break_read();
 	std::lock_guard<std::mutex>
 			a(read_mutex),

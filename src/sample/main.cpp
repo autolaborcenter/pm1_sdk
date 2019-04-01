@@ -6,6 +6,8 @@
 using namespace autolabor::pm1;
 
 int main() {
+	initialize();
+	
 	std::thread([] {
 		while (true) {
 			std::cout << get_odometry().data.x << ", "
@@ -14,22 +16,12 @@ int main() {
 			//			std::cout << (int) get_chassis_state().data._ecu0 << ", "
 			//			          << (int) get_chassis_state().data._ecu1 << ", "
 			//			          << (int) get_chassis_state().data._tcu << std::endl;
+			
 			delay(0.1);
 		}
 	}).detach();
 	
-	for (int i = 0; i < 10; ++i) {
-		
-		auto result = initialize();
-		if (!result) {
-			std::cout << result.error_info << std::endl;
-			while (true);
-		}
-		
-		go_straight(0.1, 0.1);
-		
-		shutdown();
-	}
+	go_straight(-0.1, 0.2);
 	
 	return 0;
 }
