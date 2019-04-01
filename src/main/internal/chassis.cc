@@ -5,7 +5,6 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <iostream>
 #include "serial_extension.h"
 #include "can/parse_engine.hh"
 
@@ -28,6 +27,14 @@ inline void add(std::atomic<t> &a, const t &b) {
 	auto desired  = expected + b;
 	while (!a.compare_exchange_strong(expected, desired))
 		desired = expected + b;
+}
+
+constexpr unsigned long max(unsigned long a, unsigned long b) {
+	return a > b ? a : b;
+}
+
+constexpr unsigned long gcd(unsigned long a, unsigned long b) {
+	return a <= 1 || b <= 1 ? 1 : a > b ? gcd(b, a % b) : gcd(a, b % a);
 }
 
 chassis::chassis(const std::string &port_name,
@@ -100,6 +107,12 @@ chassis::chassis(const std::string &port_name,
 	std::thread([this] {
 		std::lock_guard<std::mutex> _(write_mutex);
 		
+		constexpr static auto gcd_ = gcd(state_interval.count(),
+		                                 gcd(odometry_interval.count(),
+		                                     rudder_interval.count()));
+		constexpr static auto delay_interval
+		                           = std::chrono::milliseconds(max(1, gcd_ - 1));
+		
 		auto           _now        = now();
 		decltype(_now) task_time[] = {_now, _now, _now};
 		
@@ -119,7 +132,7 @@ chassis::chassis(const std::string &port_name,
 				task_time[2] = _now;
 			}
 			
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(delay_interval);
 		}
 	}).detach();
 	
@@ -242,8 +255,6 @@ chassis::~chassis() {
 	std::lock_guard<std::mutex>
 			a(read_mutex),
 			b(write_mutex);
-	
-	std::cout << "destroyed" << std::endl;
 }
 
 autolabor::motor_t<> chassis::left() const {

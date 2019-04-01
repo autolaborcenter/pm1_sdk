@@ -11,7 +11,7 @@
 #include <thread>
 #include <Windows.h>
 
-/** 内存安全计数器 */
+/** 受控锁 */
 class weak_lock_guard {
 	volatile bool locked;
 	std::mutex    &lock;
