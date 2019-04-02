@@ -104,9 +104,6 @@
     <ClCompile Include="..\..\src\main\internal\rudder_controller.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\pm1_sdk.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\internal\control_model\chassis_config_t.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -114,6 +111,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\pm1_sdk_sync.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

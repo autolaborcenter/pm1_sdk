@@ -71,73 +71,73 @@ namespace autolabor {
 		 */
 		DllExport result<void> shutdown();
 		
-		//		/**
-		//		 * 走直线
-		//		 *
-		//		 * @param speed    线速度
-		//		 * @param distance 行驶距离
-		//		 */
-		//		DllExport result<void> go_straight(double speed, double distance);
-		//
-		//		/**
-		//		 * 走直线
-		//		 *
-		//		 * @param speed 线速度
-		//		 * @param time  行驶时间
-		//		 */
-		//		DllExport result<void> go_straight_timing(double speed, double time);
-		//
-		//		/**
-		//		 * 走圆弧
-		//		 *
-		//		 * @param speed 线速度
-		//		 * @param r     转弯半径
-		//		 * @param rad   行驶时间
-		//		 */
-		//		DllExport result<void> go_arc(double speed, double r, double rad);
-		//
-		//		/**
-		//		 * 走圆弧
-		//		 *
-		//		 * @param speed 线速度
-		//		 * @param r     转弯半径
-		//		 * @param time  行驶时间
-		//		 */
-		//		DllExport result<void> go_arc_timing(double speed, double r, double time);
-		//
-		//		/**
-		//		 * 原地转
-		//		 *
-		//		 * @param speed 角速度
-		//		 * @param rad   弧度
-		//		 */
-		//		DllExport result<void> turn_around(double speed, double rad);
-		//
-		//		/**
-		//		 * 原地转
-		//		 *
-		//		 * @param speed 角速度
-		//		 * @param time  时间
-		//		 */
-		//		DllExport result<void> turn_around_timing(double speed, double time);
-		//
-		//		/**
-		//		 * 暂停执行阻塞控制
-		//		 */
-		//		DllExport result<void> pause();
-		//
-		//		/**
-		//		 * 恢复执行阻塞控制
-		//		 */
-		//		DllExport result<void> resume();
-
-				/**
-				 * 控制机器人运行
-				 *
-				 * @param v 线速度
-				 * @param w 角速度
-				 */
-				DllExport result<void> drive(double v, double w);
+		/**
+		 * 走直线
+		 *
+		 * @param speed    线速度
+		 * @param distance 行驶距离
+		 */
+		DllExport result<void> go_straight(double speed, double distance);
+		
+		/**
+		 * 走直线
+		 *
+		 * @param speed 线速度
+		 * @param time  行驶时间
+		 */
+		DllExport result<void> go_straight_timing(double speed, double time);
+		
+		/**
+		 * 走圆弧
+		 *
+		 * @param speed 线速度
+		 * @param r     转弯半径
+		 * @param rad   行驶时间
+		 */
+		DllExport result<void> go_arc(double speed, double r, double rad);
+		
+		/**
+		 * 走圆弧
+		 *
+		 * @param speed 线速度
+		 * @param r     转弯半径
+		 * @param time  行驶时间
+		 */
+		DllExport result<void> go_arc_timing(double speed, double r, double time);
+		
+		/**
+		 * 原地转
+		 *
+		 * @param speed 角速度
+		 * @param rad   弧度
+		 */
+		DllExport result<void> turn_around(double speed, double rad);
+		
+		/**
+		 * 原地转
+		 *
+		 * @param speed 角速度
+		 * @param time  时间
+		 */
+		DllExport result<void> turn_around_timing(double speed, double time);
+		
+		/**
+		 * 暂停执行阻塞控制
+		 */
+		DllExport result<void> pause();
+		
+		/**
+		 * 恢复执行阻塞控制
+		 */
+		DllExport result<void> resume();
+		
+		/**
+		 * 控制机器人运行
+		 *
+		 * @param v 线速度
+		 * @param w 角速度
+		 */
+		DllExport result<void> drive(double v, double w);
 		
 		struct odometry { double x, y, yaw, vx, vy, w; };
 		

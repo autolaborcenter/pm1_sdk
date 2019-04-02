@@ -167,7 +167,7 @@
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_osx.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_win.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc" />
-    <ClCompile Include="..\..\src\main\pm1_sdk.cpp" />
+    <ClCompile Include="..\..\src\main\pm1_sdk_sync.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
