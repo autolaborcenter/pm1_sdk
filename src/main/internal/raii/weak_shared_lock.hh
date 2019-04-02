@@ -10,11 +10,16 @@
 
 class weak_shared_lock {
 public:
-	explicit weak_shared_lock(std::shared_mutex &);
+	explicit weak_shared_lock(std::shared_mutex &core)
+			: core(core), own(core.try_lock_shared()) {}
 	
-	~weak_shared_lock();
+	~weak_shared_lock() {
+		if (own) core.unlock_shared();
+	}
 	
-	explicit operator bool() const;
+	explicit operator bool() const {
+		return own;
+	}
 
 private:
 	bool              own;

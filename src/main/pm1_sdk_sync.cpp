@@ -9,6 +9,7 @@
 #include "internal/raii/weak_shared_lock.hh"
 #include "internal/process_controller.hh"
 #include "internal/raii/weak_lock_guard.hh"
+#include "internal/time_extensions.h"
 
 extern "C" {
 #include "internal/control_model/model.h"
@@ -32,19 +33,19 @@ constexpr auto
 		invalid_target       = "invalid target",
 		action_busy          = "another action is invoking";
 
-#define POINTER_ASSERT                    \
-weak_shared_lock lock(mutex);             \
-if (!lock) return {chassis_pointer_busy}; \
-if (!ptr)  return {null_chassis_pointer}
+#define POINTER_ASSERT                   \
+weak_shared_lock lk0(mutex);             \
+if (!lk0) return {chassis_pointer_busy}; \
+if (!ptr) return {null_chassis_pointer}
 
-#define POINTER_ASSERT_OR(DEFAULT)                 \
-weak_shared_lock lock(mutex);                      \
-if (!lock) return {chassis_pointer_busy, DEFAULT}; \
-if (!ptr)  return {null_chassis_pointer, DEFAULT}
+#define POINTER_ASSERT_OR(DEFAULT)                \
+weak_shared_lock lk0(mutex);                      \
+if (!lk0) return {chassis_pointer_busy, DEFAULT}; \
+if (!ptr) return {null_chassis_pointer, DEFAULT}
 
-#define ACTION_ASSERT                           \
-weak_lock_guard<std::mutex> lock(action_mutex); \
-if (!lock) return {"another action is invoking"}
+#define ACTION_ASSERT                          \
+weak_lock_guard<std::mutex> lk1(action_mutex); \
+if (!lk1) return {"another action is invoking"}
 
 // ===========================================================
 
@@ -164,6 +165,12 @@ autolabor::pm1::go_straight(double speed, double distance) {
 	
 	ACTION_ASSERT;
 	
+	double target;
+	{
+		POINTER_ASSERT;
+		target = ptr->odometry().s + distance;
+	}
+	
 	return {};
 }
 
@@ -173,6 +180,8 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 		return {invalid_target};
 	
 	ACTION_ASSERT;
+	
+	const auto target = now() + seconds_duration(time);
 	
 	return {};
 }
@@ -188,6 +197,12 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 	
 	ACTION_ASSERT;
 	
+	double target;
+	{
+		POINTER_ASSERT;
+		target = ptr->odometry().theta + rad;
+	}
+	
 	return {};
 }
 
@@ -199,6 +214,8 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 		return {invalid_target};
 	
 	ACTION_ASSERT;
+	
+	const auto target = now() + seconds_duration(time);
 	
 	return {};
 }
@@ -212,6 +229,12 @@ autolabor::pm1::turn_around(double speed, double rad) {
 	
 	ACTION_ASSERT;
 	
+	double target;
+	{
+		POINTER_ASSERT;
+		target = ptr->odometry().theta + rad;
+	}
+	
 	return {};
 }
 
@@ -221,6 +244,8 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 		return {invalid_target};
 	
 	ACTION_ASSERT;
+	
+	const auto target = now() + seconds_duration(time);
 	
 	return {};
 }
