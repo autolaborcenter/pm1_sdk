@@ -25,7 +25,8 @@ int main() {
 		}
 	}).detach();
 	
-	go_straight(0.1, 0.2);
+	go_straight(+0.1, 0.2);
+	go_straight(-0.1, 0.2);
 	
 	return 0;
 }

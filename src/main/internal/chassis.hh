@@ -5,8 +5,8 @@
 #ifndef PM1_SDK_CHASSIS_H
 #define PM1_SDK_CHASSIS_H
 
-#include <mutex>
 #include <atomic>
+#include <thread>
 #include <vector>
 #include "serial/serial_port.hh"
 #include "can_define.h"
@@ -107,8 +107,8 @@ namespace autolabor {
 			
 			std::atomic_bool running;
 			
-			std::mutex read_mutex,
-			           write_mutex;
+			std::thread read_thread,
+			            write_thread;
 			
 			/** 目标运动 */
 			physical target{};

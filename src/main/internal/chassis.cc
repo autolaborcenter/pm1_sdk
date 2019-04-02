@@ -102,9 +102,7 @@ chassis::chassis(const std::string &port_name,
 	     << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
 	
 	// 定时任务
-	std::thread([this] {
-		std::lock_guard<std::mutex> _(write_mutex);
-		
+	read_thread = std::thread([this] {
 		constexpr static auto gcd_ = gcd(state_interval.count(),
 		                                 gcd(odometry_interval.count(),
 		                                     rudder_interval.count()));
@@ -132,12 +130,10 @@ chassis::chassis(const std::string &port_name,
 			
 			std::this_thread::sleep_for(delay_interval);
 		}
-	}).detach();
+	});
 	
 	// region receive
-	std::thread([this] {
-		std::lock_guard<std::mutex> _(read_mutex);
-		
+	write_thread = std::thread([this] {
 		auto left_ready  = false,
 		     right_ready = false;
 		auto delta_left  = .0,
@@ -241,7 +237,7 @@ chassis::chassis(const std::string &port_name,
 			auto      actual = port.read(buffer, sizeof(buffer));
 			for (auto i      = 0; i < actual; ++i) parser(buffer[i]);
 		}
-	}).detach();
+	});
 	// endregion
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
@@ -250,9 +246,8 @@ chassis::~chassis() {
 	if (!running.exchange(false)) return;
 	
 	port.break_read();
-	std::lock_guard<std::mutex>
-			a(read_mutex),
-			b(write_mutex);
+	read_thread.join();
+	write_thread.join();
 }
 
 autolabor::motor_t<> chassis::left() const {
