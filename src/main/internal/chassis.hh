@@ -78,7 +78,7 @@ namespace autolabor {
 			chassis_state_t state() const;
 			
 			/** 设置目标控制量 */
-			void set_target(const physical &);
+			void set_target(double speed, double rudder);
 			
 			/** 读取里程计 */
 			odometry_t odometry() const;

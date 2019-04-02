@@ -16,22 +16,22 @@ extern "C" {
 }
 
 std::atomic<autolabor::odometry_t>
-		odometry_mark = ATOMIC_VAR_INIT({});
+	odometry_mark = ATOMIC_VAR_INIT({});
 
 std::shared_ptr<autolabor::pm1::chassis>
-		ptr;
+	ptr;
 
 std::shared_mutex
-		mutex;
+	mutex;
 
 // ===========================================================
 
 constexpr auto
-		chassis_pointer_busy = "chassis pointer is busy",
-		null_chassis_pointer = "null chassis pointer",
-		infinite_action      = "action never complete",
-		invalid_target       = "invalid target",
-		action_busy          = "another action is invoking";
+	chassis_pointer_busy = "chassis pointer is busy",
+	null_chassis_pointer = "null chassis pointer",
+	infinite_action      = "action never complete",
+	invalid_target       = "invalid target",
+	action_busy          = "another action is invoking";
 
 #define POINTER_ASSERT                   \
 weak_shared_lock lk0(mutex);             \
@@ -42,6 +42,14 @@ if (!ptr) return {null_chassis_pointer}
 weak_shared_lock lk0(mutex);                      \
 if (!lk0) return {chassis_pointer_busy, DEFAULT}; \
 if (!ptr) return {null_chassis_pointer, DEFAULT}
+
+#define POINTER_ASSERT_THEN(ACTION) \
+{ POINTER_ASSERT;                   \
+  ACTION;                           \
+}
+
+#define POINTER_SCOPE \
+{ POINTER_ASSERT;
 
 #define ACTION_ASSERT                          \
 weak_lock_guard<std::mutex> lk1(action_mutex); \
@@ -100,14 +108,15 @@ autolabor::pm1::drive(double v, double w) {
 	POINTER_ASSERT;
 	
 	velocity temp{static_cast<float>(v), static_cast<float>(w)};
-	ptr->set_target(velocity_to_physical(&temp, &default_config));
+	auto     actual = velocity_to_physical(&temp, &default_config);
+	ptr->set_target(actual.speed, actual.rudder);
 	return {};
 }
 
 autolabor::pm1::result<autolabor::pm1::odometry>
 autolabor::pm1::get_odometry() {
 	const static autolabor::pm1::odometry
-			nan{NAN, NAN, NAN, NAN, NAN, NAN};
+		nan{NAN, NAN, NAN, NAN, NAN, NAN};
 	
 	POINTER_ASSERT_OR(nan);
 	auto temp = ptr->odometry() - odometry_mark;
@@ -152,9 +161,10 @@ autolabor::pm1::delay(double time) {
 // =====================================================================
 
 constexpr autolabor::process_controller
-		move_controller(0, 0.01, 0.2, 0.1);
+	move_controller(0, 0.01, 0.2, 0.1);
 
-std::mutex action_mutex;
+std::mutex    action_mutex;
+volatile bool pause_flag = false;
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_straight(double speed, double distance) {
@@ -165,13 +175,33 @@ autolabor::pm1::go_straight(double speed, double distance) {
 	
 	ACTION_ASSERT;
 	
-	double target;
-	{
-		POINTER_ASSERT;
-		target = ptr->odometry().s + distance;
-	}
+	process_t process{};
+	POINTER_ASSERT_THEN(process.begin = ptr->odometry().s)
 	
-	return {};
+	process.end   = process.begin + distance;
+	process.speed = speed;
+	
+	bool paused = pause_flag;
+	while (true) {
+		POINTER_SCOPE
+			if (pause_flag) {
+				paused = true;
+				ptr->set_target(0, NAN);
+			} else {
+				auto current = ptr->odometry().s;
+				if (paused) {
+					paused = false;
+					process.begin = current;
+				}
+				auto actual = 0 != ptr->rudder().position
+				              ? 0
+				              : move_controller(process, current);
+				ptr->set_target(actual, 0);
+			}
+		}
+		
+		delay(0.05);
+	}
 }
 
 autolabor::pm1::result<void>
@@ -183,7 +213,22 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 	
 	const auto target = now() + seconds_duration(time);
 	
-	return {};
+	bool paused = pause_flag;
+	while (true) {
+		POINTER_SCOPE
+			if (pause_flag) {
+				paused = true;
+				ptr->set_target(0, NAN);
+			} else {
+				auto current = ptr->odometry().s;
+				if (paused) {
+					paused = false;
+				}
+			}
+		}
+		
+		delay(0.05);
+	}
 }
 
 autolabor::pm1::result<void>
@@ -197,13 +242,22 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 	
 	ACTION_ASSERT;
 	
-	double target;
-	{
-		POINTER_ASSERT;
-		target = ptr->odometry().theta + rad;
+	bool paused = pause_flag;
+	while (true) {
+		POINTER_SCOPE
+			if (pause_flag) {
+				paused = true;
+				ptr->set_target(0, NAN);
+			} else {
+				auto current = ptr->odometry().s;
+				if (paused) {
+					paused = false;
+				}
+			}
+		}
+		
+		delay(0.05);
 	}
-	
-	return {};
 }
 
 autolabor::pm1::result<void>
@@ -217,7 +271,22 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	
 	const auto target = now() + seconds_duration(time);
 	
-	return {};
+	bool paused = pause_flag;
+	while (true) {
+		POINTER_SCOPE
+			if (pause_flag) {
+				paused = true;
+				ptr->set_target(0, NAN);
+			} else {
+				auto current = ptr->odometry().s;
+				if (paused) {
+					paused = false;
+				}
+			}
+		}
+		
+		delay(0.05);
+	}
 }
 
 autolabor::pm1::result<void>
@@ -229,13 +298,22 @@ autolabor::pm1::turn_around(double speed, double rad) {
 	
 	ACTION_ASSERT;
 	
-	double target;
-	{
-		POINTER_ASSERT;
-		target = ptr->odometry().theta + rad;
+	bool paused = pause_flag;
+	while (true) {
+		POINTER_SCOPE
+			if (pause_flag) {
+				paused = true;
+				ptr->set_target(0, NAN);
+			} else {
+				auto current = ptr->odometry().s;
+				if (paused) {
+					paused = false;
+				}
+			}
+		}
+		
+		delay(0.05);
 	}
-	
-	return {};
 }
 
 autolabor::pm1::result<void>
@@ -247,15 +325,32 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 	
 	const auto target = now() + seconds_duration(time);
 	
-	return {};
+	bool paused = pause_flag;
+	while (true) {
+		POINTER_SCOPE
+			if (pause_flag) {
+				paused = true;
+				ptr->set_target(0, NAN);
+			} else {
+				auto current = ptr->odometry().s;
+				if (paused) {
+					paused = false;
+				}
+			}
+		}
+		
+		delay(0.05);
+	}
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::pause() {
+	pause_flag = true;
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::resume() {
+	pause_flag = false;
 	return {};
 }
