@@ -11,7 +11,8 @@ add_library(pm1_sdk
         # --------------------------
         exception.h
         pm1_sdk.h
-        pm1_sdk.cpp
+        #        pm1_sdk.cpp
+        pm1_sdk_sync.cpp
         # --------------------------
         internal/serial/serial.h
 

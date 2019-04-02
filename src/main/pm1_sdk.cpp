@@ -146,55 +146,6 @@ namespace block {
 	}
 }
 
-std::vector<std::string> autolabor::pm1::serial_ports() {
-	auto                     info = serial::list_ports();
-	std::vector<std::string> result(info.size());
-	std::transform(info.begin(), info.end(), result.begin(),
-	               [](const serial::PortInfo &it) { return it.port; });
-	return result;
-}
-
-result<std::string> autolabor::pm1::initialize(const std::string &port) {
-	odometry_mark.store({});
-	
-	if (port.empty()) {
-		std::stringstream builder;
-		for (const auto   &item : serial_ports()) {
-			auto result = initialize(item);
-			if (result) return {0, "", item};
-			builder << item << ": " << result.error_info << std::endl;
-		}
-		
-		union_error_code error{};
-		error.bits.no_serial = true;
-		auto msg = builder.str();
-		
-		return {error.code, msg.empty() ? "no available port" : msg};
-	} else {
-		try {
-			_ptr = std::make_shared<chassis>(port);
-			return {0, "", port};
-		}
-		catch (std::exception &e) {
-			_ptr = nullptr;
-			union_error_code error{};
-			error.bits.no_serial = true;
-			return {error.code, e.what()};
-		}
-	}
-}
-
-result<void> autolabor::pm1::shutdown() {
-	if (_ptr) {
-		_ptr = nullptr;
-		return {};
-	} else {
-		union_error_code error{};
-		error.bits.not_initialized = true;
-		return {error.code, chassis_not_initialized};
-	}
-}
-
 result<void> autolabor::pm1::go_straight(double speed, double distance) {
 	return run<void>([speed, distance] {
 		if (speed == 0) {

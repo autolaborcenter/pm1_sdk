@@ -1,6 +1,6 @@
 #include <iostream>
 #include <thread>
-#include "../main/internal/serial/serial_port.hh"
+#include "../../main/internal/serial/serial_port.hh"
 
 int main() {
 	try {

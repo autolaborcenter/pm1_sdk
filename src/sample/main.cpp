@@ -1,32 +1,53 @@
 #include <iostream>
 #include <thread>
-#include "../main/pm1_sdk.h"
-#include "../main/exception.h"
+#include "pm1_sdk.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 using namespace autolabor::pm1;
 
 int main() {
-	auto temp = initialize();
-	if (!temp) {
-		std::cerr << temp.error_info << std::endl;
-		return 1;
+	//	autolabor::pm1::chassis chassis("COM6");
+	//
+	//	std::thread([&chassis] {
+	//		while (true) {
+	//			std::cout << chassis.odometry().x << ", "
+	//			          << chassis.odometry().y << ", "
+	//			          << chassis.odometry().theta << std::endl;
+	//			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//		}
+	//	}).detach();
+	//
+	//	std::thread([&chassis] {
+	//		while (true) {
+	//			std::cout << std::boolalpha
+	//			          << chassis.get_state().check_all(node_state_t::enabled)
+	//			          << std::endl;
+	//			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//		}
+	//	}).detach();
+	//
+	//	auto time = std::chrono::steady_clock::now();
+	//
+	//	while (std::chrono::steady_clock::now() - time < std::chrono::seconds(3)) {
+	//		chassis.set_target({+0.3, 0});
+	//		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//	}
+	//
+	//	while (std::chrono::steady_clock::now() - time < std::chrono::seconds(6)) {
+	//		chassis.set_target({-0.3, 0});
+	//		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//	}
+	
+	while (true) {
+		auto result = initialize();
+		if (result)
+			std::cout << result.data << std::endl;
+		else
+			std::cerr << result.error_info << std::endl;
+		shutdown();
 	}
-	
-	std::thread([] {
-		while (true) {
-			std::cout << get_odometry().data.x << ", "
-			          << get_odometry().data.y << ", "
-			          << get_odometry().data.yaw << std::endl;
-			//			std::cout << (int) get_chassis_state().data._ecu0 << ", "
-			//			          << (int) get_chassis_state().data._ecu1 << ", "
-			//			          << (int) get_chassis_state().data._tcu << std::endl;
-			
-			delay(0.1);
-		}
-	}).detach();
-	
-	go_straight(+0.1, 0.2);
-	go_straight(-0.1, 0.2);
-	
 	return 0;
 }
+
+#pragma clang diagnostic pop
