@@ -27,6 +27,8 @@ add_library(pm1_sdk
         internal/raii/weak_shared_lock.cc
         internal/raii/weak_shared_lock.hh
 
+        internal/raii/weak_lock_guard.hh
+
         internal/time_extensions.h
         internal/serial_extension.h
 

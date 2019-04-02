@@ -14,7 +14,7 @@ public:
 	
 	~weak_shared_lock();
 	
-	operator bool() const;
+	explicit operator bool() const;
 
 private:
 	bool              own;

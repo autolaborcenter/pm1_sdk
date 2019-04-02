@@ -8,6 +8,7 @@
 #include "internal/serial/serial.h"
 #include "internal/raii/weak_shared_lock.hh"
 #include "internal/process_controller.hh"
+#include "internal/raii/weak_lock_guard.hh"
 
 extern "C" {
 #include "internal/control_model/model.h"
@@ -28,8 +29,8 @@ constexpr auto
 		chassis_pointer_busy = "chassis pointer is busy",
 		null_chassis_pointer = "null chassis pointer",
 		infinite_action      = "action never complete",
-		illegal_argument     = "illegal argument",
-		invalid_target       = "invalid target";
+		invalid_target       = "invalid target",
+		action_busy          = "another action is invoking";
 
 #define POINTER_ASSERT                    \
 weak_shared_lock lock(mutex);             \
@@ -40,6 +41,10 @@ if (!ptr)  return {null_chassis_pointer}
 weak_shared_lock lock(mutex);                      \
 if (!lock) return {chassis_pointer_busy, DEFAULT}; \
 if (!ptr)  return {null_chassis_pointer, DEFAULT}
+
+#define ACTION_ASSERT                           \
+weak_lock_guard<std::mutex> lock(action_mutex); \
+if (!lock) return {"another action is invoking"}
 
 // ===========================================================
 
@@ -143,13 +148,12 @@ autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>(time));
 }
 
-#undef POINTER_ASSERT
-#undef POINTER_ASSERT_OR
-
 // =====================================================================
 
 constexpr autolabor::process_controller
 		move_controller(0, 0.01, 0.2, 0.1);
+
+std::mutex action_mutex;
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_straight(double speed, double distance) {
@@ -157,6 +161,8 @@ autolabor::pm1::go_straight(double speed, double distance) {
 		return {distance == 0 ? "" : infinite_action};
 	if (distance <= 0)
 		return {invalid_target};
+	
+	ACTION_ASSERT;
 	
 	return {};
 }
@@ -166,27 +172,33 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 	if (time < 0)
 		return {invalid_target};
 	
+	ACTION_ASSERT;
+	
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_arc(double speed, double r, double rad) {
-	if (r == 0)
-		return {illegal_argument};
+	if (std::abs(r) < 0.05)
+		return {"radius is too little, use turn_around instead"};
 	if (speed == 0)
 		return {rad == 0 ? "" : infinite_action};
 	if (rad <= 0)
 		return {invalid_target};
+	
+	ACTION_ASSERT;
 	
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_arc_timing(double speed, double r, double time) {
-	if (r == 0)
-		return {illegal_argument};
+	if (std::abs(r) < 0.05)
+		return {"radius is too little, use turn_around instead"};
 	if (time < 0)
 		return {invalid_target};
+	
+	ACTION_ASSERT;
 	
 	return {};
 }
@@ -198,6 +210,8 @@ autolabor::pm1::turn_around(double speed, double rad) {
 	if (rad <= 0)
 		return {invalid_target};
 	
+	ACTION_ASSERT;
+	
 	return {};
 }
 
@@ -205,6 +219,8 @@ autolabor::pm1::result<void>
 autolabor::pm1::turn_around_timing(double speed, double time) {
 	if (time < 0)
 		return {invalid_target};
+	
+	ACTION_ASSERT;
 	
 	return {};
 }
