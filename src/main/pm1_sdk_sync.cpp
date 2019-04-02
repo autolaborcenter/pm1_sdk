@@ -6,12 +6,11 @@
 
 #include "internal/chassis.hh"
 #include "internal/serial/serial.h"
+#include "internal/raii/weak_shared_lock.hh"
 
 extern "C" {
 #include "internal/control_model/model.h"
 }
-
-#include <shared_mutex>
 
 std::atomic<autolabor::odometry_t>
 		odometry_mark = ATOMIC_VAR_INIT({});
@@ -32,7 +31,6 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 
 autolabor::pm1::result<std::string>
 autolabor::pm1::initialize(const std::string &port) {
-	
 	if (port.empty()) {
 		std::stringstream builder;
 		for (const auto   &item : serial_ports()) {
@@ -71,17 +69,19 @@ autolabor::pm1::shutdown() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive(double v, double w) {
-	std::shared_lock<std::shared_mutex> lock(mutex);
+	weak_shared_lock lock(mutex);
+	if (!lock) return {"chassis pointer is busy"};
 	if (!ptr) return {"null chassis pointer"};
 	
 	velocity temp{static_cast<float>(v), static_cast<float>(w)};
 	ptr->set_target(velocity_to_physical(&temp, &default_config));
-	return {""};
+	return {};
 }
 
 autolabor::pm1::result<autolabor::pm1::odometry>
 autolabor::pm1::get_odometry() {
-	std::shared_lock<std::shared_mutex> lock(mutex);
+	weak_shared_lock lock(mutex);
+	if (!lock) return {"chassis pointer is busy", {NAN, NAN, NAN, NAN, NAN, NAN}};
 	if (!ptr) return {"null chassis pointer", {NAN, NAN, NAN, NAN, NAN, NAN}};
 	
 	auto temp = ptr->odometry() - odometry_mark;
@@ -90,7 +90,8 @@ autolabor::pm1::get_odometry() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::reset_odometry() {
-	std::shared_lock<std::shared_mutex> lock(mutex);
+	weak_shared_lock lock(mutex);
+	if (!lock) return {"chassis pointer is busy"};
 	if (!ptr) return {"null chassis pointer"};
 	
 	odometry_mark = ptr->odometry();
@@ -99,7 +100,8 @@ autolabor::pm1::reset_odometry() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::lock() {
-	std::shared_lock<std::shared_mutex> lock(mutex);
+	weak_shared_lock lock(mutex);
+	if (!lock) return {"chassis pointer is busy"};
 	if (!ptr) return {"null chassis pointer"};
 	
 	ptr->disable();
@@ -107,7 +109,8 @@ autolabor::pm1::lock() {
 }
 
 autolabor::pm1::result<void> autolabor::pm1::unlock() {
-	std::shared_lock<std::shared_mutex> lock(mutex);
+	weak_shared_lock lock(mutex);
+	if (!lock) return {"chassis pointer is busy"};
 	if (!ptr) return {"null chassis pointer"};
 	
 	ptr->enable();
@@ -116,7 +119,8 @@ autolabor::pm1::result<void> autolabor::pm1::unlock() {
 
 autolabor::pm1::result<autolabor::pm1::chassis_state>
 autolabor::pm1::get_chassis_state() {
-	std::shared_lock<std::shared_mutex> lock(mutex);
+	weak_shared_lock lock(mutex);
+	if (!lock) return {"chassis pointer is busy"};
 	if (!ptr) return {"null chassis pointer"};
 	
 	auto temp = ptr->state();
@@ -132,40 +136,40 @@ autolabor::pm1::delay(double time) {
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_straight(double speed, double distance) {
-	return autolabor::pm1::result<void>();
+	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_straight_timing(double speed, double time) {
-	return autolabor::pm1::result<void>();
+	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_arc(double speed, double r, double rad) {
-	return autolabor::pm1::result<void>();
+	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_arc_timing(double speed, double r, double time) {
-	return autolabor::pm1::result<void>();
+	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::turn_around(double speed, double rad) {
-	return autolabor::pm1::result<void>();
+	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::turn_around_timing(double speed, double time) {
-	return autolabor::pm1::result<void>();
+	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::pause() {
-	return autolabor::pm1::result<void>();
+	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::resume() {
-	return autolabor::pm1::result<void>();
+	return {};
 }
