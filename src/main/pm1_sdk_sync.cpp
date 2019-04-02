@@ -83,6 +83,23 @@ autolabor::pm1::reset_odometry() {
 	return {};
 }
 
+autolabor::pm1::result<void>
+autolabor::pm1::lock() {
+	std::shared_lock<std::shared_mutex> lock(mutex);
+	if (!ptr) return {"null chassis pointer"};
+	
+	ptr->disable();
+	return {};
+}
+
+autolabor::pm1::result<void> autolabor::pm1::unlock() {
+	std::shared_lock<std::shared_mutex> lock(mutex);
+	if (!ptr) return {"null chassis pointer"};
+	
+	ptr->enable();
+	return {};
+}
+
 void
 autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>(time));
