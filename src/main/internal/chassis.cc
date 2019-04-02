@@ -63,10 +63,18 @@ chassis::chassis(const std::string &port_name,
 		const auto time = now();
 		bool       temp[]{false, false, false};
 		
-		std::thread([time, this] {
-			std::this_thread::sleep_until(time + check_timeout);
-			port.break_read();
-		}).detach();
+		auto timeout = [time] { return now() - time > check_timeout; };
+		auto done    = [&temp] { return temp[0] && temp[1] && temp[2]; };
+		
+		auto task = std::thread([&] {
+			while (!done()) {
+				if (timeout()) {
+					port.break_read();
+					return;
+				}
+				std::this_thread::sleep_for(check_timeout / 20);
+			}
+		});
 		
 		autolabor::can::parse_engine parser(
 				[&, this](const autolabor::can::parser::result &result) {
@@ -87,14 +95,17 @@ chassis::chassis(const std::string &port_name,
 				});
 		
 		uint8_t buffer[28];
-		while (!temp[0] || !temp[1] || !temp[2]) {
+		while (!done()) {
 			auto actual = port.read(buffer, sizeof(buffer));
 			
 			for (auto i = 0; i < actual; ++i) parser(buffer[i]);
 			
-			if (now() - time > check_timeout)
+			if (timeout()) {
+				task.join();
 				throw std::exception("it's not a pm1 chassis");
+			}
 		}
+		task.join();
 	}
 	// endregion
 	
