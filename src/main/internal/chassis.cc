@@ -5,6 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
+#include <iostream>
 #include "serial_extension.h"
 #include "can/parse_engine.hh"
 
@@ -51,13 +52,16 @@ chassis::chassis(const std::string &port_name,
 	constexpr static auto state_interval    = std::chrono::milliseconds(1000);
 	constexpr static auto state_timeout     = state_interval * 2;
 	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
-	constexpr static auto check_timeout     = std::chrono::milliseconds(500);
+	constexpr static auto check_timeout     = std::chrono::milliseconds(1000);
 	
 	_left.time = _right.time = _rudder.time = now();
 	
 	// region check nodes
 	{
 		port << autolabor::can::pack<ecu<>::current_position_tx>()
+		     << autolabor::can::pack<tcu<0>::current_position_tx>()
+		
+		     << autolabor::can::pack<ecu<>::current_position_tx>()
 		     << autolabor::can::pack<tcu<0>::current_position_tx>();
 		
 		const auto time = now();
@@ -281,7 +285,7 @@ void chassis::disable() {
 	port << autolabor::can::pack<unit<>::emergency_stop>();
 }
 
-chassis_state_t chassis::get_state() const {
+chassis_state_t chassis::state() const {
 	return chassis_state;
 }
 

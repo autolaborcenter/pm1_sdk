@@ -75,7 +75,7 @@ namespace autolabor {
 			void disable();
 			
 			/** 检查状态 */
-			chassis_state_t get_state() const;
+			chassis_state_t state() const;
 			
 			/** 设置目标控制量 */
 			void set_target(const physical &);

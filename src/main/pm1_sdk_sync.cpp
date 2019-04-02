@@ -7,6 +7,10 @@
 #include "internal/chassis.hh"
 #include "internal/serial/serial.h"
 
+extern "C" {
+#include "internal/control_model/model.h"
+}
+
 #include <shared_mutex>
 
 std::atomic<autolabor::odometry_t>
@@ -65,6 +69,16 @@ autolabor::pm1::shutdown() {
 	}
 }
 
+autolabor::pm1::result<void>
+autolabor::pm1::drive(double v, double w) {
+	std::shared_lock<std::shared_mutex> lock(mutex);
+	if (!ptr) return {"null chassis pointer"};
+	
+	velocity temp{static_cast<float>(v), static_cast<float>(w)};
+	ptr->set_target(velocity_to_physical(&temp, &default_config));
+	return {""};
+}
+
 autolabor::pm1::result<autolabor::pm1::odometry>
 autolabor::pm1::get_odometry() {
 	std::shared_lock<std::shared_mutex> lock(mutex);
@@ -98,6 +112,17 @@ autolabor::pm1::result<void> autolabor::pm1::unlock() {
 	
 	ptr->enable();
 	return {};
+}
+
+autolabor::pm1::result<autolabor::pm1::chassis_state>
+autolabor::pm1::get_chassis_state() {
+	std::shared_lock<std::shared_mutex> lock(mutex);
+	if (!ptr) return {"null chassis pointer"};
+	
+	auto temp = ptr->state();
+	return {"", {(node_state) temp._ecu0,
+	             (node_state) temp._ecu1,
+	             (node_state) temp._tcu}};
 }
 
 void

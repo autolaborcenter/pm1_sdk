@@ -130,14 +130,14 @@ namespace autolabor {
 		//		 * 恢复执行阻塞控制
 		//		 */
 		//		DllExport result<void> resume();
-		//
-		//		/**
-		//		 * 控制机器人运行
-		//		 *
-		//		 * @param v 线速度
-		//		 * @param w 角速度
-		//		 */
-		//		DllExport result<void> drive(double v, double w);
+
+				/**
+				 * 控制机器人运行
+				 *
+				 * @param v 线速度
+				 * @param w 角速度
+				 */
+				DllExport result<void> drive(double v, double w);
 		
 		struct odometry { double x, y, yaw, vx, vy, w; };
 		

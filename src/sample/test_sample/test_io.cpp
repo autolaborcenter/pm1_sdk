@@ -4,7 +4,7 @@
 
 int main() {
 	try {
-		serial_port port("COM3", 115200);
+		serial_port port("COM7", 115200);
 		
 		std::thread([&port] {
 			uint8_t buffer[128]{};
@@ -14,12 +14,7 @@ int main() {
 			}
 		}).detach();
 		
-		std::thread([&port] {
-			const auto text = "12345";
-			while (true) port.send((uint8_t *) text, std::strlen(text));
-		}).detach();
-		
-		const auto text = "abcde";
+		const auto text = "0123456789 0123456789 0123456789";
 		while (true) port.send((uint8_t *) text, std::strlen(text));
 	} catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
