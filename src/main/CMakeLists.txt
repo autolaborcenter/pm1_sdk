@@ -12,6 +12,8 @@ add_library(pm1_sdk
         exception.h
         pm1_sdk.h
         pm1_sdk_sync.cpp
+
+        internal/process_controller.hh
         # --------------------------
         internal/serial/serial.h
 

@@ -7,6 +7,7 @@
 #include "internal/chassis.hh"
 #include "internal/serial/serial.h"
 #include "internal/raii/weak_shared_lock.hh"
+#include "internal/process_controller.hh"
 
 extern "C" {
 #include "internal/control_model/model.h"
@@ -134,33 +135,64 @@ autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>(time));
 }
 
+// =====================================================================
+
+constexpr autolabor::process_controller
+		move_controller(0, 0.01, 0.2, 0.1);
+
 autolabor::pm1::result<void>
 autolabor::pm1::go_straight(double speed, double distance) {
+	if (speed == 0)
+		return {distance == 0 ? "" : "action never complete"};
+	if (distance <= 0)
+		return {"illegal target"};
+	
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_straight_timing(double speed, double time) {
+	if (time < 0)
+		return {"illegal target"};
+	
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_arc(double speed, double r, double rad) {
+	if (r == 0)
+		return {"illegal target"};
+	if (speed == 0)
+		return {rad == 0 ? "" : "action never complete"};
+	if (rad <= 0)
+		return {"illegal target"};
+	
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_arc_timing(double speed, double r, double time) {
+	if (r == 0 || time < 0)
+		return {"illegal target"};
+	
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::turn_around(double speed, double rad) {
+	if (speed == 0)
+		return {rad == 0 ? "" : "action never complete"};
+	if (rad <= 0)
+		return {"illegal target"};
+	
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::turn_around_timing(double speed, double time) {
+	if (time < 0)
+		return {"illegal target"};
+	
 	return {};
 }
 
