@@ -72,11 +72,55 @@ namespace autolabor {
 		DllExport result<void> shutdown();
 		
 		/**
-		 * 走直线
+		 * 控制机器人运行
 		 *
-		 * @param speed    线速度
-		 * @param distance 行驶距离
+		 * @param v 线速度
+		 * @param w 角速度
 		 */
+		DllExport result<void> drive(double v, double w);
+		
+		struct odometry { double x, y, yaw, vx, vy, w; };
+		
+		/**
+		 * 获取里程计值
+		 *
+		 * @return 里程计值
+		 */
+		DllExport result<odometry> get_odometry();
+		
+		/**
+		 * 清除里程计累计值
+		 */
+		DllExport result<void> reset_odometry();
+		
+		/**
+		 * 锁定底盘
+		 */
+		DllExport result<void> lock();
+		
+		/**
+		 * 解锁底盘
+		 */
+		DllExport result<void> unlock();
+		
+		/**
+		 * 检查节点状态
+		 */
+		DllExport result<chassis_state> get_chassis_state();
+		
+		/**
+		 * 延时
+		 *
+		 * @param time 时间
+		 */
+		DllExport void delay(double time);
+		
+		/**
+	     * 走直线
+	     *
+	     * @param speed    线速度
+	     * @param distance 行驶距离
+	     */
 		DllExport result<void> go_straight(double speed, double distance);
 		
 		/**
@@ -130,50 +174,6 @@ namespace autolabor {
 		 * 恢复执行阻塞控制
 		 */
 		DllExport result<void> resume();
-		
-		/**
-		 * 控制机器人运行
-		 *
-		 * @param v 线速度
-		 * @param w 角速度
-		 */
-		DllExport result<void> drive(double v, double w);
-		
-		struct odometry { double x, y, yaw, vx, vy, w; };
-		
-		/**
-		 * 获取里程计值
-		 *
-		 * @return 里程计值
-		 */
-		DllExport result<odometry> get_odometry();
-		
-		/**
-		 * 清除里程计累计值
-		 */
-		DllExport result<void> reset_odometry();
-		
-		/**
-		 * 锁定底盘
-		 */
-		DllExport result<void> lock();
-		
-		/**
-		 * 解锁底盘
-		 */
-		DllExport result<void> unlock();
-		
-		/**
-		 * 检查节点状态
-		 */
-		DllExport result<chassis_state> get_chassis_state();
-		
-		/**
-		 * 延时
-		 *
-		 * @param time 时间
-		 */
-		DllExport void delay(double time);
 	}
 }
 

@@ -129,3 +129,43 @@ void
 autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>(time));
 }
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_straight(double speed, double distance) {
+	return autolabor::pm1::result<void>();
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_straight_timing(double speed, double time) {
+	return autolabor::pm1::result<void>();
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_arc(double speed, double r, double rad) {
+	return autolabor::pm1::result<void>();
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_arc_timing(double speed, double r, double time) {
+	return autolabor::pm1::result<void>();
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::turn_around(double speed, double rad) {
+	return autolabor::pm1::result<void>();
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::turn_around_timing(double speed, double time) {
+	return autolabor::pm1::result<void>();
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::pause() {
+	return autolabor::pm1::result<void>();
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::resume() {
+	return autolabor::pm1::result<void>();
+}
