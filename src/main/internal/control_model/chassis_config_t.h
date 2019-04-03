@@ -5,6 +5,9 @@
 #ifndef PM1_SDK_CHASSIS_CONFIG_T_H
 #define PM1_SDK_CHASSIS_CONFIG_T_H
 
+/**
+ * 底盘模型
+ */
 struct chassis_config_t {
 	float width,  // 轮距
 	      length, // 轴距
