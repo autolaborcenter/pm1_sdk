@@ -6,33 +6,30 @@
 #define PM1_SDK_ODOMETRY_T_HH
 
 
-#include "time_extensions.h"
-
-extern "C" {
-#include "control_model/chassis_config_t.h"
-}
+#include <chrono>
 
 namespace autolabor {
 	/** 里程计信息 */
 	struct odometry_t {
-		double s, x, y, theta, vx, vy, w;
+		double s, sa, x, y, theta, vx, vy, w;
 		
 		odometry_t operator+(const odometry_t &) const;
 		
 		odometry_t operator-(const odometry_t &) const;
 		
-		void operator+=(const odometry_t &delta) { *this = *this + delta; }
+		inline void operator+=(const odometry_t &delta) { *this = *this + delta; }
 		
-		void operator-=(const odometry_t &delta) { *this = *this - delta; }
+		inline void operator-=(const odometry_t &delta) { *this = *this - delta; }
 		
 		/** 清空里程 */
 		void clear();
 	};
 	
-	/** 里程计更新信息 */
+	/** 差动里程计增量 */
 	struct delta_differential_t {
-		double           width, left, rigth;
-		seconds_floating time;
+		double width, left, rigth;
+		std::chrono::duration<double, std::ratio<1>>
+		       time;
 		
 		operator odometry_t();
 	};

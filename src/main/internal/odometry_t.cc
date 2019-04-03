@@ -9,7 +9,7 @@
 using namespace autolabor;
 
 void odometry_t::clear() {
-	s = x = y = theta = vx = vy = w = 0;
+	s = sa = x = y = theta = vx = vy = w = 0;
 }
 
 odometry_t odometry_t::operator+(const odometry_t &delta) const {
@@ -17,6 +17,7 @@ odometry_t odometry_t::operator+(const odometry_t &delta) const {
 	auto cos = std::cos(theta);
 	
 	return {s + delta.s,
+	        sa + delta.sa,
 	        x + delta.x * cos - delta.y * sin,
 	        y + delta.x * sin + delta.y * cos,
 	        theta + delta.theta,
@@ -32,6 +33,7 @@ odometry_t odometry_t::operator-(const odometry_t &mark) const {
 	auto dy  = y - mark.y;
 	
 	return {s - mark.s,
+	        sa - mark.sa,
 	        dx * cos - dy * sin,
 	        dx * sin + dy * cos,
 	        theta - mark.theta,
@@ -41,25 +43,27 @@ odometry_t odometry_t::operator-(const odometry_t &mark) const {
 }
 
 delta_differential_t::operator odometry_t() {
-	double ds      = std::abs(left + rigth) / 2,
-	       dx, dy,
-	       d_theta = (rigth - left) / width,
-	       dt      = 1 / time.count();
+	double ds = (left + rigth) / 2,
+	       da = (rigth - left) / width,
+	       dx,
+	       dy,
+	       dt = 1 / time.count();
 	
-	if (d_theta == 0) {
+	if (da == 0) {
 		dx = left;
 		dy = 0;
 	} else {
-		auto r = (rigth + left) / 2 / d_theta;
-		dx = r * std::sin(d_theta);
-		dy = r * (1 - std::cos(d_theta));
+		auto r = ds / da;
+		dx = r * std::sin(da);
+		dy = r * (1 - std::cos(da));
 	}
 	
-	return {ds,
+	return {std::abs(ds),
+	        std::abs(da),
 	        dx,
 	        dy,
-	        d_theta,
+	        da,
 	        dt * dx,
 	        dt * dy,
-	        dt * d_theta};
+	        dt * da};
 }
