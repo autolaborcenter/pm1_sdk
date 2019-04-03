@@ -24,38 +24,25 @@ std::shared_ptr<autolabor::pm1::chassis>
 std::shared_mutex
 	mutex;
 
-// ===========================================================
+// =====================================================================
 
 constexpr auto
 	chassis_pointer_busy = "chassis pointer is busy",
 	null_chassis_pointer = "null chassis pointer",
 	infinite_action      = "action never complete",
-	invalid_target       = "invalid target",
-	action_busy          = "another action is invoking";
+	invalid_target       = "invalid target";
 
-#define POINTER_ASSERT                   \
+#define READ_ASSERT                      \
 weak_shared_lock lk0(mutex);             \
 if (!lk0) return {chassis_pointer_busy}; \
 if (!ptr) return {null_chassis_pointer}
 
-#define POINTER_ASSERT_OR(DEFAULT)                \
+#define READ_ASSERT_OR(DEFAULT)                   \
 weak_shared_lock lk0(mutex);                      \
 if (!lk0) return {chassis_pointer_busy, DEFAULT}; \
 if (!ptr) return {null_chassis_pointer, DEFAULT}
 
-#define POINTER_ASSERT_THEN(ACTION) \
-{ POINTER_ASSERT;                   \
-  ACTION;                           \
-}
-
-#define POINTER_SCOPE \
-{ POINTER_ASSERT;
-
-#define ACTION_ASSERT                          \
-weak_lock_guard<std::mutex> lk1(action_mutex); \
-if (!lk1) return {"another action is invoking"}
-
-// ===========================================================
+// =====================================================================
 
 std::vector<std::string> autolabor::pm1::serial_ports() {
 	auto                     info = serial::list_ports();
@@ -105,7 +92,7 @@ autolabor::pm1::shutdown() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive(double v, double w) {
-	POINTER_ASSERT;
+	READ_ASSERT;
 	
 	velocity temp{static_cast<float>(v), static_cast<float>(w)};
 	auto     actual = velocity_to_physical(&temp, &default_config);
@@ -118,34 +105,34 @@ autolabor::pm1::get_odometry() {
 	const static autolabor::pm1::odometry
 		nan{NAN, NAN, NAN, NAN, NAN, NAN};
 	
-	POINTER_ASSERT_OR(nan);
+	READ_ASSERT_OR(nan);
 	auto temp = ptr->odometry() - odometry_mark;
 	return {"", {temp.x, temp.y, temp.theta, temp.vx, temp.vy, temp.w}};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::reset_odometry() {
-	POINTER_ASSERT;
+	READ_ASSERT;
 	odometry_mark = ptr->odometry();
 	return {};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::lock() {
-	POINTER_ASSERT;
+	READ_ASSERT;
 	ptr->disable();
 	return {};
 }
 
 autolabor::pm1::result<void> autolabor::pm1::unlock() {
-	POINTER_ASSERT;
+	READ_ASSERT;
 	ptr->enable();
 	return {};
 }
 
 autolabor::pm1::result<autolabor::pm1::chassis_state>
 autolabor::pm1::get_chassis_state() {
-	POINTER_ASSERT;
+	READ_ASSERT;
 	
 	auto temp = ptr->state();
 	return {"", {(node_state) temp._ecu0,
@@ -155,13 +142,33 @@ autolabor::pm1::get_chassis_state() {
 
 void
 autolabor::pm1::delay(double time) {
-	std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>(time));
+	std::this_thread::sleep_for(seconds_duration(time));
 }
 
 // =====================================================================
 
-constexpr autolabor::process_controller
-	move_controller(0, 0.01, 0.2, 0.1);
+#define READ_STATEMENT(ACTION) \
+{ READ_ASSERT;                 \
+  ACTION;                      \
+}
+
+#define READ_SCOPE \
+{ READ_ASSERT;
+
+#define ACTION_ASSERT                          \
+weak_lock_guard<std::mutex> lk1(action_mutex); \
+if (!lk1) return {"another action is invoking"}
+
+#define STATE_ASSERT                             \
+auto state = ptr->state();                       \
+if (!state.check_all()) {                        \
+    if (state.check_all(node_state_t::disabled)) \
+        return {"chassis is locked"};            \
+                                                 \
+    return {"critical error!"};                  \
+}
+
+// =====================================================================
 
 std::mutex    action_mutex;
 volatile bool pause_flag = false;
@@ -175,19 +182,24 @@ autolabor::pm1::go_straight(double speed, double distance) {
 	
 	ACTION_ASSERT;
 	
+	constexpr static autolabor::process_controller
+		move_controller(0, 0.01, 0.2, 0.1);
+	
 	process_t process{};
-	POINTER_ASSERT_THEN(process.begin = ptr->odometry().s)
+	READ_STATEMENT(process.begin = ptr->odometry().s)
 	
 	process.end   = process.begin + distance;
 	process.speed = speed;
 	
 	bool paused = pause_flag;
 	while (true) {
-		POINTER_SCOPE
+		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
+				STATE_ASSERT
+				
 				auto current = ptr->odometry().s;
 				if (paused) {
 					paused = false;
@@ -211,16 +223,20 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 	
 	ACTION_ASSERT;
 	
+	constexpr static autolabor::process_controller
+		move_controller(0, 0.01, 0.2, 0.1);
+	
 	const auto target = now() + seconds_duration(time);
 	
 	bool paused = pause_flag;
 	while (true) {
-		POINTER_SCOPE
+		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				auto current = ptr->odometry().s;
+				STATE_ASSERT
+				
 				if (paused) {
 					paused = false;
 				}
@@ -242,14 +258,18 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 	
 	ACTION_ASSERT;
 	
+	constexpr static autolabor::process_controller
+		move_controller(0, 0.01, 0.2, 0.1);
+	
 	bool paused = pause_flag;
 	while (true) {
-		POINTER_SCOPE
+		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				auto current = ptr->odometry().s;
+				STATE_ASSERT
+				
 				if (paused) {
 					paused = false;
 				}
@@ -269,16 +289,20 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	
 	ACTION_ASSERT;
 	
+	constexpr static autolabor::process_controller
+		move_controller(0, 0.01, 0.2, 0.1);
+	
 	const auto target = now() + seconds_duration(time);
 	
 	bool paused = pause_flag;
 	while (true) {
-		POINTER_SCOPE
+		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				auto current = ptr->odometry().s;
+				STATE_ASSERT
+				
 				if (paused) {
 					paused = false;
 				}
@@ -298,14 +322,18 @@ autolabor::pm1::turn_around(double speed, double rad) {
 	
 	ACTION_ASSERT;
 	
+	constexpr static autolabor::process_controller
+		move_controller(0, 0.01, 0.2, 0.1);
+	
 	bool paused = pause_flag;
 	while (true) {
-		POINTER_SCOPE
+		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				auto current = ptr->odometry().s;
+				STATE_ASSERT
+				
 				if (paused) {
 					paused = false;
 				}
@@ -323,16 +351,20 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 	
 	ACTION_ASSERT;
 	
+	constexpr static autolabor::process_controller
+		move_controller(0, 0.01, 0.2, 0.1);
+	
 	const auto target = now() + seconds_duration(time);
 	
 	bool paused = pause_flag;
 	while (true) {
-		POINTER_SCOPE
+		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				auto current = ptr->odometry().s;
+				STATE_ASSERT
+				
 				if (paused) {
 					paused = false;
 				}
