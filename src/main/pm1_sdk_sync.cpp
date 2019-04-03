@@ -229,7 +229,7 @@ blocking(double v,
 					paused = false;
 					process.begin = current;
 				}
-				auto actual = std::abs(target.rudder - ptr->rudder().position) < 1E-4
+				auto actual = std::abs(target.rudder - ptr->rudder().position) > 1E-4
 				              ? 0
 				              : move_controller(process, current);
 				
@@ -380,6 +380,12 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 	return {cancel_flag ? action_canceled : ""};
 }
 
+inline double transform(double s, double sa) {
+	const static auto w_2 = default_config.width / 2;
+	
+	return std::abs(s + w_2 * sa) + std::abs(s - w_2 * sa);
+}
+
 autolabor::pm1::result<void>
 autolabor::pm1::go_arc(double speed, double r, double rad) {
 	if (std::abs(r) < 0.05)
@@ -392,9 +398,12 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 	constexpr static autolabor::process_controller
 		move_controller(0.5, 0.1, 12, 4);
 	
-	return blocking(speed, speed / r, rad,
+	return blocking(speed, speed / r, transform(r * rad, rad),
 	                move_controller,
-	                [] { return ptr->odometry().sa; });
+	                [] {
+		                auto temp = ptr->odometry();
+		                return transform(temp.s, temp.sa);
+	                });
 }
 
 autolabor::pm1::result<void>
