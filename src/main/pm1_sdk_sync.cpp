@@ -2,7 +2,6 @@
 // Created by User on 2019/4/2.
 //
 
-#include <iostream>
 #include "pm1_sdk.h"
 
 #include "internal/chassis.hh"
@@ -195,7 +194,7 @@ autolabor::pm1::go_straight(double speed, double distance) {
 	ACTION_ASSERT;
 	
 	constexpr static autolabor::process_controller
-		move_controller(0.5, 0.1, 2, 1);
+		move_controller(0.5, 0.1, 20, 10);
 	
 	double    rudder;
 	process_t process{};
@@ -210,7 +209,7 @@ autolabor::pm1::go_straight(double speed, double distance) {
 		rudder = target.rudder;
 	}
 	
-	bool paused = pause_flag;
+	auto paused = pause_flag;
 	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
@@ -220,7 +219,7 @@ autolabor::pm1::go_straight(double speed, double distance) {
 				// STATE_ASSERT
 				
 				auto current = ptr->odometry().s;
-				if (current > process.end) return {};
+				if (current > process.end) break;
 				
 				if (paused) {
 					paused = false;
@@ -236,7 +235,8 @@ autolabor::pm1::go_straight(double speed, double distance) {
 		
 		delay(0.05);
 	}
-	return {action_canceled};
+	ptr->set_target(0, NAN);
+	return {cancel_flag ? action_canceled : ""};
 }
 
 autolabor::pm1::result<void>
@@ -261,7 +261,7 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 		rudder = target.rudder;
 	}
 	
-	bool paused = pause_flag;
+	auto paused = pause_flag;
 	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
@@ -271,7 +271,7 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 				// STATE_ASSERT
 				
 				auto current = seconds_cast(now());
-				if (current > process.end) return {};
+				if (current > process.end) break;
 				
 				if (paused) {
 					paused = false;
@@ -287,7 +287,8 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 		
 		delay(0.05);
 	}
-	return {action_canceled};
+	ptr->set_target(0, NAN);
+	return {cancel_flag ? action_canceled : ""};
 }
 
 autolabor::pm1::result<void>
@@ -304,6 +305,16 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 	constexpr static autolabor::process_controller
 		move_controller(0, 0.01, 0.2, 0.1);
 	
+	double    rudder;
+	process_t process{seconds_cast(now())};
+	{
+		velocity temp{static_cast<float>(speed), 0};
+		auto     target = velocity_to_physical(&temp, &default_config);
+		
+		process.speed = target.speed;
+		rudder = target.rudder;
+	}
+	
 	bool paused = pause_flag;
 	while (!cancel_flag) {
 		READ_SCOPE
@@ -321,7 +332,8 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 		
 		delay(0.05);
 	}
-	return {action_canceled};
+	ptr->set_target(0, NAN);
+	return {cancel_flag ? action_canceled : ""};
 }
 
 autolabor::pm1::result<void>
@@ -350,7 +362,7 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 				// STATE_ASSERT
 				
 				auto current = seconds_cast(now());
-				if (current > process.end) return {};
+				if (current > process.end) break;
 				
 				if (paused) {
 					paused = false;
@@ -361,7 +373,8 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 		
 		delay(0.05);
 	}
-	return {action_canceled};
+	ptr->set_target(0, NAN);
+	return {cancel_flag ? action_canceled : ""};
 }
 
 autolabor::pm1::result<void>
@@ -393,7 +406,8 @@ autolabor::pm1::turn_around(double speed, double rad) {
 		
 		delay(0.05);
 	}
-	return {action_canceled};
+	ptr->set_target(0, NAN);
+	return {cancel_flag ? action_canceled : ""};
 }
 
 autolabor::pm1::result<void>
@@ -420,7 +434,7 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 				// STATE_ASSERT
 				
 				auto current = seconds_cast(now());
-				if (current > process.end) return {};
+				if (current > process.end) break;
 				
 				if (paused) {
 					paused = false;
@@ -431,7 +445,8 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 		
 		delay(0.05);
 	}
-	return {action_canceled};
+	ptr->set_target(0, NAN);
+	return {cancel_flag ? action_canceled : ""};
 }
 
 autolabor::pm1::result<void>
