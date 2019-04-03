@@ -2,6 +2,7 @@
 // Created by User on 2019/4/2.
 //
 
+#include <iostream>
 #include "pm1_sdk.h"
 
 #include "internal/chassis.hh"
@@ -97,6 +98,7 @@ autolabor::pm1::drive(double v, double w) {
 	velocity temp{static_cast<float>(v), static_cast<float>(w)};
 	auto     actual = velocity_to_physical(&temp, &default_config);
 	ptr->set_target(actual.speed, actual.rudder);
+	
 	return {};
 }
 
@@ -160,12 +162,20 @@ weak_lock_guard<std::mutex> lk1(action_mutex); \
 if (!lk1) return {"another action is invoking"}
 
 #define STATE_ASSERT                             \
-auto state = ptr->state();                       \
-if (!state.check_all()) {                        \
-    if (state.check_all(node_state_t::disabled)) \
-        return {"chassis is locked"};            \
+{                                                \
+    auto _ = ptr->state();                       \
+    if (!_.check_all()) {                        \
+        if (_.check_all(node_state_t::disabled)) \
+            return {"chassis is locked"};        \
                                                  \
-    return {"critical error!"};                  \
+        return {"critical error!"};              \
+    }                                            \
+}
+// =====================================================================
+
+inline double seconds_cast(std::chrono::steady_clock::time_point time) {
+	using s_t = autolabor::seconds_floating;
+	return std::chrono::duration_cast<s_t>(time.time_since_epoch()).count();
 }
 
 // =====================================================================
@@ -183,13 +193,20 @@ autolabor::pm1::go_straight(double speed, double distance) {
 	ACTION_ASSERT;
 	
 	constexpr static autolabor::process_controller
-		move_controller(0, 0.01, 0.2, 0.1);
+		move_controller(0.05, 0.01, 0.2, 0.1);
 	
+	double    rudder;
 	process_t process{};
-	READ_STATEMENT(process.begin = ptr->odometry().s)
 	
-	process.end   = process.begin + distance;
-	process.speed = speed;
+	READ_STATEMENT(process.begin = ptr->odometry().s)
+	process.end = process.begin + distance;
+	{
+		velocity temp{static_cast<float>(speed), 0};
+		auto     target = velocity_to_physical(&temp, &default_config);
+		
+		process.speed = target.speed;
+		rudder = target.rudder;
+	}
 	
 	bool paused = pause_flag;
 	while (true) {
@@ -198,16 +215,21 @@ autolabor::pm1::go_straight(double speed, double distance) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				STATE_ASSERT
+				// STATE_ASSERT
 				
 				auto current = ptr->odometry().s;
+				if (current > process.end) return {};
+				
 				if (paused) {
 					paused = false;
 					process.begin = current;
 				}
-				auto actual = 0 != ptr->rudder().position
+				auto actual = rudder != ptr->rudder().position
 				              ? 0
 				              : move_controller(process, current);
+				
+				std::cout << actual << std::endl;
+				
 				ptr->set_target(actual, 0);
 			}
 		}
@@ -224,9 +246,19 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 	ACTION_ASSERT;
 	
 	constexpr static autolabor::process_controller
-		move_controller(0, 0.01, 0.2, 0.1);
+		move_controller(0.05, 0.01, 0.5, 0.2);
 	
-	const auto target = now() + seconds_duration(time);
+	double    rudder;
+	process_t process{seconds_cast(now())};
+	
+	process.end = process.begin + time;
+	{
+		velocity temp{static_cast<float>(speed), 0};
+		auto     target = velocity_to_physical(&temp, &default_config);
+		
+		process.speed = target.speed;
+		rudder = target.rudder;
+	}
 	
 	bool paused = pause_flag;
 	while (true) {
@@ -237,9 +269,18 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 			} else {
 				STATE_ASSERT
 				
+				auto current = seconds_cast(now());
+				if (current > process.end) return {};
+				
 				if (paused) {
 					paused = false;
+					process.begin = current;
 				}
+				auto actual = rudder != ptr->rudder().position
+				              ? 0
+				              : move_controller(process, current);
+				
+				ptr->set_target(actual, 0);
 			}
 		}
 		
@@ -292,7 +333,9 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	constexpr static autolabor::process_controller
 		move_controller(0, 0.01, 0.2, 0.1);
 	
-	const auto target = now() + seconds_duration(time);
+	process_t process{seconds_cast(now())};
+	process.end   = process.begin + time;
+	process.speed = speed;
 	
 	bool paused = pause_flag;
 	while (true) {
@@ -303,8 +346,12 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 			} else {
 				STATE_ASSERT
 				
+				auto current = seconds_cast(now());
+				if (current > process.end) return {};
+				
 				if (paused) {
 					paused = false;
+					process.begin = current;
 				}
 			}
 		}
@@ -354,7 +401,9 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 	constexpr static autolabor::process_controller
 		move_controller(0, 0.01, 0.2, 0.1);
 	
-	const auto target = now() + seconds_duration(time);
+	process_t process{seconds_cast(now())};
+	process.end   = process.begin + time;
+	process.speed = speed;
 	
 	bool paused = pause_flag;
 	while (true) {
@@ -365,8 +414,12 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 			} else {
 				STATE_ASSERT
 				
+				auto current = seconds_cast(now());
+				if (current > process.end) return {};
+				
 				if (paused) {
 					paused = false;
+					process.begin = current;
 				}
 			}
 		}

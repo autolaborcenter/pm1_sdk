@@ -19,5 +19,3 @@ int main() {
 		autolabor::pm1::shutdown();
 	}
 }
-
-#pragma clang diagnostic pop

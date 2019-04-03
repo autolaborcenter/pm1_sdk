@@ -26,16 +26,18 @@ namespace autolabor {
 		                             double speed_end,
 		                             double acceleration,
 		                             double deceleration) noexcept
-				: speed_begin(speed_begin),
-				  speed_end(speed_end),
-				  acceleration(acceleration),
-				  deceleration(deceleration) {}
+			: speed_begin(speed_begin),
+			  speed_end(speed_end),
+			  acceleration(acceleration),
+			  deceleration(deceleration) {}
 		
 		inline double operator()(const process_t &process,
 		                         double current) const {
-			return std::max({acceleration * std::max({.0, current - process.begin}) + speed_begin,
-			                 process.speed,
-			                 deceleration * std::max({.0, process.end - current}) + speed_end});
+			auto abs       = std::abs(process.speed);
+			auto optimized = std::min({abs,
+			                           acceleration * std::max({.0, current - process.begin}) + speed_begin,
+			                           deceleration * std::max({.0, process.end - current}) + speed_end});
+			return process.speed > 0 ? +optimized : -optimized;
 		}
 	
 	private:

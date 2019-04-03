@@ -9,7 +9,7 @@
 template<class t>
 class weak_lock_guard {
 public:
-	explicit weak_lock_guard(t &)
+	explicit weak_lock_guard(t &core)
 			: core(core), own(core.try_lock()) {}
 	
 	~weak_lock_guard() {
