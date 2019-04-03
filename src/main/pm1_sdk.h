@@ -174,6 +174,11 @@ namespace autolabor {
 		 * 恢复执行阻塞控制
 		 */
 		DllExport result<void> resume();
+		
+		/**
+		 * 取消所有正在执行的动作
+		 */
+		DllExport result<void> cancel_all();
 	}
 }
 

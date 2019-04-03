@@ -28,10 +28,11 @@ std::shared_mutex
 // =====================================================================
 
 constexpr auto
-	chassis_pointer_busy = "chassis pointer is busy",
-	null_chassis_pointer = "null chassis pointer",
-	infinite_action      = "action never complete",
-	invalid_target       = "invalid target";
+	chassis_pointer_busy  = "chassis pointer is busy",
+	null_chassis_pointer  = "null chassis pointer",
+	infinite_action       = "action never complete",
+	invalid_target        = "invalid target",
+	action_canceled       = "action canceled";
 
 #define READ_ASSERT                      \
 weak_shared_lock lk0(mutex);             \
@@ -181,7 +182,8 @@ inline double seconds_cast(std::chrono::steady_clock::time_point time) {
 // =====================================================================
 
 std::mutex    action_mutex;
-volatile bool pause_flag = false;
+volatile bool pause_flag  = false,
+              cancel_flag = false;
 
 autolabor::pm1::result<void>
 autolabor::pm1::go_straight(double speed, double distance) {
@@ -193,7 +195,7 @@ autolabor::pm1::go_straight(double speed, double distance) {
 	ACTION_ASSERT;
 	
 	constexpr static autolabor::process_controller
-		move_controller(0.05, 0.01, 0.2, 0.1);
+		move_controller(0.5, 0.1, 2, 1);
 	
 	double    rudder;
 	process_t process{};
@@ -209,7 +211,7 @@ autolabor::pm1::go_straight(double speed, double distance) {
 	}
 	
 	bool paused = pause_flag;
-	while (true) {
+	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
@@ -228,14 +230,13 @@ autolabor::pm1::go_straight(double speed, double distance) {
 				              ? 0
 				              : move_controller(process, current);
 				
-				std::cout << actual << std::endl;
-				
 				ptr->set_target(actual, 0);
 			}
 		}
 		
 		delay(0.05);
 	}
+	return {action_canceled};
 }
 
 autolabor::pm1::result<void>
@@ -246,7 +247,7 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 	ACTION_ASSERT;
 	
 	constexpr static autolabor::process_controller
-		move_controller(0.05, 0.01, 0.5, 0.2);
+		move_controller(0.5, 0.1, 5, 2);
 	
 	double    rudder;
 	process_t process{seconds_cast(now())};
@@ -261,13 +262,13 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 	}
 	
 	bool paused = pause_flag;
-	while (true) {
+	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				STATE_ASSERT
+				// STATE_ASSERT
 				
 				auto current = seconds_cast(now());
 				if (current > process.end) return {};
@@ -286,6 +287,7 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 		
 		delay(0.05);
 	}
+	return {action_canceled};
 }
 
 autolabor::pm1::result<void>
@@ -303,13 +305,13 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 		move_controller(0, 0.01, 0.2, 0.1);
 	
 	bool paused = pause_flag;
-	while (true) {
+	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				STATE_ASSERT
+				// STATE_ASSERT
 				
 				if (paused) {
 					paused = false;
@@ -319,6 +321,7 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 		
 		delay(0.05);
 	}
+	return {action_canceled};
 }
 
 autolabor::pm1::result<void>
@@ -338,13 +341,13 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	process.speed = speed;
 	
 	bool paused = pause_flag;
-	while (true) {
+	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				STATE_ASSERT
+				// STATE_ASSERT
 				
 				auto current = seconds_cast(now());
 				if (current > process.end) return {};
@@ -358,6 +361,7 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 		
 		delay(0.05);
 	}
+	return {action_canceled};
 }
 
 autolabor::pm1::result<void>
@@ -373,13 +377,13 @@ autolabor::pm1::turn_around(double speed, double rad) {
 		move_controller(0, 0.01, 0.2, 0.1);
 	
 	bool paused = pause_flag;
-	while (true) {
+	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				STATE_ASSERT
+				// STATE_ASSERT
 				
 				if (paused) {
 					paused = false;
@@ -389,6 +393,7 @@ autolabor::pm1::turn_around(double speed, double rad) {
 		
 		delay(0.05);
 	}
+	return {action_canceled};
 }
 
 autolabor::pm1::result<void>
@@ -406,13 +411,13 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 	process.speed = speed;
 	
 	bool paused = pause_flag;
-	while (true) {
+	while (!cancel_flag) {
 		READ_SCOPE
 			if (pause_flag) {
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				STATE_ASSERT
+				// STATE_ASSERT
 				
 				auto current = seconds_cast(now());
 				if (current > process.end) return {};
@@ -426,6 +431,7 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 		
 		delay(0.05);
 	}
+	return {action_canceled};
 }
 
 autolabor::pm1::result<void>
@@ -437,5 +443,13 @@ autolabor::pm1::pause() {
 autolabor::pm1::result<void>
 autolabor::pm1::resume() {
 	pause_flag = false;
+	return {};
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::cancel_all() {
+	cancel_flag = true;
+	{ std::lock_guard<std::mutex> wait(action_mutex); }
+	cancel_flag = false;
 	return {};
 }
