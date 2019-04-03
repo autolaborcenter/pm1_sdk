@@ -197,11 +197,11 @@ volatile bool pause_flag  = false,
  * @return 返回原因
  */
 autolabor::pm1::result<void>
-blocking(double v,
-         double w,
-         double limit,
-         const autolabor::process_controller &move_controller,
-         std::function<double()> &&current_getter) {
+block(double v,
+      double w,
+      double limit,
+      const autolabor::process_controller &move_controller,
+      std::function<double()> &&current_getter) {
 	ACTION_ASSERT;
 	
 	autolabor::process_t process{};
@@ -243,42 +243,29 @@ blocking(double v,
 	return {cancel_flag ? action_canceled : ""};
 }
 
+/**
+ * 阻塞执行
+ *
+ * @param process         初始过程
+ * @param move_controller 运动控制器
+ * @param rudder          目标后轮方向
+ * @param current_getter  过程描述变量
+ *
+ * @return 返回原因
+ */
 autolabor::pm1::result<void>
-autolabor::pm1::go_straight(double speed, double distance) {
-	if (speed == 0)
-		return {distance == 0 ? "" : infinite_action};
-	if (distance <= 0)
-		return {invalid_target};
-	
-	constexpr static autolabor::process_controller
-		move_controller(0.5, 0.1, 12, 4);
-	
-	return blocking(speed, 0, distance,
-	                move_controller,
-	                [] { return ptr->odometry().s; });
-}
-
-autolabor::pm1::result<void>
-autolabor::pm1::go_straight_timing(double speed, double time) {
-	if (time < 0)
-		return {invalid_target};
-	
+block_timing(double v,
+             double w,
+             double time,
+             const autolabor::process_controller &move_controller) {
 	ACTION_ASSERT;
 	
-	constexpr static autolabor::process_controller
-		move_controller(0.5, 0.1, 5, 2);
+	autolabor::process_t process{seconds_cast(autolabor::now())};
+	process.end       = process.begin + time;
 	
-	double    rudder;
-	process_t process{seconds_cast(now())};
-	
-	process.end = process.begin + time;
-	{
-		velocity temp{static_cast<float>(speed), 0};
-		auto     target = velocity_to_physical(&temp, &default_config);
-		
-		process.speed = target.speed;
-		rudder = target.rudder;
-	}
+	velocity   temp{static_cast<float>(v), static_cast<float>(w)};
+	const auto target = velocity_to_physical(&temp, &default_config);
+	process.speed = target.speed;
 	
 	auto paused     = pause_flag;
 	auto pause_time = process.begin;
@@ -286,31 +273,52 @@ autolabor::pm1::go_straight_timing(double speed, double time) {
 		READ_SCOPE
 			if (pause_flag) {
 				paused     = true;
-				pause_time = seconds_cast(now());
+				pause_time = seconds_cast(autolabor::now());
 				ptr->set_target(0, NAN);
 			} else {
 				// STATE_ASSERT
 				
-				auto current = seconds_cast(now());
+				auto current = seconds_cast(autolabor::now());
 				if (current > process.end) break;
 				
 				if (paused) {
 					paused = false;
 					process.begin = current;
-					process.end += seconds_cast(now()) - pause_time;
+					process.end += seconds_cast(autolabor::now()) - pause_time;
 				}
-				auto actual = rudder != ptr->rudder().position
+				auto actual = std::abs(target.rudder - ptr->rudder().position) > 1E-4
 				              ? 0
 				              : move_controller(process, current);
 				
-				ptr->set_target(actual, rudder);
+				ptr->set_target(actual, target.rudder);
 			}
 		}
 		
-		delay(0.05);
+		autolabor::pm1::delay(0.05);
 	}
 	ptr->set_target(0, NAN);
 	return {cancel_flag ? action_canceled : ""};
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_straight(double speed, double distance) {
+	if (speed == 0)
+		return {distance == 0 ? "" : infinite_action};
+	if (distance <= 0)
+		return {invalid_target};
+	
+	return block(speed, 0, distance,
+	             {0.5, 0.1, 12, 4},
+	             [] { return ptr->odometry().s; });
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_straight_timing(double speed, double time) {
+	if (time < 0)
+		return {invalid_target};
+	
+	return block_timing(speed, 0, time,
+	                    {0.5, 0.1, 5, 2});
 }
 
 autolabor::pm1::result<void>
@@ -320,12 +328,9 @@ autolabor::pm1::turn_around(double speed, double rad) {
 	if (rad <= 0)
 		return {invalid_target};
 	
-	constexpr static autolabor::process_controller
-		move_controller(0.5, 0.1, 12, 4);
-	
-	return blocking(0, speed, rad,
-	                move_controller,
-	                [] { return ptr->odometry().sa; });
+	return block(0, speed, rad,
+	             {0.5, 0.1, 12, 4},
+	             [] { return ptr->odometry().sa; });
 }
 
 autolabor::pm1::result<void>
@@ -333,51 +338,8 @@ autolabor::pm1::turn_around_timing(double speed, double time) {
 	if (time < 0)
 		return {invalid_target};
 	
-	ACTION_ASSERT;
-	
-	constexpr static autolabor::process_controller
-		move_controller(0, 0.01, 0.2, 0.1);
-	
-	double    rudder;
-	process_t process{seconds_cast(now())};
-	
-	process.end = process.begin + time;
-	{
-		velocity temp{0, static_cast<float>(speed)};
-		auto     target = velocity_to_physical(&temp, &default_config);
-		
-		process.speed = target.speed;
-		rudder = target.rudder;
-	}
-	
-	auto paused = pause_flag;
-	while (!cancel_flag) {
-		READ_SCOPE
-			if (pause_flag) {
-				paused = true;
-				ptr->set_target(0, NAN);
-			} else {
-				// STATE_ASSERT
-				
-				auto current = seconds_cast(now());
-				if (current > process.end) break;
-				
-				if (paused) {
-					paused = false;
-					process.begin = current;
-				}
-				auto actual = rudder != ptr->rudder().position
-				              ? 0
-				              : move_controller(process, current);
-				
-				ptr->set_target(actual, rudder);
-			}
-		}
-		
-		delay(0.05);
-	}
-	ptr->set_target(0, NAN);
-	return {cancel_flag ? action_canceled : ""};
+	return block_timing(0, speed, time,
+	                    {0.5, 0.1, 5, 2});
 }
 
 inline double transform(double s, double sa) {
@@ -395,15 +357,12 @@ autolabor::pm1::go_arc(double speed, double r, double rad) {
 	if (rad <= 0)
 		return {invalid_target};
 	
-	constexpr static autolabor::process_controller
-		move_controller(0.5, 0.1, 12, 4);
-	
-	return blocking(speed, speed / r, transform(r * rad, rad),
-	                move_controller,
-	                [] {
-		                auto temp = ptr->odometry();
-		                return transform(temp.s, temp.sa);
-	                });
+	return block(speed, speed / r, transform(r * rad, rad),
+	             {0.5, 0.1, 12, 4},
+	             [] {
+		             auto temp = ptr->odometry();
+		             return transform(temp.s, temp.sa);
+	             });
 }
 
 autolabor::pm1::result<void>
@@ -413,38 +372,8 @@ autolabor::pm1::go_arc_timing(double speed, double r, double time) {
 	if (time < 0)
 		return {invalid_target};
 	
-	ACTION_ASSERT;
-	
-	constexpr static autolabor::process_controller
-		move_controller(0, 0.01, 0.2, 0.1);
-	
-	process_t process{seconds_cast(now())};
-	process.end   = process.begin + time;
-	process.speed = speed;
-	
-	bool paused = pause_flag;
-	while (!cancel_flag) {
-		READ_SCOPE
-			if (pause_flag) {
-				paused = true;
-				ptr->set_target(0, NAN);
-			} else {
-				// STATE_ASSERT
-				
-				auto current = seconds_cast(now());
-				if (current > process.end) break;
-				
-				if (paused) {
-					paused = false;
-					process.begin = current;
-				}
-			}
-		}
-		
-		delay(0.05);
-	}
-	ptr->set_target(0, NAN);
-	return {cancel_flag ? action_canceled : ""};
+	return block_timing(speed, speed / r, time,
+	                    {0.5, 0.1, 5, 2});
 }
 
 autolabor::pm1::result<void>

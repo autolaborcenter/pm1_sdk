@@ -20,16 +20,11 @@ namespace autolabor {
 	};
 	
 	/** 过程控制器 */
-	class process_controller {
-	public:
-		constexpr process_controller(double speed_begin,
-		                             double speed_end,
-		                             double acceleration,
-		                             double deceleration) noexcept
-			: speed_begin(speed_begin),
-			  speed_end(speed_end),
-			  acceleration(acceleration),
-			  deceleration(deceleration) {}
+	struct process_controller {
+		double speed_begin,  // 起步速度
+		       speed_end,    // 终止速度
+		       acceleration, // 加速度
+		       deceleration; // 减速度
 		
 		inline double operator()(const process_t &process,
 		                         double current) const {
@@ -39,12 +34,6 @@ namespace autolabor {
 			                           deceleration * std::max({.0, process.end - current}) + speed_end});
 			return process.speed > 0 ? +optimized : -optimized;
 		}
-	
-	private:
-		double speed_begin,  // 起步速度
-		       speed_end,    // 终止速度
-		       acceleration, // 加速度
-		       deceleration; // 减速度
 	};
 }
 
