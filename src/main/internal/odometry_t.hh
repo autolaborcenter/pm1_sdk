@@ -29,7 +29,7 @@ namespace autolabor {
 	struct delta_differential_t {
 		double width, left, rigth;
 		std::chrono::duration<double, std::ratio<1>>
-		       time;
+		       interval;
 		
 		operator odometry_t();
 	};

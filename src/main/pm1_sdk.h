@@ -132,6 +132,22 @@ namespace autolabor {
 		DllExport result<void> go_straight_timing(double speed, double time);
 		
 		/**
+     	 * 原地转
+     	 *
+     	 * @param speed 角速度
+     	 * @param rad   弧度
+     	 */
+		DllExport result<void> turn_around(double speed, double rad);
+		
+		/**
+		 * 原地转
+		 *
+		 * @param speed 角速度
+		 * @param time  时间
+		 */
+		DllExport result<void> turn_around_timing(double speed, double time);
+		
+		/**
 		 * 走圆弧
 		 *
 		 * @param speed 线速度
@@ -148,22 +164,6 @@ namespace autolabor {
 		 * @param time  行驶时间
 		 */
 		DllExport result<void> go_arc_timing(double speed, double r, double time);
-		
-		/**
-		 * 原地转
-		 *
-		 * @param speed 角速度
-		 * @param rad   弧度
-		 */
-		DllExport result<void> turn_around(double speed, double rad);
-		
-		/**
-		 * 原地转
-		 *
-		 * @param speed 角速度
-		 * @param time  时间
-		 */
-		DllExport result<void> turn_around_timing(double speed, double time);
 		
 		/**
 		 * 暂停执行阻塞控制
