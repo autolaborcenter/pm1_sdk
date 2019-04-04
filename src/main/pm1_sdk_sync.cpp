@@ -229,7 +229,7 @@ block(double v,
 					paused = false;
 					process.begin = current;
 				}
-				auto actual = std::abs(target.rudder - ptr->rudder().position) > 1E-4
+				auto actual = std::abs(target.rudder - ptr->rudder().position) > 2E-3
 				              ? 0
 				              : move_controller(process, current);
 				

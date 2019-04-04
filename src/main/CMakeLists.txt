@@ -9,12 +9,14 @@ add_subdirectory(internal/control_model)
 
 add_library(pm1_sdk
         # --------------------------
+        # pm1 sdk
         exception.h
         pm1_sdk.h
         pm1_sdk_sync.cpp
 
         internal/process_controller.hh
         # --------------------------
+        # serial port
         internal/serial/serial.h
 
         internal/serial/list_ports/list_ports_win.cc
@@ -24,6 +26,7 @@ add_library(pm1_sdk
         internal/serial/serial_port.hh
         internal/serial/serial_port.cc
         # --------------------------
+        # extensions
         internal/raii/weak_shared_lock.hh
 
         internal/raii/weak_lock_guard.hh
@@ -33,6 +36,7 @@ add_library(pm1_sdk
 
         internal/can_define.h
         # --------------------------
+        # can hub
         internal/can/pack.h
         internal/can/pack.cpp
 
@@ -44,6 +48,7 @@ add_library(pm1_sdk
         internal/can/parse_engine.hh
         internal/can/parse_engine.cc
         # --------------------------
+        # pm1 control model
         internal/control_model/pi.h
 
         internal/control_model/chassis_config_t.h
@@ -57,12 +62,14 @@ add_library(pm1_sdk
         internal/control_model/optimization.h
         internal/control_model/optimization.c
         # --------------------------
+        # pm1 chassis
         internal/chassis.hh
         internal/chassis.cc
 
         internal/odometry_t.hh
         internal/odometry_t.cc
         # --------------------------
+        # others
         internal/rudder_controller.hh
         internal/rudder_controller.cc)
 
