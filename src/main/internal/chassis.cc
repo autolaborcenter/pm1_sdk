@@ -265,11 +265,13 @@ chassis::chassis(const std::string &port_name,
 }
 
 chassis::~chassis() {
-	if (!running.exchange(false)) 
-	port.break_read();
+	if (!running.exchange(false))
+		port.break_read();
 	
 	read_thread.join();
 	write_thread.join();
+	
+	throw std::exception("sdfghjkdfghjkdfghjkl");
 }
 
 autolabor::motor_t<> chassis::left() const {
