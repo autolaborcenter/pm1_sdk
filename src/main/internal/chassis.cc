@@ -95,7 +95,7 @@ chassis::chassis(const std::string &port_name,
 				}
 			});
 		
-		uint8_t buffer[28];
+		uint8_t buffer[64];
 		while (!done()) {
 			auto actual = port.read(buffer, sizeof(buffer));
 			
@@ -140,13 +140,12 @@ chassis::chassis(const std::string &port_name,
 					port << autolabor::can::pack<unit<>::state_tx>();
 					task_time[2] = _now;
 				}
-			} catch (std::exception &e) {
-				running.store(false);
-				return;
-			}
+			} catch (std::exception &e) { break; }
 			
 			std::this_thread::sleep_for(delay_interval);
 		}
+		
+		if (running.exchange(false)) port.break_read();
 	});
 	
 	// region receive
@@ -249,18 +248,17 @@ chassis::chassis(const std::string &port_name,
 				}
 			});
 		
-		uint8_t buffer[28];
+		uint8_t buffer[64];
 		while (running) {
-			auto actual = port.read(buffer, sizeof(buffer));
-			
-			for (auto i = 0; i < actual; ++i)
-				try { parser(buffer[i]); }
-				catch (std::exception &e) {
-					running       = false;
-					chassis_state = {};
-					return;
-				}
+			try {
+				auto actual = port.read(buffer, sizeof(buffer));
+				
+				for (auto i = 0; i < actual; ++i) parser(buffer[i]);
+				
+			} catch (std::exception &) { break; }
 		}
+		
+		chassis_state = {};
 	});
 	// endregion
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -270,8 +268,8 @@ chassis::~chassis() {
 	if (!running.exchange(false)) return;
 	
 	port.break_read();
-	read_thread.join();
-	write_thread.join();
+	if (read_thread.joinable()) read_thread.join();
+	if (write_thread.joinable()) write_thread.join();
 }
 
 autolabor::motor_t<> chassis::left() const {
@@ -287,11 +285,15 @@ autolabor::motor_t<> chassis::rudder() const {
 }
 
 void chassis::enable() {
-	port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
+	try {
+		port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
+	} catch (std::exception &) {}
 }
 
 void chassis::disable() {
-	port << autolabor::can::pack<unit<>::emergency_stop>();
+	try {
+		port << autolabor::can::pack<unit<>::emergency_stop>();
+	} catch (std::exception &) {}
 }
 
 chassis_state_t chassis::state() const {
