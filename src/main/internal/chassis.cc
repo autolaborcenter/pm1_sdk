@@ -254,10 +254,9 @@ chassis::chassis(const std::string &port_name,
 				
 				for (auto i = 0; i < actual; ++i) parser(buffer[i]);
 				
-			} catch (std::exception &) { break; }
+			} catch (std::exception &) { running = false; }
 		}
 		
-		running       = false;
 		chassis_state = {};
 	});
 	// endregion
@@ -265,8 +264,8 @@ chassis::chassis(const std::string &port_name,
 }
 
 chassis::~chassis() {
-	if (!running.exchange(false))
-		port.break_read();
+	running = false;
+	port.break_read();
 	
 	read_thread.join();
 	write_thread.join();
