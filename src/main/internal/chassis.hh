@@ -101,7 +101,7 @@ namespace autolabor {
 			/** 里程计 */
 			std::atomic<odometry_t> _odometry{};
 			
-			std::atomic_bool running;
+			volatile bool running;
 			
 			std::thread read_thread,
 			            write_thread;
