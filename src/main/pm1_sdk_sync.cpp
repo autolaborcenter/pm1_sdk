@@ -167,7 +167,7 @@ if (!lk1) return {"another action is invoking"}
 {                                                \
     auto _ = ptr->state();                       \
     if (!_.check_all()) {                        \
-        if (_.check_all(node_state_t::disabled)) \
+        if (_.check_all(autolabor::pm1::node_state_t::disabled)) \
             return {"chassis is locked"};        \
                                                  \
         return {"critical error!"};              \
@@ -220,7 +220,7 @@ block(double v,
 				paused = true;
 				ptr->set_target(0, NAN);
 			} else {
-				// STATE_ASSERT
+				STATE_ASSERT
 				
 				auto current = current_getter();
 				if (current > process.end) break;
@@ -276,7 +276,7 @@ block_timing(double v,
 				pause_time = seconds_cast(autolabor::now());
 				ptr->set_target(0, NAN);
 			} else {
-				// STATE_ASSERT
+				STATE_ASSERT
 				
 				auto current = seconds_cast(autolabor::now());
 				if (current > process.end) break;

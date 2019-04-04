@@ -5,7 +5,6 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include <iostream>
 #include "serial_extension.h"
 #include "can/parse_engine.hh"
 
@@ -177,15 +176,15 @@ chassis::chassis(const std::string &port_name,
 				// 处理
 				const auto msg = result.message;
 				
-				if (unit<ecu<0>>::state_rx::match(msg)) {
+				if (unit<ecu<0 >>::state_rx::match(msg)) {
 					chassis_state._ecu0 = parse_state(*msg.data.data);
 					reply_time[0] = _now;
 					
-				} else if (unit<ecu<1>>::state_rx::match(msg)) {
+				} else if (unit<ecu<1 >>::state_rx::match(msg)) {
 					chassis_state._ecu1 = parse_state(*msg.data.data);
 					reply_time[1] = _now;
 					
-				} else if (unit<tcu<0>>::state_rx::match(msg)) {
+				} else if (unit<tcu<0 >>::state_rx::match(msg)) {
 					chassis_state._tcu = parse_state(*msg.data.data);
 					reply_time[2] = _now;
 					
@@ -258,6 +257,7 @@ chassis::chassis(const std::string &port_name,
 			} catch (std::exception &) { break; }
 		}
 		
+		running       = false;
 		chassis_state = {};
 	});
 	// endregion
@@ -265,11 +265,11 @@ chassis::chassis(const std::string &port_name,
 }
 
 chassis::~chassis() {
-	if (!running.exchange(false)) return;
-	
+	if (!running.exchange(false)) 
 	port.break_read();
-	if (read_thread.joinable()) read_thread.join();
-	if (write_thread.joinable()) write_thread.join();
+	
+	read_thread.join();
+	write_thread.join();
 }
 
 autolabor::motor_t<> chassis::left() const {
