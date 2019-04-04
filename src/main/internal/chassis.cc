@@ -126,25 +126,21 @@ chassis::chassis(const std::string &port_name,
 		while (running) {
 			_now = now();
 			
-			try {
-				if (_now - task_time[0] > odometry_interval) {
-					port << autolabor::can::pack<ecu<>::current_position_tx>();
-					task_time[0] = _now;
-				}
-				if (_now - task_time[1] > rudder_interval) {
-					port << autolabor::can::pack<tcu<0>::current_position_tx>();
-					task_time[1] = _now;
-				}
-				if (_now - task_time[2] > state_interval) {
-					port << autolabor::can::pack<unit<>::state_tx>();
-					task_time[2] = _now;
-				}
-			} catch (std::exception &e) { break; }
+			if (_now - task_time[0] > odometry_interval) {
+				port << autolabor::can::pack<ecu<>::current_position_tx>();
+				task_time[0] = _now;
+			}
+			if (_now - task_time[1] > rudder_interval) {
+				port << autolabor::can::pack<tcu<0>::current_position_tx>();
+				task_time[1] = _now;
+			}
+			if (_now - task_time[2] > state_interval) {
+				port << autolabor::can::pack<unit<>::state_tx>();
+				task_time[2] = _now;
+			}
 			
 			std::this_thread::sleep_for(delay_interval);
 		}
-		
-		if (running.exchange(false)) port.break_read();
 	});
 	
 	// region receive
@@ -176,15 +172,15 @@ chassis::chassis(const std::string &port_name,
 				// 处理
 				const auto msg = result.message;
 				
-				if (unit<ecu<0 >>::state_rx::match(msg)) {
+				if (unit < ecu < 0 >> ::state_rx::match(msg)) {
 					chassis_state._ecu0 = parse_state(*msg.data.data);
 					reply_time[0] = _now;
 					
-				} else if (unit<ecu<1 >>::state_rx::match(msg)) {
+				} else if (unit < ecu < 1 >> ::state_rx::match(msg)) {
 					chassis_state._ecu1 = parse_state(*msg.data.data);
 					reply_time[1] = _now;
 					
-				} else if (unit<tcu<0 >>::state_rx::match(msg)) {
+				} else if (unit < tcu < 0 >> ::state_rx::match(msg)) {
 					chassis_state._tcu = parse_state(*msg.data.data);
 					reply_time[2] = _now;
 					
@@ -284,15 +280,11 @@ autolabor::motor_t<> chassis::rudder() const {
 }
 
 void chassis::enable() {
-	try {
-		port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
-	} catch (std::exception &) {}
+	port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
 }
 
 void chassis::disable() {
-	try {
-		port << autolabor::can::pack<unit<>::emergency_stop>();
-	} catch (std::exception &) {}
+	port << autolabor::can::pack<unit<>::emergency_stop>();
 }
 
 chassis_state_t chassis::state() const {
