@@ -82,6 +82,9 @@ namespace autolabor {
 			
 			/** 读取里程计 */
 			odometry_t odometry() const;
+			
+			/** 线程是否正常运行 */
+			bool is_running() const;
 		
 		private:
 			/** 串口引用 */
@@ -94,13 +97,6 @@ namespace autolabor {
 			motor_t<> _left{},
 			          _right{},
 			          _rudder{};
-			
-			/** 底盘参数 */
-			chassis_config_t parameters{};
-			
-			/** 优化参数 */
-			float optimize_width,
-			      acceleration;
 			
 			/** 里程计 */
 			std::atomic<odometry_t> _odometry{};

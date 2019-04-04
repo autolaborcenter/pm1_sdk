@@ -41,10 +41,7 @@ chassis::chassis(const std::string &port_name,
                  float optimize_width,
                  float acceleration)
 	: port(port_name, 115200),
-	  running(true),
-	  parameters(chassis_config),
-	  optimize_width(optimize_width),
-	  acceleration(acceleration) {
+	  running(true) {
 	using result_t = autolabor::can::parser::result_type;
 	
 	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
@@ -130,17 +127,22 @@ chassis::chassis(const std::string &port_name,
 		while (running) {
 			_now = now();
 			
-			if (_now - task_time[0] > odometry_interval) {
-				port << autolabor::can::pack<ecu<>::current_position_tx>();
-				task_time[0] = _now;
-			}
-			if (_now - task_time[1] > rudder_interval) {
-				port << autolabor::can::pack<tcu<0>::current_position_tx>();
-				task_time[1] = _now;
-			}
-			if (_now - task_time[2] > state_interval) {
-				port << autolabor::can::pack<unit<>::state_tx>();
-				task_time[2] = _now;
+			try {
+				if (_now - task_time[0] > odometry_interval) {
+					port << autolabor::can::pack<ecu<>::current_position_tx>();
+					task_time[0] = _now;
+				}
+				if (_now - task_time[1] > rudder_interval) {
+					port << autolabor::can::pack<tcu<0>::current_position_tx>();
+					task_time[1] = _now;
+				}
+				if (_now - task_time[2] > state_interval) {
+					port << autolabor::can::pack<unit<>::state_tx>();
+					task_time[2] = _now;
+				}
+			} catch (std::exception &e) {
+				running.store(false);
+				return;
 			}
 			
 			std::this_thread::sleep_for(delay_interval);
@@ -148,13 +150,12 @@ chassis::chassis(const std::string &port_name,
 	});
 	
 	// region receive
-	write_thread = std::thread([this] {
+	write_thread = std::thread([=] {
 		auto left_ready  = false,
 		     right_ready = false;
 		auto delta_left  = .0,
 		     delta_right = .0;
 		auto time        = now();
-		auto copy        = this->parameters;
 		auto speed       = .0f;
 		
 		decltype(time) reply_time[] = {time, time, time};
@@ -197,9 +198,9 @@ chassis::chassis(const std::string &port_name,
 					_left.update(_now, value);
 					
 					if (right_ready) {
-						odometry_t delta = delta_differential_t{copy.width,
-						                                        copy.radius * delta_left,
-						                                        copy.radius * delta_right,
+						odometry_t delta = delta_differential_t{chassis_config.width,
+						                                        chassis_config.radius * delta_left,
+						                                        chassis_config.radius * delta_right,
 						                                        _now - time};
 						add(_odometry, delta);
 						right_ready = false;
@@ -215,9 +216,9 @@ chassis::chassis(const std::string &port_name,
 					_right.update(_now, value);
 					
 					if (left_ready) {
-						odometry_t delta = delta_differential_t{copy.width,
-						                                        copy.radius * delta_left,
-						                                        copy.radius * delta_right,
+						odometry_t delta = delta_differential_t{chassis_config.width,
+						                                        chassis_config.radius * delta_left,
+						                                        chassis_config.radius * delta_right,
 						                                        _now - time};
 						add(_odometry, delta);
 						left_ready = false;
@@ -234,13 +235,14 @@ chassis::chassis(const std::string &port_name,
 						target         = {0, value};
 					
 					physical current{speed, value};
-					auto     optimized = optimize(&target, &current, this->optimize_width, this->acceleration);
-					auto     wheels    = physical_to_wheels(&optimized, &copy);
+					auto     optimized = optimize(&target, &current, optimize_width, acceleration);
+					auto     wheels    = physical_to_wheels(&optimized, &chassis_config);
 					speed = optimized.speed;
 					
 					auto left   = PULSES_OF(wheels.left, default_wheel_k);
 					auto right  = PULSES_OF(wheels.right, default_wheel_k);
 					auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
+					
 					port << pack_big_endian<ecu<0>::target_speed, int>(left)
 					     << pack_big_endian<ecu<1>::target_speed, int>(right)
 					     << pack_big_endian<tcu<0>::target_position, short>(rudder);
@@ -249,8 +251,15 @@ chassis::chassis(const std::string &port_name,
 		
 		uint8_t buffer[28];
 		while (running) {
-			auto      actual = port.read(buffer, sizeof(buffer));
-			for (auto i      = 0; i < actual; ++i) parser(buffer[i]);
+			auto actual = port.read(buffer, sizeof(buffer));
+			
+			for (auto i = 0; i < actual; ++i)
+				try { parser(buffer[i]); }
+				catch (std::exception &e) {
+					running       = false;
+					chassis_state = {};
+					return;
+				}
 		}
 	});
 	// endregion
@@ -298,4 +307,8 @@ void chassis::set_target(double speed, double rudder) {
 
 autolabor::odometry_t chassis::odometry() const {
 	return _odometry;
+}
+
+bool chassis::is_running() const {
+	return running;
 }
