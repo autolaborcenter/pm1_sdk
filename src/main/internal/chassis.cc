@@ -270,8 +270,6 @@ chassis::~chassis() {
 	
 	read_thread.join();
 	write_thread.join();
-	
-	throw std::exception("sdfghjkdfghjkdfghjkl");
 }
 
 autolabor::motor_t<> chassis::left() const {
