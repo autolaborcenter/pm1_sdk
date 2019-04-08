@@ -1,6 +1,6 @@
 #include <iostream>
 #include <thread>
-#include "../pm1_sdk.h"
+#include "pm1_sdk.h"
 
 int main() {
 	std::thread([] {
@@ -25,6 +25,7 @@ int main() {
 			std::cout << result.data << std::endl;
 		else
 			std::cerr << result.error_info << std::endl;
+		autolabor::pm1::delay(1);
 		autolabor::pm1::shutdown();
 	}
 }
