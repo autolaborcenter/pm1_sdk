@@ -15,8 +15,14 @@ extern "C" {
 
 using namespace autolabor::pm1;
 
+std::vector<node_state_t> chassis_state_t::as_vector() const {
+	return {_ecu0, _ecu1, _tcu};
+}
+
 bool chassis_state_t::check_all(node_state_t target) const {
-	return _ecu0 == target && _ecu1 == target && _tcu == target;
+	auto vector = as_vector();
+	return std::all_of(vector.cbegin(), vector.cend(),
+	                   [target](node_state_t it) { return it == target; });
 }
 
 template<class t>
@@ -43,12 +49,13 @@ chassis::chassis(const std::string &port_name,
 	  running(true) {
 	using result_t = autolabor::can::parser::result_type;
 	
-	constexpr static auto odometry_interval = std::chrono::milliseconds(50);
-	constexpr static auto rudder_interval   = std::chrono::milliseconds(20);
-	constexpr static auto state_interval    = std::chrono::milliseconds(1000);
-	constexpr static auto state_timeout     = state_interval * 2;
-	constexpr static auto control_timeout   = std::chrono::milliseconds(500);
-	constexpr static auto check_timeout     = std::chrono::milliseconds(1000);
+	constexpr static auto odometry_interval   = std::chrono::milliseconds(50);
+	constexpr static auto rudder_interval     = std::chrono::milliseconds(20);
+	constexpr static auto state_interval      = std::chrono::milliseconds(1000);
+	constexpr static auto state_timeout       = state_interval * 2;
+	constexpr static auto control_timeout     = std::chrono::milliseconds(500);
+	constexpr static auto check_timeout       = std::chrono::milliseconds(1000);
+	constexpr static auto check_state_timeout = std::chrono::milliseconds(100);
 	
 	_left.time = _right.time = _rudder.time = now();
 	
@@ -172,15 +179,15 @@ chassis::chassis(const std::string &port_name,
 				// 处理
 				const auto msg = result.message;
 				
-				if (unit < ecu < 0 >> ::state_rx::match(msg)) {
+				if (unit<ecu<0 >>::state_rx::match(msg)) {
 					chassis_state._ecu0 = parse_state(*msg.data.data);
 					reply_time[0] = _now;
 					
-				} else if (unit < ecu < 1 >> ::state_rx::match(msg)) {
+				} else if (unit<ecu<1 >>::state_rx::match(msg)) {
 					chassis_state._ecu1 = parse_state(*msg.data.data);
 					reply_time[1] = _now;
 					
-				} else if (unit < tcu < 0 >> ::state_rx::match(msg)) {
+				} else if (unit<tcu<0 >>::state_rx::match(msg)) {
 					chassis_state._tcu = parse_state(*msg.data.data);
 					reply_time[2] = _now;
 					
@@ -256,7 +263,14 @@ chassis::chassis(const std::string &port_name,
 		chassis_state = {};
 	});
 	// endregion
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	for (const auto time = now();
+	     now() - time < check_state_timeout;) {
+		auto vector = chassis_state.as_vector();
+		if (std::none_of(vector.cbegin(), vector.cend(),
+		                 [](node_state_t it) { return it == node_state_t::unknown; }))
+			break;
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	}
 }
 
 chassis::~chassis() {
