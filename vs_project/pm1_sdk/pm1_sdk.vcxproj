@@ -71,10 +71,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)_debug</TargetName>
-    <OutDir>$(SolutionDir)\out\debug</OutDir>
+    <OutDir>$(SolutionDir)\out\debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)\out\release</OutDir>
+    <OutDir>$(SolutionDir)\out\release\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -141,7 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\main\exception.h" />
+    <ClInclude Include="..\..\src\main\exception_engine.hh" />
     <ClInclude Include="..\..\src\main\internal\can\info.h" />
     <ClInclude Include="..\..\src\main\internal\can\pack.h" />
     <ClInclude Include="..\..\src\main\internal\can\parser.hh" />
@@ -154,14 +154,19 @@
     <ClInclude Include="..\..\src\main\internal\control_model\optimization.h" />
     <ClInclude Include="..\..\src\main\internal\control_model\pi.h" />
     <ClInclude Include="..\..\src\main\internal\odometry_t.hh" />
+    <ClInclude Include="..\..\src\main\internal\raii\weak_lock_guard.hh" />
+    <ClInclude Include="..\..\src\main\internal\raii\weak_shared_lock.hh" />
     <ClInclude Include="..\..\src\main\internal\rudder_controller.hh" />
     <ClInclude Include="..\..\src\main\internal\serial\serial.h" />
     <ClInclude Include="..\..\src\main\internal\serial\serial_port.hh" />
     <ClInclude Include="..\..\src\main\internal\serial_extension.h" />
     <ClInclude Include="..\..\src\main\internal\time_extensions.h" />
     <ClInclude Include="..\..\src\main\pm1_sdk.h" />
+    <ClInclude Include="..\..\src\main\pm1_sdk_native.h" />
+    <ClInclude Include="..\..\src\main\safe_shared_ptr.hh" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\main\exception_engine.cc" />
     <ClCompile Include="..\..\src\main\internal\can\pack.cpp" />
     <ClCompile Include="..\..\src\main\internal\can\parser.cc" />
     <ClCompile Include="..\..\src\main\internal\can\parse_engine.cc" />
@@ -175,7 +180,8 @@
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_osx.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_win.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc" />
-    <ClCompile Include="..\..\src\main\pm1_sdk_sync.cpp" />
+    <ClCompile Include="..\..\src\main\pm1_sdk.cpp" />
+    <ClCompile Include="..\..\src\main\pm1_sdk_native.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

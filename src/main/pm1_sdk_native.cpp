@@ -5,6 +5,7 @@
 #include "pm1_sdk_native.h"
 
 #include <atomic>
+#include <vector>
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
@@ -12,8 +13,8 @@
 #include "exception_engine.hh"
 #include "safe_shared_ptr.hh"
 
-#include "internal/serial/serial.h"
 #include "internal/chassis.hh"
+#include "internal/serial/serial.h"
 #include "internal/raii/weak_shared_lock.hh"
 #include "internal/process_controller.hh"
 #include "internal/raii/weak_lock_guard.hh"
@@ -82,7 +83,7 @@ initialize(const char *port, double *const progress) {
 	
 	auto list = port == nullptr || std::strlen(port) == 0
 	            ? serial_ports()
-	            : std::vector{std::string(port)};
+	            : std::vector<std::string>{std::string(port)};
 	
 	if (list.empty())
 		exceptions.set(id, "no available port");
@@ -181,7 +182,7 @@ STD_CALL autolabor::pm1::native::
 check_state(unsigned char &what) {
 	return use_ptr([&what](ptr_t ptr) {
 		auto states = ptr->state().as_vector();
-		what = 1 == std::unordered_set(states.begin(), states.end()).size()
+		what = 1 == std::unordered_set<node_state_t>(states.begin(), states.end()).size()
 		       ? static_cast<unsigned char>(states.front())
 		       : 0x7f;
 	});

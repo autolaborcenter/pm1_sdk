@@ -66,10 +66,22 @@
     <ClInclude Include="..\..\src\main\internal\control_model\pi.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\exception.h">
+    <ClInclude Include="..\..\src\main\internal\serial\serial_port.hh">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\serial\serial_port.hh">
+    <ClInclude Include="..\..\src\main\exception_engine.hh">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\pm1_sdk_native.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\safe_shared_ptr.hh">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\internal\raii\weak_lock_guard.hh">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\internal\raii\weak_shared_lock.hh">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -113,7 +125,13 @@
     <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\pm1_sdk_sync.cpp">
+    <ClCompile Include="..\..\src\main\exception_engine.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\pm1_sdk.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\pm1_sdk_native.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

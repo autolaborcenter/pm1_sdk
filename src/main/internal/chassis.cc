@@ -105,7 +105,7 @@ chassis::chassis(const std::string &port_name,
 		while (!done()) {
 			auto actual = port.read(buffer, sizeof(buffer));
 			
-			for (auto i = 0; i < actual; ++i) parser(buffer[i]);
+			for (size_t i = 0; i < actual; ++i) parser(buffer[i]);
 			
 			if (timeout()) {
 				task.join();
@@ -255,7 +255,7 @@ chassis::chassis(const std::string &port_name,
 			try {
 				auto actual = port.read(buffer, sizeof(buffer));
 				
-				for (auto i = 0; i < actual; ++i) parser(buffer[i]);
+				for (size_t i = 0; i < actual; ++i) parser(buffer[i]);
 				
 			} catch (std::exception &) { running = false; }
 		}

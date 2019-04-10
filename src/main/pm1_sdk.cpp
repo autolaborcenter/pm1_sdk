@@ -11,7 +11,10 @@
 
 #include "internal/serial/serial.h"
 #include "internal/time_extensions.h"
+
+extern "C" {
 #include "internal/control_model/chassis_config_t.h"
+}
 
 autolabor::pm1::result<void>
 on_native(std::function < autolabor::pm1::native::handler_t() > && block) {
