@@ -20,111 +20,120 @@ namespace autolabor {
 			using handler_t = unsigned long;
 			
 			/**
-			* 获取错误信息
-			*/
+			 * 获取错误信息
+			 */
 			DLL_EXPORT const char *STD_CALL
-			get_error_info(handler_t);
+			get_error_info(handler_t) noexcept;
 			
 			/**
-			* 移除错误信息
-			*/
+			 * 移除错误信息
+			 */
 			DLL_EXPORT void STD_CALL
-			remove_error_info(handler_t);
+			remove_error_info(handler_t) noexcept;
 			
 			/**
-			* 清除错误信息
-			*/
+			 * 清除错误信息
+			 */
 			DLL_EXPORT void STD_CALL
-			clear_error_info();
+			clear_error_info() noexcept;
 			
+			/**
+			 * 获取当前打开的串口名字
+			 */
 			DLL_EXPORT const char *STD_CALL
-			get_current_port();
+			get_current_port() noexcept;
 			
 			/**
-			* 初始化
-			*/
+			 * 初始化
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			initialize(const char *port, double *const progress);
+			initialize(const char *port, double *const progress) noexcept;
 			
 			/**
-			* 关闭
-			*/
+			 * 关闭
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			shutdown();
+			shutdown() noexcept;
 			
 			/**
-			* 获取里程计值
-			*/
+			 * 获取里程计值
+			 */
 			DLL_EXPORT handler_t STD_CALL
 			get_odometry(double &s, double &sa,
 			             double &x, double &y, double &theta,
-			             double &vx, double &vy, double &w);
+			             double &vx, double &vy, double &w) noexcept;
 			
 			/**
-			* 清除里程计累计值
-			*/
+			 * 清除里程计累计值
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			reset_odometry();
+			reset_odometry() noexcept;
 			
 			/**
-			* 锁定底盘
-			*/
+			 * 锁定底盘
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			lock();
+			lock() noexcept;
 			
 			/**
-			* 解锁底盘
-			*/
+			 * 解锁底盘
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			unlock();
+			unlock() noexcept;
 			
 			/**
-			* 检查节点状态
-			*
-			* @param what
-			*        0x00 : unknown
-			*        0x01 : normal
-			*        0xff : lock
-			*        else : error
-			*/
+			 * 检查节点状态
+			 *
+			 * @param what
+			 *        0x00 : unknown
+			 *        0x01 : normal
+			 *        0xff : lock
+			 *        else : error
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			check_state(unsigned char &what);
+			check_state(unsigned char &what) noexcept;
 			
 			/**
-			* 行驶
-			*/
+			 * 行驶
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			drive(double v, double w);
+			drive(double v, double w) noexcept;
 			
 			/**
-			* 行驶
-			*/
+			 * 行驶
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			drive_spatial(double v, double w, double spatium, double &progress);
+			drive_spatial(double v,
+			              double w,
+			              double spatium,
+			              double &progress) noexcept;
 			
 			/**
-			* 行驶
-			*/
+			 * 行驶
+			 */
 			DLL_EXPORT handler_t STD_CALL
-			drive_timing(double v, double w, double time, double &progress);
+			drive_timing(double v,
+			             double w,
+			             double time,
+			             double &progress) noexcept;
 			
 			/**
-			* 暂停执行阻塞控制
-			*/
+			 * 暂停执行阻塞控制
+			 */
 			DLL_EXPORT void STD_CALL
-			pause();
+			pause() noexcept;
 			
 			/**
-			* 恢复执行阻塞控制
-			*/
+			 * 恢复执行阻塞控制
+			 */
 			DLL_EXPORT void STD_CALL
-			resume();
+			resume() noexcept;
 			
 			/**
-			* 取消所有正在执行的动作
-			*/
+			 * 取消所有正在执行的动作
+			 */
 			DLL_EXPORT void STD_CALL
-			cancel_all();
+			cancel_all() noexcept;
 		}
 	}
 }

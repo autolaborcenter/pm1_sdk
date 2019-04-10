@@ -43,19 +43,19 @@ inline handler_t use_ptr(std::function < void(ptr_t) > && block) {
 
 const char *
 STD_CALL autolabor::pm1::native::
-get_error_info(handler_t handler) {
+get_error_info(handler_t handler) noexcept {
 	return exceptions[handler];
 }
 
 void
 STD_CALL autolabor::pm1::native::
-remove_error_info(handler_t handler) {
+remove_error_info(handler_t handler) noexcept {
 	exceptions.remove(handler);
 }
 
 void
 STD_CALL autolabor::pm1::native::
-clear_error_info() {
+clear_error_info() noexcept {
 	exceptions.clear();
 }
 
@@ -71,13 +71,13 @@ std::string current_port;
 
 const char *
 STD_CALL autolabor::pm1::native::
-get_current_port() {
+get_current_port() noexcept {
 	return current_port.c_str();
 }
 
 handler_t
 STD_CALL autolabor::pm1::native::
-initialize(const char *port, double *const progress) {
+initialize(const char *port, double *const progress) noexcept {
 	handler_t id = ++task_id;
 	if (progress) *progress = 0;
 	
@@ -113,7 +113,7 @@ initialize(const char *port, double *const progress) {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-shutdown() {
+shutdown() noexcept {
 	handler_t id = ++task_id;
 	if (!chassis_ptr(nullptr))
 		exceptions.set(id, "null chassis pointer");
@@ -125,7 +125,7 @@ handler_t
 STD_CALL autolabor::pm1::native::
 get_odometry(double &s, double &sa,
              double &x, double &y, double &theta,
-             double &vx, double &vy, double &w) {
+             double &vx, double &vy, double &w) noexcept {
 	handler_t id = ++task_id;
 	try {
 		chassis_ptr.read<void>([&](ptr_t ptr) {
@@ -155,7 +155,7 @@ get_odometry(double &s, double &sa,
 
 handler_t
 STD_CALL autolabor::pm1::native::
-reset_odometry() {
+reset_odometry() noexcept {
 	return use_ptr([](ptr_t ptr) {
 		odometry_mark = ptr->odometry();
 	});
@@ -163,7 +163,7 @@ reset_odometry() {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-lock() {
+lock() noexcept {
 	return use_ptr([](ptr_t ptr) {
 		ptr->disable();
 	});
@@ -171,7 +171,7 @@ lock() {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-unlock() {
+unlock() noexcept {
 	return use_ptr([](ptr_t ptr) {
 		ptr->enable();
 	});
@@ -179,7 +179,7 @@ unlock() {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-check_state(unsigned char &what) {
+check_state(unsigned char &what) noexcept {
 	return use_ptr([&what](ptr_t ptr) {
 		auto states = ptr->state().as_vector();
 		what = 1 == std::unordered_set<node_state_t>(states.begin(), states.end()).size()
@@ -190,7 +190,7 @@ check_state(unsigned char &what) {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-drive(double v, double w) {
+drive(double v, double w) noexcept {
 	velocity temp{static_cast<float>(v), static_cast<float>(w)};
 	
 	return use_ptr(
@@ -202,13 +202,22 @@ std::mutex    action_mutex;
 volatile bool pause_flag  = false,
               cancel_flag = false;
 
-void block(physical target,
-           double limit,
-           const autolabor::process_controller &controller,
-           std::function<double(ptr_t)> &&measure,
-           double &progress) {
+handler_t block(double v,
+                double w,
+                double limit,
+                const autolabor::process_controller &controller,
+                std::function<double(ptr_t)> &&measure,
+                double &progress) noexcept {
+	handler_t id    = ++task_id;
+	
+	velocity temp{static_cast<float>(v), static_cast<float>(w)};
+	auto     target = velocity_to_physical(&temp, &default_config);
+	
 	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
-	if (!lock) throw std::exception("another action is invoking");
+	if (!lock) {
+		exceptions.set(id, "another action is invoking");
+		return id;
+	}
 	
 	autolabor::process_t process{0, 0, target.speed};
 	progress = 0;
@@ -216,52 +225,58 @@ void block(physical target,
 	auto rest     = 1 - progress;
 	auto paused   = true;
 	auto finished = false;
-	while (!finished) {
-		if (cancel_flag) {
-			chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
-			throw std::exception("action canceled");
+	try {
+		while (!finished) {
+			if (cancel_flag) {
+				chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
+				throw std::exception("action canceled");
+			}
+			
+			if (paused) {
+				// 检查恢复标记
+				if (!(paused = pause_flag)) {
+					process.begin = chassis_ptr.read(measure);
+					process.end   = process.begin + limit;
+				}
+			} else {
+				finished = chassis_ptr.read<bool>([&](ptr_t ptr) {
+					constexpr static auto disabled = autolabor::pm1::node_state_t::disabled;
+					
+					// 检查状态
+					auto states = ptr->state();
+					if (!states.check_all())
+						throw std::exception(states.check_all(disabled)
+						                     ? "chassis is locked"
+						                     : "critical error");
+					// 检查任务进度
+					auto current = measure(ptr);
+					auto sub     = process[current];
+					
+					// 任务完成
+					if ((progress = 1 - rest * (1 - sub)) >= 1)
+						return true;
+					// 检查暂停标记
+					if ((paused   = pause_flag)) {
+						limit *= (1 - sub); // 子任务规模缩减
+						rest *= (1 - sub);  // 子任务比例缩减
+						ptr->set_target(0, target.rudder);
+					} else
+						ptr->set_target(std::abs(target.rudder - ptr->rudder().position) > 2E-3
+						                ? 0
+						                : controller(process, current),
+						                target.rudder);
+					return false;
+				});
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 		
-		if (paused) {
-			// 检查恢复标记
-			if (!(paused = pause_flag)) {
-				process.begin = chassis_ptr.read(measure);
-				process.end   = process.begin + limit;
-			}
-		} else {
-			finished = chassis_ptr.read<bool>([&](ptr_t ptr) {
-				constexpr static auto disabled = autolabor::pm1::node_state_t::disabled;
-				
-				// 检查状态
-				auto states = ptr->state();
-				if (!states.check_all())
-					throw std::exception(states.check_all(disabled)
-					                     ? "chassis is locked"
-					                     : "critical error");
-				// 检查任务进度
-				auto current = measure(ptr);
-				auto sub     = process[current];
-				
-				// 任务完成
-				if ((progress = 1 - rest * (1 - sub)) >= 1)
-					return true;
-				// 检查暂停标记
-				if ((paused   = pause_flag)) {
-					limit *= (1 - sub); // 子任务规模缩减
-					rest *= (1 - sub);  // 子任务比例缩减
-					ptr->set_target(0, target.rudder);
-				} else
-					ptr->set_target(std::abs(target.rudder - ptr->rudder().position) > 2E-3
-					                ? 0
-					                : controller(process, current),
-					                target.rudder);
-				return false;
-			});
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
+	} catch (const std::exception &e) {
+		exceptions.set(id, e.what());
 	}
 	
-	chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
+	return id;
 }
 
 handler_t
@@ -269,25 +284,17 @@ STD_CALL autolabor::pm1::native::
 drive_spatial(double v,
               double w,
               double spatium,
-              double &progress) {
-	velocity  temp{static_cast<float>(v), static_cast<float>(w)};
-	auto      physical = velocity_to_physical(&temp, &default_config);
-	handler_t id       = ++task_id;
-	try {
-		block(physical, spatium,
-		      {0.5, 0.1, 12, 4},
-		      [](ptr_t ptr) {
-			      const static auto w_2 = default_config.width / 2;
-			
-			      auto odometry = ptr->odometry();
-			      return std::abs(odometry.s + w_2 * odometry.sa) +
-			             std::abs(odometry.s - w_2 * odometry.sa);
-		      },
-		      progress);
-	} catch (std::exception &e) {
-		exceptions.set(id, e.what());
-	}
-	return id;
+              double &progress) noexcept {
+	return block(v, w, spatium,
+	             {0.5, 0.1, 12, 4},
+	             [](ptr_t ptr) {
+		             const static auto w_2 = default_config.width / 2;
+		
+		             auto odometry = ptr->odometry();
+		             return std::abs(odometry.s + w_2 * odometry.sa) +
+		                    std::abs(odometry.s - w_2 * odometry.sa);
+	             },
+	             progress);
 }
 
 handler_t
@@ -295,36 +302,28 @@ STD_CALL autolabor::pm1::native::
 drive_timing(double v,
              double w,
              double time,
-             double &progress) {
-	velocity  temp{static_cast<float>(v), static_cast<float>(w)};
-	auto      physical = velocity_to_physical(&temp, &default_config);
-	handler_t id       = ++task_id;
-	try {
-		block(physical, time,
-		      {0.5, 0.1, 5, 2},
-		      [](ptr_t ptr) {
-			      return std::chrono::duration_cast<seconds_floating>(
-				      now().time_since_epoch()
-			      ).count();
-		      },
-		      progress);
-	} catch (std::exception &e) {
-		exceptions.set(id, e.what());
-	}
-	return id;
+             double &progress) noexcept {
+	return block(v, w, time,
+	             {0.5, 0.1, 5, 2},
+	             [](ptr_t) {
+		             return std::chrono::duration_cast<seconds_floating>(
+			             now().time_since_epoch()
+		             ).count();
+	             },
+	             progress);
 }
 
 void
 STD_CALL autolabor::pm1::native::
-pause() { pause_flag = true; }
+pause() noexcept { pause_flag = true; }
 
 void
 STD_CALL autolabor::pm1::native::
-resume() { pause_flag = false; }
+resume() noexcept { pause_flag = false; }
 
 void
 STD_CALL autolabor::pm1::native::
-cancel_all() {
+cancel_all() noexcept {
 	cancel_flag = true;
 	{ std::lock_guard<std::mutex> wait(action_mutex); }
 	cancel_flag = false;
