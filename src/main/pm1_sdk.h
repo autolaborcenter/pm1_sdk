@@ -20,9 +20,9 @@ namespace autolabor {
 	namespace pm1 {
 		enum class chassis_state : uint8_t {
 			unknown  = 0x00,
-			enabled  = 0x01,
+			unlocked = 0x01,
 			error    = 0x7f,
-			disabled = 0xff
+			locked   = 0xff
 		};
 		
 		/** 表示全局指令执行的结果 */
