@@ -1,10 +1,3 @@
-constexpr auto
-	chassis_pointer_busy = "chassis pointer is busy",
-	null_chassis_pointer = "null chassis pointer",
-	infinite_action      = "action never complete",
-	invalid_target       = "invalid target",
-	action_canceled      = "action canceled";
-
 //
 // Created by User on 2019/4/10.
 //
@@ -122,7 +115,7 @@ STD_CALL autolabor::pm1::native::
 shutdown() {
 	handler_t id = ++task_id;
 	if (!chassis_ptr(nullptr))
-		exceptions.set(id, null_chassis_pointer);
+		exceptions.set(id, "null chassis pointer");
 	current_port.clear();
 	return id;
 }

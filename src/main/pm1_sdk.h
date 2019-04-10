@@ -17,14 +17,11 @@
 #include <vector>
 
 namespace autolabor::pm1 {
-	enum class node_state : uint8_t {
+	enum class chassis_state : uint8_t {
 		unknown  = 0x00,
 		enabled  = 0x01,
+		error    = 0x7f,
 		disabled = 0xff
-	};
-	
-	struct chassis_state {
-		node_state _ecu0, _ecu1, _tcu;
 	};
 	
 	/** 表示全局指令执行的结果 */
