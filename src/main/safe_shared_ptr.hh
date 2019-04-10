@@ -26,7 +26,7 @@ public:
 	}
 	
 	template<class t>
-	inline t read(std::function<t(ptr_t)> &&block) {
+	inline t read(const std::function<t(ptr_t)> &block) {
 		weak_shared_lock lock(mutex);
 		if (!lock)
 			throw std::exception("pointer is busy");

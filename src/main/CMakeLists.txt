@@ -11,7 +11,7 @@ add_library(pm1_sdk
         # --------------------------
         # pm1 sdk
         pm1_sdk.h
-        pm1_sdk_sync.cpp
+        pm1_sdk.cpp
 
         exception_engine.hh
         exception_engine.cc

@@ -53,130 +53,146 @@ namespace autolabor::pm1 {
 	};
 	
 	/**
-	* @return 全部串口的名字列表
-	*/
+	 * @return 全部串口的名字列表
+	 */
 	DLL_EXPORT std::vector<std::string> serial_ports();
 	
 	/**
-	* 初始化
-	*
-	* @param port 串口名字
-	* @returns 是否成功
-	*/
-	DLL_EXPORT result<std::string> initialize(const std::string &port = "");
+	 * 初始化
+	 *
+	 * @param port 串口名字
+	 * @returns 是否成功
+	 */
+	DLL_EXPORT result<std::string> initialize(
+		const std::string &port = "",
+		double *progress = nullptr);
 	
 	/**
-	* 关闭
-	*/
+	 * 关闭
+	 */
 	DLL_EXPORT result<void> shutdown();
-	
-	/**
-	* 控制机器人运行
-	*
-	* @param v 线速度
-	* @param w 角速度
-	*/
-	DLL_EXPORT result<void> drive(double v, double w);
 	
 	struct odometry { double x, y, yaw, vx, vy, w; };
 	
 	/**
-	* 获取里程计值
-	*
-	* @return 里程计值
-	*/
+	 * 获取里程计值
+	 *
+	 * @return 里程计值
+	 */
 	DLL_EXPORT result<odometry> get_odometry();
 	
 	/**
-	* 清除里程计累计值
-	*/
+	 * 清除里程计累计值
+	 */
 	DLL_EXPORT result<void> reset_odometry();
 	
 	/**
-	* 锁定底盘
-	*/
+	 * 锁定底盘
+	 */
 	DLL_EXPORT result<void> lock();
 	
 	/**
-	* 解锁底盘
-	*/
+	 * 解锁底盘
+	 */
 	DLL_EXPORT result<void> unlock();
 	
 	/**
-	* 检查节点状态
-	*/
+	 * 检查节点状态
+	 */
 	DLL_EXPORT result<chassis_state> get_chassis_state();
 	
 	/**
-	* 延时
-	*
-	* @param time 时间
-	*/
+	 * 延时
+	 *
+	 * @param time 时间
+	 */
 	DLL_EXPORT void delay(double time);
 	
 	/**
-	* 走直线
-	*
-	* @param speed    线速度
-	* @param distance 行驶距离
-	*/
-	DLL_EXPORT result<void> go_straight(double speed, double distance);
+     * 控制机器人运行
+     *
+     * @param v 线速度
+     * @param w 角速度
+     */
+	DLL_EXPORT result<void> drive(double v, double w);
 	
 	/**
-	* 走直线
-	*
-	* @param speed 线速度
-	* @param time  行驶时间
-	*/
-	DLL_EXPORT result<void> go_straight_timing(double speed, double time);
+	 * 走直线
+	 *
+	 * @param speed    线速度
+	 * @param distance 行驶距离
+	 */
+	DLL_EXPORT result<void> go_straight(double speed,
+	                                    double distance,
+	                                    double *progress = nullptr);
 	
 	/**
-	* 原地转
-	*
-	* @param speed 角速度
-	* @param rad   弧度
-	*/
-	DLL_EXPORT result<void> turn_around(double speed, double rad);
+	 * 走直线
+	 *
+	 * @param speed 线速度
+	 * @param time  行驶时间
+	 */
+	DLL_EXPORT result<void> go_straight_timing(double speed,
+	                                           double time,
+	                                           double *progress = nullptr);
 	
 	/**
-	* 原地转
-	*
-	* @param speed 角速度
-	* @param time  时间
-	*/
-	DLL_EXPORT result<void> turn_around_timing(double speed, double time);
+	 * 原地转
+	 *
+	 * @param speed 角速度
+	 * @param rad   弧度
+	 */
+	DLL_EXPORT result<void> turn_around(double speed,
+	                                    double rad,
+	                                    double *progress = nullptr);
 	
 	/**
-	* 走圆弧
-	*
-	* @param speed 线速度
-	* @param r     转弯半径
-	* @param rad   行驶时间
-	*/
-	DLL_EXPORT result<void> go_arc(double speed, double r, double rad);
+	 * 原地转
+	 *
+	 * @param speed 角速度
+	 * @param time  时间
+	 */
+	DLL_EXPORT result<void> turn_around_timing(double speed,
+	                                           double time,
+	                                           double *progress = nullptr);
 	
 	/**
-	* 走圆弧
-	*
-	* @param speed 线速度
-	* @param r     转弯半径
-	* @param time  行驶时间
-	*/
-	DLL_EXPORT result<void> go_arc_timing(double speed, double r, double time);
+	 * 走圆弧
+	 *
+	 * @param speed 线速度
+	 * @param r     转弯半径
+	 * @param rad   行驶时间
+	 */
+	DLL_EXPORT result<void> go_arc(double speed,
+	                               double r,
+	                               double rad,
+	                               double *progress = nullptr);
 	
 	/**
-	* 暂停执行阻塞控制
-	*/
+	 * 走圆弧
+	 *
+	 * @param speed 线速度
+	 * @param r     转弯半径
+	 * @param time  行驶时间
+	 */
+	DLL_EXPORT result<void> go_arc_timing(double speed,
+	                                      double r,
+	                                      double time,
+	                                      double *progress = nullptr);
+	
+	/**
+	 * 暂停执行阻塞控制
+	 */
 	DLL_EXPORT result<void> pause();
 	
 	/**
-	* 恢复执行阻塞控制
-	*/
+	 * 恢复执行阻塞控制
+	 */
 	DLL_EXPORT result<void> resume();
 	
 	/**
-	* 取消所有正在执行的动作
-	*/
+	 * 取消所有正在执行的动作
+	 */
 	DLL_EXPORT result<void> cancel_all();
 }
 

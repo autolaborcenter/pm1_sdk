@@ -17,6 +17,10 @@ namespace autolabor {
 		double begin, // 起点
 		       end,   // 终点
 		       speed; // 目标速度
+		
+		double operator[](double current) const {
+			return (current - begin) / (end - begin);
+		}
 	};
 	
 	/** 过程控制器 */

@@ -35,6 +35,9 @@ namespace autolabor::pm1::native {
 	DLL_EXPORT void STD_CALL
 	clear_error_info();
 	
+	DLL_EXPORT const char *STD_CALL
+	get_current_port();
+	
 	/**
 	 * 初始化
 	 */
@@ -95,31 +98,31 @@ namespace autolabor::pm1::native {
 	 * 行驶
 	 */
 	DLL_EXPORT handler_t STD_CALL
-	drive_spatial(double v, double w, double spatium, double *const progress);
+	drive_spatial(double v, double w, double spatium, double &progress);
 	
 	/**
 	 * 行驶
 	 */
 	DLL_EXPORT handler_t STD_CALL
-	drive_timing(double v, double w, double time, double *const progress);
+	drive_timing(double v, double w, double time, double &progress);
 	
 	/**
 	 * 暂停执行阻塞控制
 	 */
-	DLL_EXPORT handler_t STD_CALL
+	DLL_EXPORT void STD_CALL
 	pause();
 	
 	/**
 	 * 恢复执行阻塞控制
 	 */
-	DLL_EXPORT handler_t STD_CALL
+	DLL_EXPORT void STD_CALL
 	resume();
 	
 	/**
 	 * 取消所有正在执行的动作
 	 */
-	DLL_EXPORT handler_t STD_CALL
-	cancel_all(double *const progress);
+	DLL_EXPORT void STD_CALL
+	cancel_all();
 }
 
 
