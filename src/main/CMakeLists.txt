@@ -10,9 +10,16 @@ add_subdirectory(internal/control_model)
 add_library(pm1_sdk
         # --------------------------
         # pm1 sdk
-        exception.h
         pm1_sdk.h
         pm1_sdk_sync.cpp
+
+        exception_engine.hh
+        exception_engine.cc
+
+        safe_shared_ptr.hh
+
+        pm1_sdk_native.h
+        pm1_sdk_native.cpp
 
         internal/process_controller.hh
         # --------------------------
