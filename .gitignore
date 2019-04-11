@@ -4,8 +4,7 @@
 
 # cmake
 out/
-cmake-build-debug/
-cmake-build-release/
+cmake-build-*
 
 # vs
 vs_project/pm1_sdk/Debug/

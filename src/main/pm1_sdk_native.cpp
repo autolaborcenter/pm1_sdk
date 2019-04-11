@@ -356,6 +356,8 @@ adjust_rudder(double offset,
 	
 	try {
 		while (true) {
+			using namespace std::chrono_literals;
+			
 			if (cancel_flag) {
 				chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
 				throw std::exception("action canceled");
@@ -369,6 +371,7 @@ adjust_rudder(double offset,
 					
 					if (difference < pi_f / 120) {
 						progress = 1;
+						std::this_thread::sleep_for(50ms);
 						ptr->reset_rudder();
 						return true;
 					} else {
@@ -380,7 +383,6 @@ adjust_rudder(double offset,
 				
 				if (finished) break;
 			}
-			using namespace std::chrono_literals;
 			std::this_thread::sleep_for(50ms);
 		}
 	} catch (std::exception &e) {

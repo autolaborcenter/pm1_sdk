@@ -339,6 +339,6 @@ void chassis::set_target(double speed, double rudder) {
 }
 
 void chassis::reset_rudder() {
-	target.rudder = 0;
 	port << autolabor::can::pack<tcu<0>::encoder_reset>();
+	target.rudder = 0;
 }

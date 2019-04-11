@@ -10,13 +10,12 @@ using namespace autolabor::pm1::native;
 
 int main() {
 	double        progress = 0;
-	volatile bool flag     = true;
-	auto          display  = std::thread([&] {
-		while (flag) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-//			std::cout << 100 * progress << '%' << std::endl;
+	std::thread([&] {
+		while (true) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			std::cout << 100 * progress << '%' << std::endl;
 		}
-	});
+	}).detach();
 	
 	auto handler = initialize(nullptr, progress);
 	auto error   = std::string(get_error_info(handler));
@@ -40,7 +39,5 @@ int main() {
 	
 	std::cout << s << ", " << x << std::endl;
 	
-	flag = false;
-	display.join();
 	return 0;
 }

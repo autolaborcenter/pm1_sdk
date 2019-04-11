@@ -2,15 +2,14 @@ cmake_minimum_required(VERSION 3.12)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_DEBUG_POSTFIX "_debug")
-
-if (CMAKE_CL_64)
-    set(ADDRESS_MODEL 64)
-    set(NODE_TARGET x64)
+if (${CMAKE_SIZEOF_VOID_P} MATCHES "8")
+    set(ARCH "x64")
 else ()
-    set(ADDRESS_MODEL 32)
-    set(NODE_TARGET x86)
+    set(ARCH "x86")
 endif ()
+
+set(CMAKE_DEBUG_POSTFIX "_debug")
+message("${ARCH} selected")
 
 add_subdirectory(internal/can)
 add_subdirectory(internal/control_model)
@@ -77,10 +76,7 @@ set(NATIVE_LIBRARY
         internal/chassis.cc
 
         internal/odometry_t.hh
-        internal/odometry_t.cc
-        # --------------------------
-        # others
-        )
+        internal/odometry_t.cc)
 
 add_library(pm1_sdk_native SHARED
         ${NATIVE_LIBRARY})
@@ -96,14 +92,14 @@ add_library(pm1_sdk SHARED
         pm1_sdk.cpp)
 
 # 指定安装路径
-install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/native)
-install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/native)
+install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
+install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
 
-install(TARGETS pm1_sdk_static DESTINATION ${PROJECT_SOURCE_DIR}/out/cpp)
-install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/cpp)
+install(TARGETS pm1_sdk_static DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/cpp)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/cpp)
 
-install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/dll)
-install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/dll)
+install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/dll)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/dll)
 
 #if (MSVC)
 #    set(CompilerFlags
