@@ -193,19 +193,31 @@ check_state() noexcept {
 	}
 }
 
-handler_t
-STD_CALL autolabor::pm1::native::
-drive(double v, double w) noexcept {
-	velocity temp{static_cast<float>(v), static_cast<float>(w)};
-	
-	return use_ptr(
-		[physical = velocity_to_physical(&temp, &default_config)]
-			(ptr_t ptr) { ptr->set_target(physical.speed, physical.rudder); });
-}
-
 std::mutex    action_mutex;
 volatile bool pause_flag  = false,
               cancel_flag = false;
+
+handler_t
+STD_CALL autolabor::pm1::native::
+drive(double v, double w) noexcept {
+	handler_t id = ++task_id;
+	
+	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
+	if (!lock) {
+		exceptions.set(id, "another action is invoking");
+		return id;
+	}
+	
+	velocity temp{static_cast<float>(v), static_cast<float>(w)};
+	try {
+		chassis_ptr.read<void>(
+			[physical = velocity_to_physical(&temp, &default_config)]
+				(ptr_t ptr) { ptr->set_target(physical.speed, physical.rudder); });
+	} catch (std::exception &e) {
+		exceptions.set(id, e.what());
+	}
+	return id;
+}
 
 handler_t block(double v,
                 double w,
@@ -332,6 +344,10 @@ pause() noexcept { pause_flag = true; }
 void
 STD_CALL autolabor::pm1::native::
 resume() noexcept { pause_flag = false; }
+
+bool
+STD_CALL autolabor::pm1::native::
+is_paused() noexcept { return pause_flag; }
 
 void
 STD_CALL autolabor::pm1::native::

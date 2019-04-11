@@ -135,6 +135,12 @@ namespace autolabor {
 			resume() noexcept;
 			
 			/**
+			 * 检查当前是否已暂停
+			 */
+			DLL_EXPORT bool STD_CALL
+			is_paused() noexcept;
+			
+			/**
 			 * 取消所有正在执行的动作
 			 */
 			DLL_EXPORT void STD_CALL
