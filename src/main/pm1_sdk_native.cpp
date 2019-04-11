@@ -59,14 +59,6 @@ clear_error_info() noexcept {
 	exceptions.clear();
 }
 
-std::vector<std::string> serial_ports() {
-	auto                     info = serial::list_ports();
-	std::vector<std::string> result(info.size());
-	std::transform(info.begin(), info.end(), result.begin(),
-	               [](const serial::PortInfo &it) { return it.port; });
-	return result;
-}
-
 std::string current_port;
 
 const char *
@@ -78,6 +70,14 @@ get_current_port() noexcept {
 handler_t
 STD_CALL autolabor::pm1::native::
 initialize(const char *port, double &progress) noexcept {
+	const static auto serial_ports = [] {
+		auto                     info = serial::list_ports();
+		std::vector<std::string> result(info.size());
+		std::transform(info.begin(), info.end(), result.begin(),
+		               [](const serial::PortInfo &it) { return it.port; });
+		return result;
+	};
+	
 	handler_t id = ++task_id;
 	progress = 0;
 	
@@ -93,9 +93,11 @@ initialize(const char *port, double &progress) noexcept {
 		for (auto i = list.begin(); i < list.end(); ++i) {
 			progress = static_cast<double>(i - list.begin()) / list.size();
 			try {
-				auto ptr = std::make_shared<chassis>(*i);
+				auto ptr = std::make_shared<chassis>
+					(*i, default_config, pi_f / 4, 2 * pi_f);
+				
 				odometry_mark = ptr->odometry();
-				current_port = *i;
+				current_port  = *i;
 				chassis_ptr(ptr);
 				break;
 			}
@@ -176,15 +178,19 @@ unlock() noexcept {
 	});
 }
 
-handler_t
+unsigned char
 STD_CALL autolabor::pm1::native::
-check_state(unsigned char &what) noexcept {
-	return use_ptr([&what](ptr_t ptr) {
-		auto states = ptr->state().as_vector();
-		what = 1 == std::unordered_set<node_state_t>(states.begin(), states.end()).size()
-		       ? static_cast<unsigned char>(states.front())
-		       : 0x7f;
-	});
+check_state() noexcept {
+	try {
+		return chassis_ptr.read<unsigned char>([](ptr_t ptr) {
+			auto states = ptr->state().as_vector();
+			return 1 == std::unordered_set<node_state_t>(states.begin(), states.end()).size()
+			       ? static_cast<unsigned char>(states.front())
+			       : 0x7f;
+		});
+	} catch (std::exception &e) {
+		return 0;
+	}
 }
 
 handler_t
@@ -212,20 +218,19 @@ handler_t block(double v,
 	velocity temp{static_cast<float>(v), static_cast<float>(w)};
 	auto     target = velocity_to_physical(&temp, &default_config);
 	
+	autolabor::process_t process{0, 0, target.speed};
+	progress = 0;
+	
 	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
 	if (!lock) {
 		exceptions.set(id, "another action is invoking");
 		return id;
 	}
 	
-	autolabor::process_t process{0, 0, target.speed};
-	progress = 0;
-	
-	auto rest     = 1 - progress;
-	auto paused   = true;
-	auto finished = false;
+	auto rest   = 1 - progress;
+	auto paused = true;
 	try {
-		while (!finished) {
+		while (true) {
 			if (cancel_flag) {
 				chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
 				throw std::exception("action canceled");
@@ -238,7 +243,7 @@ handler_t block(double v,
 					process.end   = process.begin + limit;
 				}
 			} else {
-				finished = chassis_ptr.read<bool>([&](ptr_t ptr) {
+				auto finished = chassis_ptr.read<bool>([&](ptr_t ptr) {
 					constexpr static auto disabled = autolabor::pm1::node_state_t::disabled;
 					
 					// 检查状态
@@ -266,6 +271,8 @@ handler_t block(double v,
 						                target.rudder);
 					return false;
 				});
+				
+				if (finished) break;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
@@ -278,6 +285,15 @@ handler_t block(double v,
 	return id;
 }
 
+double
+STD_CALL autolabor::pm1::native::
+spatium_calculate(double spatium, double angle) noexcept {
+	const static auto w_2 = default_config.width / 2;
+	
+	return std::abs(spatium + w_2 * angle) +
+	       std::abs(spatium - w_2 * angle);
+}
+
 handler_t
 STD_CALL autolabor::pm1::native::
 drive_spatial(double v,
@@ -287,11 +303,8 @@ drive_spatial(double v,
 	return block(v, w, spatium,
 	             {0.5, 0.1, 12, 4},
 	             [](ptr_t ptr) {
-		             const static auto w_2 = default_config.width / 2;
-		
 		             auto odometry = ptr->odometry();
-		             return std::abs(odometry.s + w_2 * odometry.sa) +
-		                    std::abs(odometry.s - w_2 * odometry.sa);
+		             return spatium_calculate(odometry.s, odometry.sa);
 	             },
 	             progress);
 }

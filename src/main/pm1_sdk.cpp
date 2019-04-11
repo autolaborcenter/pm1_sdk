@@ -84,22 +84,12 @@ autolabor::pm1::result<void> autolabor::pm1::unlock() {
 
 autolabor::pm1::result<autolabor::pm1::chassis_state>
 autolabor::pm1::get_chassis_state() {
-	uint8_t state;
-	
-	auto handler = native::check_state(state);
-	auto error   = std::string(native::get_error_info(handler));
-	native::remove_error_info(handler);
-	return {error, static_cast<chassis_state>(state)};
+	return {"", static_cast<chassis_state>(native::check_state())};
 }
 
 void
 autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(seconds_duration(time));
-}
-
-inline double transform(double s, double sa) {
-	const static auto w_2 = default_config.width / 2;
-	return std::abs(s + w_2 * sa) + std::abs(s - w_2 * sa);
 }
 
 constexpr auto
@@ -118,7 +108,7 @@ autolabor::pm1::go_straight(double speed,
 	double _progress;
 	return on_native([&] {
 		return native::drive_spatial(
-			speed, 0, transform(distance, 0),
+			speed, 0, native::spatium_calculate(distance, 0),
 			progress ? *progress : _progress);
 	});
 }
@@ -150,7 +140,7 @@ autolabor::pm1::turn_around(double speed,
 	double _progress;
 	return on_native([&] {
 		return native::drive_spatial(
-			0, speed, transform(0, rad),
+			0, speed, native::spatium_calculate(0, rad),
 			progress ? *progress : _progress);
 	});
 }
@@ -186,7 +176,7 @@ autolabor::pm1::go_arc(double speed,
 	double _progress;
 	return on_native([&] {
 		return native::drive_spatial(
-			speed, speed / r, transform(r * rad, rad),
+			speed, speed / r, native::spatium_calculate(r * rad, rad),
 			progress ? *progress : _progress);
 	});
 }

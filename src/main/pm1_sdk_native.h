@@ -84,20 +84,25 @@ namespace autolabor {
 			/**
 			 * 检查节点状态
 			 *
-			 * @param what
-			 *        0x00 : unknown
-			 *        0x01 : normal
-			 *        0xff : lock
-			 *        else : error
+			 * @return 0x00 : unknown
+			 *         0x01 : normal
+			 *         0xff : lock
+			 *         else : error
 			 */
-			DLL_EXPORT handler_t STD_CALL
-			check_state(unsigned char &what) noexcept;
+			DLL_EXPORT unsigned char STD_CALL
+			check_state() noexcept;
 			
 			/**
 			 * 行驶
 			 */
 			DLL_EXPORT handler_t STD_CALL
 			drive(double v, double w) noexcept;
+			
+			/**
+			 * 计算里程度量
+			 */
+			DLL_EXPORT double STD_CALL
+			spatium_calculate(double spatium, double angle) noexcept;
 			
 			/**
 			 * 行驶

@@ -59,6 +59,8 @@ chassis::chassis(const std::string &port_name,
 	
 	_left.time = _right.time = _rudder.time = now();
 	
+	acceleration /= 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(rudder_interval).count();
+	
 	// region check nodes
 	{
 		port << autolabor::can::pack<ecu<>::current_position_tx>()
