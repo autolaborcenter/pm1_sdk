@@ -6,7 +6,10 @@
 
 void autolabor::exception_engine::set(size_t id, const std::string &text) {
 	std::unique_lock<decltype(mutex)> _(mutex);
-	map[id] = text;
+	if (text.empty())
+		map.erase(id);
+	else
+		map[id] = text;
 }
 
 void autolabor::exception_engine::remove(size_t id) {
@@ -23,6 +26,5 @@ const char *autolabor::exception_engine::operator[](size_t id) const {
 	std::shared_lock<decltype(mutex)> _(mutex);
 	
 	auto ptr = map.find(id);
-	return ptr == map.end() ? nothing
-	                        : ptr->second.c_str();
+	return ptr == map.end() ? "" : ptr->second.c_str();
 }
