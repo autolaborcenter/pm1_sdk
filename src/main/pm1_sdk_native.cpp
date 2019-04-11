@@ -77,9 +77,9 @@ get_current_port() noexcept {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-initialize(const char *port, double *const progress) noexcept {
+initialize(const char *port, double &progress) noexcept {
 	handler_t id = ++task_id;
-	if (progress) *progress = 0;
+	progress = 0;
 	
 	auto list = port == nullptr || std::strlen(port) == 0
 	            ? serial_ports()
@@ -91,23 +91,22 @@ initialize(const char *port, double *const progress) noexcept {
 		std::stringstream builder;
 		
 		for (auto i = list.begin(); i < list.end(); ++i) {
-			if (progress) *progress = static_cast<double>(i - list.begin()) / list.size();
+			progress = static_cast<double>(i - list.begin()) / list.size();
 			try {
 				auto ptr = std::make_shared<chassis>(*i);
 				odometry_mark = ptr->odometry();
-				exceptions.remove(id);
 				current_port = *i;
 				chassis_ptr(ptr);
 				break;
 			}
 			catch (std::exception &e) {
 				builder << *i << " : " << e.what() << std::endl;
-				exceptions.set(id, builder.str());
 			}
 		}
+		exceptions.set(id, builder.str());
 	}
 	
-	if (progress) *progress = 1;
+	progress = 1;
 	return id;
 }
 

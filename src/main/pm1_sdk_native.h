@@ -47,7 +47,7 @@ namespace autolabor {
 			 * 初始化
 			 */
 			DLL_EXPORT handler_t STD_CALL
-			initialize(const char *port, double *const progress) noexcept;
+			initialize(const char *port, double &progress) noexcept;
 			
 			/**
 			 * 关闭

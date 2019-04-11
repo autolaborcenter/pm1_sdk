@@ -18,7 +18,7 @@ int main() {
 		}
 	});
 	
-	auto handler = initialize(nullptr, &progress);
+	auto handler = initialize(nullptr, progress);
 	auto error   = std::string(get_error_info(handler));
 	remove_error_info(handler);
 	if (!error.empty()) {

@@ -14,8 +14,6 @@ namespace autolabor {
 		mutable std::shared_mutex               mutex;
 		std::unordered_map<size_t, std::string> map;
 		
-		constexpr static auto nothing = "";
-	
 	public:
 		void set(size_t id, const std::string &text);
 		
