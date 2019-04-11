@@ -70,23 +70,26 @@ namespace autolabor {
 			/** 舵轮状态 */
 			motor_t<> rudder() const;
 			
-			/** 锁定 */
-			void enable();
-			
-			/** 解锁 */
-			void disable();
-			
 			/** 检查状态 */
 			chassis_state_t state() const;
-			
-			/** 设置目标控制量 */
-			void set_target(double speed, double rudder);
 			
 			/** 读取里程计 */
 			odometry_t odometry() const;
 			
 			/** 线程是否正常运行 */
 			bool is_running() const;
+			
+			/** 锁定 */
+			void enable();
+			
+			/** 解锁 */
+			void disable();
+			
+			/** 设置目标控制量 */
+			void set_target(double speed, double rudder);
+			
+			/** 重设舵轮零位 */
+			void reset_rudder();
 		
 		private:
 			/** 串口引用 */
@@ -112,7 +115,7 @@ namespace autolabor {
 			physical target{};
 			
 			/** 最后一次请求的时间 */
-			mutable decltype(autolabor::now()) request_time;
+			decltype(autolabor::now()) request_time;
 		};
 	}
 }

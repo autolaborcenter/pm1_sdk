@@ -80,8 +80,7 @@ set(NATIVE_LIBRARY
         internal/odometry_t.cc
         # --------------------------
         # others
-        internal/rudder_controller.hh
-        internal/rudder_controller.cc)
+        )
 
 add_library(pm1_sdk_native SHARED
         ${NATIVE_LIBRARY})

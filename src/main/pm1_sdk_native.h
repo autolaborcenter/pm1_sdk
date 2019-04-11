@@ -123,6 +123,13 @@ namespace autolabor {
 			             double &progress) noexcept;
 			
 			/**
+			 * 矫正后轮
+			 */
+			DLL_EXPORT handler_t STD_CALL
+			adjust_rudder(double offset,
+			              double &progress) noexcept;
+			
+			/**
 			 * 暂停执行阻塞控制
 			 */
 			DLL_EXPORT void STD_CALL

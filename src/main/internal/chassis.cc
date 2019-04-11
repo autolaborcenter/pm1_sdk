@@ -25,8 +25,10 @@ bool chassis_state_t::check_all(node_state_t target) const {
 	                   [target](node_state_t it) { return it == target; });
 }
 
+// region functions
+
 template<class t>
-inline void add(std::atomic<t> &a, const t &b) {
+inline void atomic_plus_assign(std::atomic<t> &a, const t &b) {
 	auto expected = a.load();
 	auto desired  = expected + b;
 	while (!a.compare_exchange_strong(expected, desired))
@@ -41,25 +43,33 @@ constexpr unsigned long gcd(unsigned long a, unsigned long b) {
 	return a <= 1 || b <= 1 ? 1 : a > b ? gcd(b, a % b) : gcd(a, b % a);
 }
 
+template<class t>
+constexpr long long int count_ms(t time) {
+	return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
+}
+
+// endregion
+
 chassis::chassis(const std::string &port_name,
                  const chassis_config_t &chassis_config,
                  float optimize_width,
                  float acceleration)
 	: port(port_name, 115200),
 	  running(true) {
-	using result_t = autolabor::can::parser::result_type;
+	using namespace std::chrono_literals;
+	using result_t  = autolabor::can::parser::result_type;
 	
-	constexpr static auto odometry_interval   = std::chrono::milliseconds(50);
-	constexpr static auto rudder_interval     = std::chrono::milliseconds(20);
-	constexpr static auto state_interval      = std::chrono::milliseconds(1000);
-	constexpr static auto state_timeout       = state_interval * 2;
-	constexpr static auto control_timeout     = std::chrono::milliseconds(500);
-	constexpr static auto check_timeout       = std::chrono::milliseconds(1000);
-	constexpr static auto check_state_timeout = std::chrono::milliseconds(100);
+	constexpr static auto odometry_interval   = 50ms;
+	constexpr static auto rudder_interval     = 20ms;
+	constexpr static auto state_interval      = 1s;
+	constexpr static auto state_timeout       = 2 * state_interval;
+	constexpr static auto control_timeout     = 500ms;
+	constexpr static auto check_timeout       = 1000ms;
+	constexpr static auto check_state_timeout = 100ms;
 	
 	_left.time = _right.time = _rudder.time = now();
 	
-	acceleration /= 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(rudder_interval).count();
+	acceleration /= 1000.0 / count_ms(rudder_interval);
 	
 	// region check nodes
 	{
@@ -121,11 +131,11 @@ chassis::chassis(const std::string &port_name,
 	port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
 	     << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
 	
-	// 定时任务
-	read_thread = std::thread([this] {
-		constexpr static auto gcd_ = gcd(state_interval.count(),
-		                                 gcd(odometry_interval.count(),
-		                                     rudder_interval.count()));
+	// region ask
+	read_thread  = std::thread([this] {
+		constexpr static auto gcd_ = gcd(count_ms(state_interval),
+		                                 gcd(count_ms(odometry_interval),
+		                                     count_ms(rudder_interval)));
 		constexpr static auto delay_interval
 		                           = std::chrono::milliseconds(max(1, gcd_ - 1));
 		
@@ -151,7 +161,7 @@ chassis::chassis(const std::string &port_name,
 			std::this_thread::sleep_for(delay_interval);
 		}
 	});
-	
+	// endregion
 	// region receive
 	write_thread = std::thread([=] {
 		auto left_ready  = false,
@@ -205,7 +215,7 @@ chassis::chassis(const std::string &port_name,
 						                                        chassis_config.radius * delta_left,
 						                                        chassis_config.radius * delta_right,
 						                                        _now - time};
-						add(_odometry, delta);
+						atomic_plus_assign(_odometry, delta);
 						right_ready = false;
 						time        = _now;
 					} else
@@ -223,7 +233,7 @@ chassis::chassis(const std::string &port_name,
 						                                        chassis_config.radius * delta_left,
 						                                        chassis_config.radius * delta_right,
 						                                        _now - time};
-						add(_odometry, delta);
+						atomic_plus_assign(_odometry, delta);
 						left_ready = false;
 						time       = _now;
 					} else
@@ -265,6 +275,7 @@ chassis::chassis(const std::string &port_name,
 		chassis_state = {};
 	});
 	// endregion
+	// region wait state
 	for (const auto time = now();
 	     now() - time < check_state_timeout;) {
 		auto vector = chassis_state.as_vector();
@@ -273,6 +284,7 @@ chassis::chassis(const std::string &port_name,
 			break;
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	}
+	// endregion
 }
 
 chassis::~chassis() {
@@ -282,6 +294,8 @@ chassis::~chassis() {
 	read_thread.join();
 	write_thread.join();
 }
+
+//==============================================================
 
 autolabor::motor_t<> chassis::left() const {
 	return _left;
@@ -295,16 +309,26 @@ autolabor::motor_t<> chassis::rudder() const {
 	return _rudder;
 }
 
+chassis_state_t chassis::state() const {
+	return chassis_state;
+}
+
+autolabor::odometry_t chassis::odometry() const {
+	return _odometry;
+}
+
+bool chassis::is_running() const {
+	return running;
+}
+
+//==============================================================
+
 void chassis::enable() {
 	port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
 }
 
 void chassis::disable() {
 	port << autolabor::can::pack<unit<>::emergency_stop>();
-}
-
-chassis_state_t chassis::state() const {
-	return chassis_state;
 }
 
 void chassis::set_target(double speed, double rudder) {
@@ -314,10 +338,7 @@ void chassis::set_target(double speed, double rudder) {
 	legalize_physical(&target, 6 * pi_f);
 }
 
-autolabor::odometry_t chassis::odometry() const {
-	return _odometry;
-}
-
-bool chassis::is_running() const {
-	return running;
+void chassis::reset_rudder() {
+	target.rudder = 0;
+	port << autolabor::can::pack<tcu<0>::encoder_reset>();
 }

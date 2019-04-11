@@ -267,7 +267,6 @@ handler_t block(double v,
 					// 检查任务进度
 					auto current = measure(ptr);
 					auto sub     = process[current];
-					
 					// 任务完成
 					if ((progress = 1 - rest * (1 - sub)) >= 1)
 						return true;
@@ -277,16 +276,17 @@ handler_t block(double v,
 						rest *= (1 - sub);  // 子任务比例缩减
 						ptr->set_target(0, target.rudder);
 					} else
-						ptr->set_target(std::abs(target.rudder - ptr->rudder().position) > 2E-3
-						                ? 0
-						                : controller(process, current),
+						ptr->set_target(std::abs(target.rudder - ptr->rudder().position) < pi_f / 120
+						                ? controller(process, current)
+						                : 0,
 						                target.rudder);
 					return false;
 				});
 				
 				if (finished) break;
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			using namespace std::chrono_literals;
+			std::this_thread::sleep_for(50ms);
 		}
 		
 		chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
@@ -335,6 +335,59 @@ drive_timing(double v,
 		             ).count();
 	             },
 	             progress);
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+adjust_rudder(double offset,
+              double &progress) noexcept {
+	handler_t id = ++task_id;
+	
+	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
+	if (!lock) {
+		exceptions.set(id, "another action is invoking");
+		return id;
+	}
+	
+	const auto total = chassis_ptr.read<double>([=](ptr_t ptr) {
+		ptr->set_target(0, offset);
+		return std::abs(offset - ptr->rudder().position);
+	});
+	
+	try {
+		while (true) {
+			if (cancel_flag) {
+				chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
+				throw std::exception("action canceled");
+			}
+			
+			if (pause_flag)
+				chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
+			else {
+				auto finished = chassis_ptr.read<bool>([&](ptr_t ptr) {
+					auto difference = std::abs(offset - ptr->rudder().position);
+					
+					if (difference < pi_f / 120) {
+						progress = 1;
+						ptr->reset_rudder();
+						return true;
+					} else {
+						progress = difference / total;
+						ptr->set_target(0, offset);
+						return false;
+					}
+				});
+				
+				if (finished) break;
+			}
+			using namespace std::chrono_literals;
+			std::this_thread::sleep_for(50ms);
+		}
+	} catch (std::exception &e) {
+		exceptions.set(id, e.what());
+	}
+	
+	return id;
 }
 
 void
