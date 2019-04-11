@@ -7,7 +7,7 @@
 
 
 #ifdef  _MSC_VER
-#define DLL_EXPORT __declspec(dllexport)
+#define DLL_EXPORT extern "C" __declspec(dllexport)
 #define STD_CALL   __stdcall
 #else
 #define DLL_EXPORT
@@ -17,7 +17,7 @@
 namespace autolabor {
 	namespace pm1 {
 		namespace native {
-			using handler_t = unsigned long;
+			using handler_t = unsigned int;
 			
 			/**
 			 * 获取错误信息

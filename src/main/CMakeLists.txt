@@ -4,6 +4,14 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_DEBUG_POSTFIX "_debug")
 
+if (CMAKE_CL_64)
+    set(ADDRESS_MODEL 64)
+    set(NODE_TARGET x64)
+else ()
+    set(ADDRESS_MODEL 32)
+    set(NODE_TARGET x86)
+endif ()
+
 add_subdirectory(internal/can)
 add_subdirectory(internal/control_model)
 
