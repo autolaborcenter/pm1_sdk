@@ -9,7 +9,7 @@
 #include <memory>
 #include <functional>
 #include <shared_mutex>
-#include "internal/raii/weak_shared_lock.hh"
+#include "weak_shared_lock.hh"
 
 template<class t>
 class safe_shared_ptr {

@@ -10,8 +10,8 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "exception_engine.hh"
-#include "safe_shared_ptr.hh"
+#include "internal/exception_engine.hh"
+#include "internal/raii/safe_shared_ptr.hh"
 
 #include "internal/chassis.hh"
 #include "internal/serial/serial.h"

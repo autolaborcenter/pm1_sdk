@@ -7,19 +7,14 @@ set(CMAKE_DEBUG_POSTFIX "_debug")
 add_subdirectory(internal/can)
 add_subdirectory(internal/control_model)
 
-add_library(pm1_sdk
+set(NATIVE_LIBRARY
         # --------------------------
         # pm1 sdk
-        pm1_sdk.h
-        pm1_sdk.cpp
-
-        exception_engine.hh
-        exception_engine.cc
-
-        safe_shared_ptr.hh
-
         pm1_sdk_native.h
         pm1_sdk_native.cpp
+
+        internal/exception_engine.hh
+        internal/exception_engine.cc
 
         internal/process_controller.hh
         # --------------------------
@@ -34,14 +29,12 @@ add_library(pm1_sdk
         internal/serial/serial_port.cc
         # --------------------------
         # extensions
-        internal/raii/weak_shared_lock.hh
-
+        internal/raii/safe_shared_ptr.hh
         internal/raii/weak_lock_guard.hh
+        internal/raii/weak_shared_lock.hh
 
         internal/time_extensions.h
         internal/serial_extension.h
-
-        internal/can_define.h
         # --------------------------
         # can hub
         internal/can/pack.h
@@ -70,6 +63,8 @@ add_library(pm1_sdk
         internal/control_model/optimization.c
         # --------------------------
         # pm1 chassis
+        internal/can_define.h
+
         internal/chassis.hh
         internal/chassis.cc
 
@@ -80,9 +75,28 @@ add_library(pm1_sdk
         internal/rudder_controller.hh
         internal/rudder_controller.cc)
 
+add_library(pm1_sdk_native SHARED
+        ${NATIVE_LIBRARY})
+
+add_library(pm1_sdk_static
+        ${NATIVE_LIBRARY}
+        pm1_sdk.h
+        pm1_sdk.cpp)
+
+add_library(pm1_sdk SHARED
+        ${NATIVE_LIBRARY}
+        pm1_sdk.h
+        pm1_sdk.cpp)
+
 # 指定安装路径
-install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out)
-install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out)
+install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/native)
+install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/native)
+
+install(TARGETS pm1_sdk_static DESTINATION ${PROJECT_SOURCE_DIR}/out/cpp)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/cpp)
+
+install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/dll)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/dll)
 
 #if (MSVC)
 #    set(CompilerFlags
