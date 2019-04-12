@@ -19,17 +19,31 @@
 #include "internal/process_controller.hh"
 #include "internal/raii/weak_lock_guard.hh"
 
+// region task resources
+
 using handler_t = autolabor::pm1::native::handler_t;
 
 std::atomic<handler_t> task_id(0);
 
 autolabor::exception_engine exceptions; // NOLINT(cert-err58-cpp)
 
+// endregion
+// region chassis resources
+
 safe_shared_ptr<autolabor::pm1::chassis> chassis_ptr;
 using ptr_t = decltype(chassis_ptr)::ptr_t;
 
 std::atomic<autolabor::odometry_t>
 	odometry_mark         = ATOMIC_VAR_INIT({});
+
+// endregion
+// region action resource
+
+std::mutex    action_mutex;
+volatile bool pause_flag  = false,
+              cancel_flag = false;
+
+// endregion
 
 inline handler_t use_ptr(std::function < void(ptr_t) > && block) {
 	handler_t id = ++task_id;
@@ -126,9 +140,12 @@ initialize(const char *port,
 					 if_nan(optimize_width, pi_f / 4),
 					 if_nan(acceleration, 2 * pi_f));
 				
+				chassis_ptr(ptr);
+				builder.str("");
 				odometry_mark = ptr->odometry();
 				current_port  = *i;
-				chassis_ptr(ptr);
+				pause_flag    = false;
+				cancel_flag   = false;
 				break;
 			}
 			catch (std::exception &e) {
@@ -218,14 +235,10 @@ check_state() noexcept {
 			       ? static_cast<unsigned char>(states.front())
 			       : 0x7f;
 		});
-	} catch (std::exception &e) {
+	} catch (std::exception &) {
 		return 0;
 	}
 }
-
-std::mutex    action_mutex;
-volatile bool pause_flag  = false,
-              cancel_flag = false;
 
 handler_t
 STD_CALL autolabor::pm1::native::
