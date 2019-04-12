@@ -81,12 +81,12 @@ set(NATIVE_LIBRARY
 add_library(pm1_sdk_native SHARED
         ${NATIVE_LIBRARY})
 
-add_library(pm1_sdk_static
+add_library(pm1_sdk
         ${NATIVE_LIBRARY}
         pm1_sdk.h
         pm1_sdk.cpp)
 
-add_library(pm1_sdk SHARED
+add_library(pm1_sdk_shared SHARED
         ${NATIVE_LIBRARY}
         pm1_sdk.h
         pm1_sdk.cpp)
@@ -95,10 +95,10 @@ add_library(pm1_sdk SHARED
 install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
 install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
 
-install(TARGETS pm1_sdk_static DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/cpp)
-install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/cpp)
+install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)
 
-install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/dll)
+install(TARGETS pm1_sdk_shared DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/dll)
 install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/dll)
 
 #if (MSVC)
