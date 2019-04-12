@@ -67,9 +67,29 @@ get_current_port() noexcept {
 	return current_port.c_str();
 }
 
+void
+STD_CALL autolabor::pm1::native::
+get_default_chassis_config(double &width,
+                           double &length,
+                           double &wheel_radius,
+                           double &optimize_width,
+                           double &acceleration) noexcept {
+	width          = default_config.width;
+	length         = default_config.length;
+	wheel_radius   = default_config.radius;
+	optimize_width = pi_f / 4;
+	acceleration   = 2 * pi_f;
+}
+
 handler_t
 STD_CALL autolabor::pm1::native::
-initialize(const char *port, double &progress) noexcept {
+initialize(const char *port,
+           double width,
+           double length,
+           double wheel_radius,
+           double optimize_width,
+           double acceleration,
+           double &progress) noexcept {
 	const static auto serial_ports = [] {
 		auto                     info = serial::list_ports();
 		std::vector<std::string> result(info.size());
@@ -80,6 +100,14 @@ initialize(const char *port, double &progress) noexcept {
 	
 	handler_t id = ++task_id;
 	progress = 0;
+	
+	const static auto if_nan = [](double expect, double default_value) {
+		return static_cast<float>(std::isnan(expect) ? default_value : expect);
+	};
+	
+	chassis_config_t config{if_nan(width, default_config.width),
+	                        if_nan(length, default_config.length),
+	                        if_nan(wheel_radius, default_config.radius)};
 	
 	auto list = port == nullptr || std::strlen(port) == 0
 	            ? serial_ports()
@@ -94,7 +122,9 @@ initialize(const char *port, double &progress) noexcept {
 			progress = static_cast<double>(i - list.begin()) / list.size();
 			try {
 				auto ptr = std::make_shared<chassis>
-					(*i, default_config, pi_f / 4, 2 * pi_f);
+					(*i, config,
+					 if_nan(optimize_width, pi_f / 4),
+					 if_nan(acceleration, 2 * pi_f));
 				
 				odometry_mark = ptr->odometry();
 				current_port  = *i;

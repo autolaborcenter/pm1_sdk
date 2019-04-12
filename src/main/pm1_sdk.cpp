@@ -37,7 +37,13 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 autolabor::pm1::result<std::string>
 autolabor::pm1::initialize(const std::string &port, double *progress) {
 	double _progress;
-	auto   handler = native::initialize(port.c_str(), progress ? *progress : _progress);
+	auto   handler = native::initialize(port.c_str(),
+	                                    NAN,
+	                                    NAN,
+	                                    NAN,
+	                                    NAN,
+	                                    NAN,
+	                                    progress ? *progress : _progress);
 	auto   error   = std::string(native::get_error_info(handler));
 	native::remove_error_info(handler);
 	

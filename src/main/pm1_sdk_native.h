@@ -44,10 +44,26 @@ namespace autolabor {
 			get_current_port() noexcept;
 			
 			/**
+			 * 获取默认参数
+			 */
+			DLL_EXPORT void STD_CALL
+			get_default_chassis_config(double &width,
+			                           double &length,
+			                           double &wheel_radius,
+			                           double &optimize_width,
+			                           double &acceleration) noexcept;
+			
+			/**
 			 * 初始化
 			 */
 			DLL_EXPORT handler_t STD_CALL
-			initialize(const char *port, double &progress) noexcept;
+			initialize(const char *port,
+			           double width,
+			           double length,
+			           double wheel_radius,
+			           double optimize_width,
+			           double acceleration,
+			           double &progress) noexcept;
 			
 			/**
 			 * 关闭
