@@ -132,7 +132,7 @@ initialize(const char *port,
 	else {
 		std::stringstream builder;
 		
-		for (auto i = list.begin(); i < list.end(); ++i) {
+		for (auto i = list.begin();;) {
 			progress = static_cast<double>(i - list.begin()) / list.size();
 			try {
 				auto ptr = std::make_shared<chassis>
@@ -149,7 +149,9 @@ initialize(const char *port,
 				break;
 			}
 			catch (std::exception &e) {
-				builder << *i << " : " << e.what() << std::endl;
+				builder << *i << " : " << e.what();
+				if (++i < list.end()) builder << std::endl;
+				else break;
 			}
 		}
 		exceptions.set(id, builder.str());
