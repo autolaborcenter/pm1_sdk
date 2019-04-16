@@ -18,7 +18,6 @@ set(NATIVE_LIBRARY
         # --------------------------
         # pm1 sdk
         pm1_sdk_native.h
-        pm1_sdk_native.cpp
 
         internal/exception_engine.hh
         internal/exception_engine.cc
@@ -79,21 +78,33 @@ set(NATIVE_LIBRARY
         internal/odometry_t.cc)
 
 add_library(pm1_sdk_native SHARED
-        ${NATIVE_LIBRARY})
+        ${NATIVE_LIBRARY}
+        pm1_sdk_native.cpp)
+
+add_library(pm1_sdk_native_injection SHARED
+        ${NATIVE_LIBRARY}
+        pm1_sdk_native_injection.cpp)
 
 add_library(pm1_sdk
         ${NATIVE_LIBRARY}
+        pm1_sdk_native.cpp
+
         pm1_sdk.h
         pm1_sdk.cpp)
 
 add_library(pm1_sdk_shared SHARED
         ${NATIVE_LIBRARY}
+        pm1_sdk_native.cpp
+
         pm1_sdk.h
         pm1_sdk.cpp)
 
 # 指定安装路径
 install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
 install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
+
+install(TARGETS pm1_sdk_native_injection DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native/injection)
+install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native/injection)
 
 install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)
 install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)

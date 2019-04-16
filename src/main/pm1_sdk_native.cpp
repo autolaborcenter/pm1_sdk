@@ -359,8 +359,9 @@ drive_spatial(double v,
               double &progress) noexcept {
 	return block(v, w, spatium,
 	             {0.5, 0.1, 12, 4},
-	             [](ptr_t ptr) {
-		             auto odometry = ptr->odometry();
+	             [origin = chassis_ptr.read<odometry_t>([](ptr_t ptr) { return ptr->odometry(); })]
+		             (ptr_t ptr) {
+		             auto odometry = ptr->odometry() - origin;
 		             return spatium_calculate(odometry.s, odometry.sa);
 	             },
 	             progress);
