@@ -132,7 +132,13 @@ check_state() noexcept {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-drive(double v, double w) noexcept {
+drive_physical(double, double) noexcept {
+	return ++task_id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+drive(double, double) noexcept {
 	return ++task_id;
 }
 

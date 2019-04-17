@@ -109,6 +109,12 @@ namespace autolabor {
 			check_state() noexcept;
 			
 			/**
+ 			 * 行驶
+ 			 */
+			DLL_EXPORT handler_t STD_CALL
+			drive_physical(double speed, double rudder) noexcept;
+			
+			/**
 			 * 行驶
 			 */
 			DLL_EXPORT handler_t STD_CALL

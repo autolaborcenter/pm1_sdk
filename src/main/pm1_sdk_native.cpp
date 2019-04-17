@@ -244,7 +244,7 @@ check_state() noexcept {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-drive(double v, double w) noexcept {
+drive_physical(double speed, double rudder) noexcept {
 	handler_t id = ++task_id;
 	
 	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
@@ -253,15 +253,20 @@ drive(double v, double w) noexcept {
 		return id;
 	}
 	
-	velocity temp{static_cast<float>(v), static_cast<float>(w)};
 	try {
-		chassis_ptr.read<void>(
-			[physical = velocity_to_physical(&temp, &default_config)]
-				(ptr_t ptr) { ptr->set_target(physical.speed, physical.rudder); });
+		chassis_ptr.read<void>([=](ptr_t ptr) { ptr->set_target(speed, rudder); });
 	} catch (std::exception &e) {
 		exceptions.set(id, e.what());
 	}
 	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+drive(double v, double w) noexcept {
+	velocity temp{static_cast<float>(v), static_cast<float>(w)};
+	auto     physical = velocity_to_physical(&temp, &default_config);
+	return drive_physical(physical.speed, physical.rudder);
 }
 
 handler_t block(double v,
