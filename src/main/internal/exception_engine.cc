@@ -4,12 +4,12 @@
 
 #include "exception_engine.hh"
 
-void autolabor::exception_engine::set(size_t id, const std::string &text) {
+void autolabor::exception_engine::set(size_t id, const std::string &msg) {
 	std::unique_lock<decltype(mutex)> _(mutex);
-	if (text.empty())
+	if (msg.empty())
 		map.erase(id);
 	else
-		map[id] = text;
+		map[id] = msg;
 }
 
 void autolabor::exception_engine::remove(size_t id) {

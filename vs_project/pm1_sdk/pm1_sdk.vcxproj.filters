@@ -113,9 +113,6 @@
     <ClCompile Include="..\..\src\main\internal\odometry_t.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\rudder_controller.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\internal\control_model\chassis_config_t.c">
       <Filter>源文件</Filter>
     </ClCompile>

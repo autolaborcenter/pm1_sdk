@@ -40,7 +40,6 @@ set(NATIVE_LIBRARY
         internal/raii/weak_shared_lock.hh
 
         internal/time_extensions.h
-        internal/serial_extension.h
         # --------------------------
         # can hub
         internal/can/pack.h

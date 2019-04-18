@@ -47,6 +47,7 @@ namespace autolabor {
 		/** 底盘 */
 		class chassis final {
 		public:
+			// 速度矢量空间限幅
 			float max_v, max_w;
 			
 			explicit chassis(const std::string &port_name,
@@ -108,6 +109,7 @@ namespace autolabor {
 			/** 里程计 */
 			std::atomic<odometry_t> _odometry{};
 			
+			/** 底层线程是否运行 */
 			volatile bool running;
 			
 			std::thread read_thread,

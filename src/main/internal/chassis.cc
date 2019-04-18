@@ -5,7 +5,6 @@
 #include "chassis.hh"
 
 #include <algorithm>
-#include "serial_extension.h"
 #include "can/parse_engine.hh"
 
 extern "C" {
@@ -26,6 +25,13 @@ bool chassis_state_t::check_all(node_state_t target) const {
 }
 
 // region functions
+
+template<class t>
+inline serial_port &operator<<(serial_port &port,
+                               const autolabor::can::msg_union<t> &msg) {
+	port.send(msg.bytes, sizeof(t));
+	return port;
+}
 
 template<class t>
 inline void atomic_plus_assign(std::atomic<t> &a, const t &b) {
@@ -134,7 +140,7 @@ chassis::chassis(const std::string &port_name,
 	     << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
 	
 	// region ask
-	read_thread  = std::thread([this] {
+	write_thread = std::thread([this] {
 		constexpr static auto gcd_ = gcd(count_ms(state_interval),
 		                                 gcd(count_ms(odometry_interval),
 		                                     count_ms(rudder_interval)));
@@ -165,7 +171,7 @@ chassis::chassis(const std::string &port_name,
 	});
 	// endregion
 	// region receive
-	write_thread = std::thread([=] {
+	read_thread  = std::thread([=] {
 		auto left_ready  = false,
 		     right_ready = false;
 		auto delta_left  = .0,
@@ -255,8 +261,8 @@ chassis::chassis(const std::string &port_name,
 					
 					auto     limiting = physical_to_velocity(&optimized, &chassis_config);
 					auto     ratio    = std::max({1.0f,
-					                              std::abs(limiting.v / max_v),
-					                              std::abs(limiting.w / max_w)});
+					                              std::abs(limiting.v / this->max_v),
+					                              std::abs(limiting.w / this->max_w)});
 					physical limited{optimized.speed / ratio, optimized.rudder};
 					
 					auto wheels = physical_to_wheels(&limited, &chassis_config);
