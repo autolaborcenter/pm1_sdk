@@ -43,6 +43,8 @@ autolabor::pm1::initialize(const std::string &port, double *progress) {
 	                                    NAN,
 	                                    NAN,
 	                                    NAN,
+	                                    NAN,
+	                                    NAN,
 	                                    progress ? *progress : _progress);
 	auto   error   = std::string(native::get_error_info(handler));
 	native::remove_error_info(handler);

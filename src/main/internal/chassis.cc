@@ -254,7 +254,7 @@ chassis::chassis(const std::string &port_name,
 					speed = optimized.speed;
 					
 					auto     limiting = physical_to_velocity(&optimized, &chassis_config);
-					auto     ratio    = std::min({1.0f,
+					auto     ratio    = std::max({1.0f,
 					                              std::abs(limiting.v / max_v),
 					                              std::abs(limiting.w / max_w)});
 					physical limited{optimized.speed / ratio, optimized.rudder};

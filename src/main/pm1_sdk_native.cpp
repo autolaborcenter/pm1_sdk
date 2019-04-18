@@ -87,12 +87,16 @@ get_default_chassis_config(double &width,
                            double &length,
                            double &wheel_radius,
                            double &optimize_width,
-                           double &acceleration) noexcept {
+                           double &acceleration,
+                           double &max_v,
+                           double &max_w) noexcept {
 	width          = default_config.width;
 	length         = default_config.length;
 	wheel_radius   = default_config.radius;
 	optimize_width = pi_f / 4;
 	acceleration   = 2 * pi_f;
+	max_v          = INFINITY;
+	max_w          = INFINITY;
 }
 
 handler_t
