@@ -47,6 +47,8 @@ namespace autolabor {
 		/** 底盘 */
 		class chassis final {
 		public:
+			float max_v, max_w;
+			
 			explicit chassis(const std::string &port_name,
 			                 const chassis_config_t & = default_config,
 			                 float optimize_width = pi_f / 4,

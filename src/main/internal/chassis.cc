@@ -55,7 +55,9 @@ chassis::chassis(const std::string &port_name,
                  float optimize_width,
                  float acceleration)
 	: port(port_name, 115200),
-	  running(true) {
+	  running(true),
+	  max_v(INFINITY),
+	  max_w(INFINITY) {
 	using namespace std::chrono_literals;
 	using result_t  = autolabor::can::parser::result_type;
 	
@@ -249,9 +251,15 @@ chassis::chassis(const std::string &port_name,
 					
 					physical current{speed, value};
 					auto     optimized = optimize(&target, &current, optimize_width, acceleration);
-					auto     wheels    = physical_to_wheels(&optimized, &chassis_config);
 					speed = optimized.speed;
 					
+					auto     limiting = physical_to_velocity(&optimized, &chassis_config);
+					auto     ratio    = std::min({1.0f,
+					                              std::abs(limiting.v / max_v),
+					                              std::abs(limiting.w / max_w)});
+					physical limited{optimized.speed / ratio, optimized.rudder};
+					
+					auto wheels = physical_to_wheels(&limited, &chassis_config);
 					auto left   = PULSES_OF(wheels.left, default_wheel_k);
 					auto right  = PULSES_OF(wheels.right, default_wheel_k);
 					auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));

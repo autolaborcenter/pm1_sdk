@@ -103,6 +103,8 @@ initialize(const char *port,
            double wheel_radius,
            double optimize_width,
            double acceleration,
+           double max_v,
+           double max_w,
            double &progress) noexcept {
 	const static auto serial_ports = [] {
 		auto                     info = serial::list_ports();
@@ -143,9 +145,11 @@ initialize(const char *port,
 				chassis_ptr(ptr);
 				builder.str("");
 				odometry_mark = ptr->odometry();
-				current_port  = *i;
-				pause_flag    = false;
-				cancel_flag   = false;
+				ptr->max_v = if_nan(max_v, INFINITY);
+				ptr->max_w = if_nan(max_w, INFINITY);
+				current_port = *i;
+				pause_flag   = false;
+				cancel_flag  = false;
 				break;
 			}
 			catch (std::exception &e) {

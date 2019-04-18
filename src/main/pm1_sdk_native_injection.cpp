@@ -63,6 +63,8 @@ initialize(const char *port,
            double wheel_radius,
            double optimize_width,
            double acceleration,
+           double max_v,
+           double max_w,
            double &progress) noexcept {
 	handler_t id = ++task_id;
 	current_port = port == nullptr || std::strlen(port) == 0

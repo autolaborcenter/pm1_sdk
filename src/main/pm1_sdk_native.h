@@ -51,6 +51,8 @@ namespace autolabor {
 			                           double &length,
 			                           double &wheel_radius,
 			                           double &optimize_width,
+			                           double &max_v,
+			                           double &max_w,
 			                           double &acceleration) noexcept;
 			
 			/**
@@ -63,6 +65,8 @@ namespace autolabor {
 			           double wheel_radius,
 			           double optimize_width,
 			           double acceleration,
+			           double max_v,
+			           double max_w,
 			           double &progress) noexcept;
 			
 			/**
