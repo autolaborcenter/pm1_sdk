@@ -59,7 +59,7 @@ autolabor::pm1::shutdown() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive(double v, double w) {
-	return on_native([=] { return native::drive(v, w); });
+	return on_native([=] { return native::drive_velocity(v, w); });
 }
 
 autolabor::pm1::result<autolabor::pm1::odometry>
@@ -221,6 +221,6 @@ autolabor::pm1::resume() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::cancel_all() {
-	native::cancel_all();
+	native::cancel_action();
 	return {};
 }

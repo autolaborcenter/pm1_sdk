@@ -140,7 +140,13 @@ drive_physical(double, double) noexcept {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-drive(double, double) noexcept {
+drive_wheels(double, double) noexcept {
+	return ++task_id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+drive_velocity(double, double) noexcept {
 	return ++task_id;
 }
 
@@ -177,6 +183,46 @@ drive_timing(double v,
 
 handler_t
 STD_CALL autolabor::pm1::native::
+go_straight(double speed,
+            double meters,
+            double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+go_straight_timing(double speed,
+                   double seconds,
+                   double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+turn_around(double speed,
+            double rad,
+            double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+turn_around_timing(double speed,
+                   double seconds,
+                   double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
 adjust_rudder(double offset,
               double &progress) noexcept {
 	handler_t id = ++task_id;
@@ -198,7 +244,7 @@ is_paused() noexcept { return pause_flag; }
 
 void
 STD_CALL autolabor::pm1::native::
-cancel_all() noexcept {
+cancel_action() noexcept {
 	cancel_flag = true;
 	{ std::lock_guard<std::mutex> wait(action_mutex); }
 	cancel_flag = false;

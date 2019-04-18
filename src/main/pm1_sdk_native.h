@@ -113,16 +113,22 @@ namespace autolabor {
 			check_state() noexcept;
 			
 			/**
- 			 * 行驶
+ 			 * 按物理模型参数设置目标控制量
  			 */
 			DLL_EXPORT handler_t STD_CALL
 			drive_physical(double speed, double rudder) noexcept;
 			
 			/**
-			 * 行驶
+		  	 * 按两轮轮速设置目标控制量
+		  	 */
+			DLL_EXPORT handler_t STD_CALL
+			drive_wheels(double left, double right) noexcept;
+			
+			/**
+			 * 按速度矢量设置目标控制量
 			 */
 			DLL_EXPORT handler_t STD_CALL
-			drive(double v, double w) noexcept;
+			drive_velocity(double v, double w) noexcept;
 			
 			/**
 			 * 计算里程度量
@@ -131,7 +137,7 @@ namespace autolabor {
 			spatium_calculate(double spatium, double angle) noexcept;
 			
 			/**
-			 * 行驶
+			 * 按里程度量约束行驶
 			 */
 			DLL_EXPORT handler_t STD_CALL
 			drive_spatial(double v,
@@ -140,13 +146,45 @@ namespace autolabor {
 			              double &progress) noexcept;
 			
 			/**
-			 * 行驶
+			 * 按时间约束行驶
 			 */
 			DLL_EXPORT handler_t STD_CALL
 			drive_timing(double v,
 			             double w,
 			             double time,
 			             double &progress) noexcept;
+			
+			/**
+			 * 按距离约束向前行驶
+			 */
+			DLL_EXPORT handler_t STD_CALL
+			go_straight(double speed,
+			            double meters,
+			            double &progress) noexcept;
+			
+			/**
+			 * 按时间约束向前行驶
+			 */
+			DLL_EXPORT handler_t STD_CALL
+			go_straight_timing(double speed,
+			                   double seconds,
+			                   double &progress) noexcept;
+			
+			/**
+	 		 * 按距离约束原地转向
+	 		 */
+			DLL_EXPORT handler_t STD_CALL
+			turn_around(double speed,
+			            double rad,
+			            double &progress) noexcept;
+			
+			/**
+			 * 按时间约束原地转向
+			 */
+			DLL_EXPORT handler_t STD_CALL
+			turn_around_timing(double speed,
+			                   double seconds,
+			                   double &progress) noexcept;
 			
 			/**
 			 * 矫正后轮
@@ -174,10 +212,12 @@ namespace autolabor {
 			is_paused() noexcept;
 			
 			/**
-			 * 取消所有正在执行的动作
+			 * 取消正在执行的动作
+			 *
+			 * 当成功获取锁，认为所有动作已取消
 			 */
 			DLL_EXPORT void STD_CALL
-			cancel_all() noexcept;
+			cancel_action() noexcept;
 		}
 	}
 }

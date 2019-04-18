@@ -271,7 +271,15 @@ drive_physical(double speed, double rudder) noexcept {
 
 handler_t
 STD_CALL autolabor::pm1::native::
-drive(double v, double w) noexcept {
+drive_wheels(double left, double right) noexcept {
+	wheels temp{static_cast<float>(left), static_cast<float>(right)};
+	auto   physical = wheels_to_physical(&temp, &default_config);
+	return drive_physical(physical.speed, physical.rudder);
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+drive_velocity(double v, double w) noexcept {
 	velocity temp{static_cast<float>(v), static_cast<float>(w)};
 	auto     physical = velocity_to_physical(&temp, &default_config);
 	return drive_physical(physical.speed, physical.rudder);
@@ -398,6 +406,46 @@ drive_timing(double v,
 
 handler_t
 STD_CALL autolabor::pm1::native::
+go_straight(double speed,
+            double meters,
+            double &progress) noexcept {
+	return drive_spatial(speed, 0,
+	                     spatium_calculate(meters, 0),
+	                     progress);
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+go_straight_timing(double speed,
+                   double seconds,
+                   double &progress) noexcept {
+	return drive_timing(speed, 0,
+	                    seconds,
+	                    progress);
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+turn_around(double speed,
+            double rad,
+            double &progress) noexcept {
+	return drive_spatial(0, speed,
+	                     spatium_calculate(0, rad),
+	                     progress);
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+turn_around_timing(double speed,
+                   double seconds,
+                   double &progress) noexcept {
+	return drive_timing(0, speed,
+	                    seconds,
+	                    progress);
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
 adjust_rudder(double offset,
               double &progress) noexcept {
 	handler_t id = ++task_id;
@@ -465,7 +513,7 @@ is_paused() noexcept { return pause_flag; }
 
 void
 STD_CALL autolabor::pm1::native::
-cancel_all() noexcept {
+cancel_action() noexcept {
 	cancel_flag = true;
 	{ std::lock_guard<std::mutex> wait(action_mutex); }
 	cancel_flag = false;
