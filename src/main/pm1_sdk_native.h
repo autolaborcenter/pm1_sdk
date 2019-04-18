@@ -104,9 +104,9 @@ namespace autolabor {
 			/**
 			 * 检查节点状态
 			 *
-			 * @return 0x00 : unknown
-			 *         0x01 : normal
-			 *         0xff : lock
+			 * @return 0x00 : offline
+			 *         0x01 : unlocked
+			 *         0xff : locked
 			 *         else : error
 			 */
 			DLL_EXPORT unsigned char STD_CALL
@@ -153,89 +153,6 @@ namespace autolabor {
 			             double w,
 			             double time,
 			             double &progress) noexcept;
-			
-			/**
-			 * 按距离约束向前行驶
-			 */
-			DLL_EXPORT handler_t STD_CALL
-			go_straight(double speed,
-			            double meters,
-			            double &progress) noexcept;
-			
-			/**
-			 * 按时间约束向前行驶
-			 */
-			DLL_EXPORT handler_t STD_CALL
-			go_straight_timing(double speed,
-			                   double seconds,
-			                   double &progress) noexcept;
-			
-			/**
-	 		 * 按距离约束原地转向
-	 		 */
-			DLL_EXPORT handler_t STD_CALL
-			turn_around(double speed,
-			            double rad,
-			            double &progress) noexcept;
-			
-			/**
-			 * 按时间约束原地转向
-			 */
-			DLL_EXPORT handler_t STD_CALL
-			turn_around_timing(double speed,
-			                   double seconds,
-			                   double &progress) noexcept;
-			
-			/**
-			 * 按圆弧行驶（线速度、半径、距离约束）
-	 		 */
-			DLL_EXPORT handler_t STD_CALL
-			go_arc_vs(double v,
-			          double r,
-			          double s,
-			          double &progress) noexcept;
-			/**
-  			 * 按圆弧行驶（线速度、半径、角度约束）
- 			 */
-			DLL_EXPORT handler_t STD_CALL
-			go_arc_va(double v,
-			          double r,
-			          double a,
-			          double &progress) noexcept;
-			/**
-  			 * 按圆弧行驶（角速度、半径、距离约束）
-	 		 */
-			DLL_EXPORT handler_t STD_CALL
-			go_arc_ws(double w,
-			          double r,
-			          double s,
-			          double &progress) noexcept;
-			/**
-  			 * 按圆弧行驶（角速度、半径、角度约束）
-	 		 */
-			DLL_EXPORT handler_t STD_CALL
-			go_arc_wa(double w,
-			          double r,
-			          double a,
-			          double &progress) noexcept;
-			
-			/**
-		   	 * 按圆弧行驶（线速度、半径、时间约束）
-		  	 */
-			DLL_EXPORT handler_t STD_CALL
-			go_arc_vt(double v,
-			          double r,
-			          double t,
-			          double &progress) noexcept;
-			
-			/**
-			 * 按圆弧行驶（角速度、半径、时间约束）
-   			 */
-			DLL_EXPORT handler_t STD_CALL
-			go_arc_wt(double w,
-			          double r,
-			          double t,
-			          double &progress) noexcept;
 			
 			/**
 			 * 矫正后轮

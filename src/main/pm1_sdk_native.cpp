@@ -10,14 +10,17 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "internal/exception_engine.hh"
-#include "internal/raii/safe_shared_ptr.hh"
-
 #include "internal/chassis.hh"
-#include "internal/serial/serial.h"
-#include "internal/raii/weak_shared_lock.hh"
-#include "internal/process_controller.hh"
+
+#include "internal/raii/safe_shared_ptr.hh"
 #include "internal/raii/weak_lock_guard.hh"
+#include "internal/raii/weak_shared_lock.hh"
+
+#include "internal/serial/serial.h"
+#include "internal/exception_engine.hh"
+#include "internal/process_controller.hh"
+
+constexpr auto action_conflict = "another action is invoking";
 
 // region task resources
 
@@ -257,7 +260,7 @@ drive_physical(double speed, double rudder) noexcept {
 	
 	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
 	if (!lock) {
-		exceptions.set(id, "another action is invoking");
+		exceptions.set(id, action_conflict);
 		return id;
 	}
 	
@@ -301,7 +304,7 @@ handler_t block(double v,
 	
 	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
 	if (!lock) {
-		exceptions.set(id, "another action is invoking");
+		exceptions.set(id, action_conflict);
 		return id;
 	}
 	
@@ -404,156 +407,6 @@ drive_timing(double v,
 	             progress);
 }
 
-inline handler_t save_exception(const std::string &info) {
-	handler_t id = ++task_id;
-	exceptions.set(id, "action never complete");
-	return id;
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_straight(double speed,
-            double meters,
-            double &progress) noexcept {
-	if (meters == 0) return ++task_id;
-	if (speed == 0) return save_exception("action never complete");
-	if (meters < 0) return save_exception("illegal action parameter");
-	
-	return drive_spatial(speed, 0,
-	                     spatium_calculate(meters, 0),
-	                     progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_straight_timing(double speed,
-                   double seconds,
-                   double &progress) noexcept {
-	if (seconds == 0) return ++task_id;
-	if (seconds < 0) return save_exception("illegal action parameter");
-	
-	return drive_timing(speed, 0,
-	                    seconds,
-	                    progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-turn_around(double speed,
-            double rad,
-            double &progress) noexcept {
-	if (rad == 0) return ++task_id;
-	if (speed == 0) return save_exception("action never complete");
-	if (rad < 0) return save_exception("illegal action parameter");
-	
-	return drive_spatial(0, speed,
-	                     spatium_calculate(0, rad),
-	                     progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-turn_around_timing(double speed,
-                   double seconds,
-                   double &progress) noexcept {
-	if (seconds == 0) return ++task_id;
-	if (seconds < 0) return save_exception("illegal action parameter");
-	
-	return drive_timing(0, speed,
-	                    seconds,
-	                    progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_arc_vs(double v,
-          double r,
-          double s,
-          double &progress) noexcept {
-	if (r == 0) return save_exception("illegal action parameter");
-	if (s == 0) return ++task_id;
-	if (v == 0) return save_exception("action never complete");
-	if (s < 0) return save_exception("illegal action parameter");
-	
-	return drive_spatial(v, v / r,
-	                     spatium_calculate(s, s / r),
-	                     progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_arc_va(double v,
-          double r,
-          double a,
-          double &progress) noexcept {
-	if (r == 0) return save_exception("illegal action parameter");
-	if (a == 0) return ++task_id;
-	if (v == 0) return save_exception("action never complete");
-	if (a < 0) return save_exception("illegal action parameter");
-	
-	return drive_spatial(v, v / r,
-	                     spatium_calculate(a * r, a),
-	                     progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_arc_ws(double w,
-          double r,
-          double s,
-          double &progress) noexcept {
-	if (r == 0) return save_exception("illegal action parameter");
-	if (s == 0) return ++task_id;
-	if (w == 0) return save_exception("action never complete");
-	if (s < 0) return save_exception("illegal action parameter");
-	
-	return drive_spatial(w * r, w,
-	                     spatium_calculate(s, s / r),
-	                     progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_arc_wa(double w,
-          double r,
-          double a,
-          double &progress) noexcept {
-	if (r == 0) return save_exception("illegal action parameter");
-	if (a == 0) return ++task_id;
-	if (w == 0) return save_exception("action never complete");
-	if (a < 0) return save_exception("illegal action parameter");
-	
-	return drive_spatial(w * r, w,
-	                     spatium_calculate(a * r, a),
-	                     progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_arc_vt(double v,
-          double r,
-          double t,
-          double &progress) noexcept {
-	if (r == 0) return save_exception("illegal action parameter");
-	if (t == 0) return ++task_id;
-	if (t < 0) return save_exception("illegal action parameter");
-	
-	return drive_timing(v, v / r, t, progress);
-}
-
-handler_t
-STD_CALL autolabor::pm1::native::
-go_arc_wt(double w,
-          double r,
-          double t,
-          double &progress) noexcept {
-	if (r == 0) return save_exception("illegal action parameter");
-	if (t == 0) return ++task_id;
-	if (t < 0) return save_exception("illegal action parameter");
-	
-	return drive_timing(w * r, w, t, progress);
-}
-
 handler_t
 STD_CALL autolabor::pm1::native::
 adjust_rudder(double offset,
@@ -562,7 +415,7 @@ adjust_rudder(double offset,
 	
 	weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
 	if (!lock) {
-		exceptions.set(id, "another action is invoking");
+		exceptions.set(id, action_conflict);
 		return id;
 	}
 	

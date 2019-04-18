@@ -35,16 +35,18 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 }
 
 autolabor::pm1::result<std::string>
-autolabor::pm1::initialize(const std::string &port, double *progress) {
+autolabor::pm1::initialize(const std::string &port,
+                           const autolabor::pm1::chassis_config &config,
+                           double *progress) {
 	double _progress;
 	auto   handler = native::initialize(port.c_str(),
-	                                    NAN,
-	                                    NAN,
-	                                    NAN,
-	                                    NAN,
-	                                    NAN,
-	                                    NAN,
-	                                    NAN,
+	                                    config.width,
+	                                    config.length,
+	                                    config.wheel_radius,
+	                                    config.optimize_width,
+	                                    config.acceleration,
+	                                    config.max_v,
+	                                    config.max_w,
 	                                    progress ? *progress : _progress);
 	auto   error   = std::string(native::get_error_info(handler));
 	native::remove_error_info(handler);
@@ -55,11 +57,6 @@ autolabor::pm1::initialize(const std::string &port, double *progress) {
 autolabor::pm1::result<void>
 autolabor::pm1::shutdown() {
 	return on_native([] { return native::shutdown(); });
-}
-
-autolabor::pm1::result<void>
-autolabor::pm1::drive(double v, double w) {
-	return on_native([=] { return native::drive_velocity(v, w); });
 }
 
 autolabor::pm1::result<autolabor::pm1::odometry>
@@ -90,9 +87,9 @@ autolabor::pm1::result<void> autolabor::pm1::unlock() {
 	return on_native([] { return native::unlock(); });
 }
 
-autolabor::pm1::result<autolabor::pm1::chassis_state>
-autolabor::pm1::get_chassis_state() {
-	return {"", static_cast<chassis_state>(native::check_state())};
+autolabor::pm1::chassis_state
+autolabor::pm1::check_state() {
+	return static_cast<chassis_state>(native::check_state());
 }
 
 void
@@ -100,127 +97,206 @@ autolabor::pm1::delay(double time) {
 	std::this_thread::sleep_for(seconds_duration(time));
 }
 
-constexpr auto
-	infinite_action = "action never complete",
-	invalid_target  = "invalid target";
+autolabor::pm1::result<void>
+autolabor::pm1::drive_physical(double speed, double rudder) {
+	return on_native([=] { return native::drive_physical(speed, rudder); });
+}
 
 autolabor::pm1::result<void>
-autolabor::pm1::go_straight(double speed,
-                            double distance,
-                            double *progress) {
-	if (speed == 0)
-		return {distance == 0 ? "" : infinite_action};
-	if (distance <= 0)
-		return {invalid_target};
-	
+autolabor::pm1::drive_wheels(double left, double right) {
+	return on_native([=] { return native::drive_wheels(left, right); });
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::drive_velocity(double v, double w) {
+	return on_native([=] { return native::drive_velocity(v, w); });
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::drive(double v, double w) {
+	return on_native([=] { return native::drive_velocity(v, w); });
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::drive_spatial(double v,
+                              double w,
+                              double spatium,
+                              double *progress) {
 	double _progress;
 	return on_native([&] {
 		return native::drive_spatial(
-			speed, 0, native::spatium_calculate(distance, 0),
+			v, w, spatium,
 			progress ? *progress : _progress);
 	});
 }
 
 autolabor::pm1::result<void>
-autolabor::pm1::go_straight_timing(double speed,
-                                   double time,
-                                   double *progress) {
-	if (time < 0)
-		return {invalid_target};
-	
+autolabor::pm1::drive_timing(double v,
+                             double w,
+                             double time,
+                             double *progress) {
 	double _progress;
 	return on_native([&] {
 		return native::drive_timing(
-			speed, 0, time,
+			v, w, time,
 			progress ? *progress : _progress);
 	});
+}
+
+constexpr auto
+	infinite_action = "action never complete",
+	negative_target = "action target argument must be positive";
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_straight(double speed,
+                            double meters,
+                            double *progress) {
+	if (meters == 0) return {};
+	if (speed == 0) return {infinite_action};
+	if (meters < 0) return {negative_target};
+	
+	return drive_spatial(speed, 0,
+	                     native::spatium_calculate(meters, 0),
+	                     progress);
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_straight_timing(double speed,
+                                   double seconds,
+                                   double *progress) {
+	if (seconds == 0) return {};
+	if (seconds < 0) return {negative_target};
+	
+	return drive_timing(speed, 0,
+	                    seconds,
+	                    progress);
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::turn_around(double speed,
                             double rad,
                             double *progress) {
-	if (speed == 0)
-		return {rad == 0 ? "" : infinite_action};
-	if (rad <= 0)
-		return {invalid_target};
+	if (rad == 0) return {};
+	if (speed == 0) return {infinite_action};
+	if (rad < 0) return {negative_target};
 	
-	double _progress;
-	return on_native([&] {
-		return native::drive_spatial(
-			0, speed, native::spatium_calculate(0, rad),
-			progress ? *progress : _progress);
-	});
+	return drive_spatial(0, speed,
+	                     native::spatium_calculate(0, rad),
+	                     progress);
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::turn_around_timing(double speed,
-                                   double time,
+                                   double seconds,
                                    double *progress) {
-	if (time < 0)
-		return {invalid_target};
+	if (seconds == 0) return {};
+	if (seconds < 0) return {negative_target};
 	
-	double _progress;
-	return on_native([&] {
-		return native::drive_timing(
-			0, speed, time,
-			progress ? *progress : _progress);
-	});
+	return drive_timing(0, speed,
+	                    seconds,
+	                    progress);
 }
 
 
 autolabor::pm1::result<void>
-autolabor::pm1::go_arc(double speed,
-                       double r,
-                       double rad,
-                       double *progress) {
-	if (std::abs(r) < 0.05)
-		return {"radius is too little, use turn_around instead"};
-	if (speed == 0)
-		return {rad == 0 ? "" : infinite_action};
-	if (rad <= 0)
-		return {invalid_target};
+autolabor::pm1::go_arc_vs(double v,
+                          double r,
+                          double s,
+                          double *progress) {
+	if (r == 0) return {"illegal action parameter"};
+	if (s == 0) return {};
+	if (v == 0) return {infinite_action};
+	if (s < 0) return {negative_target};
 	
-	double _progress;
-	return on_native([&] {
-		return native::drive_spatial(
-			speed, speed / r, native::spatium_calculate(r * rad, rad),
-			progress ? *progress : _progress);
-	});
+	return drive_spatial(v, v / r,
+	                     native::spatium_calculate(s, s / r),
+	                     progress);
 }
 
 autolabor::pm1::result<void>
-autolabor::pm1::go_arc_timing(double speed,
-                              double r,
-                              double time,
-                              double *progress) {
-	if (std::abs(r) < 0.05)
-		return {"radius is too little, use turn_around instead"};
-	if (time < 0)
-		return {invalid_target};
+autolabor::pm1::go_arc_va(double v,
+                          double r,
+                          double a,
+                          double *progress) {
+	if (r == 0) return {"illegal action parameter"};
+	if (a == 0) return {};
+	if (v == 0) return {infinite_action};
+	if (a < 0) return {negative_target};
 	
-	double _progress;
-	return on_native([&] {
-		return native::drive_timing(
-			speed, speed / r, time,
-			progress ? *progress : _progress);
-	});
+	return drive_spatial(v, v / r,
+	                     native::spatium_calculate(a * r, a),
+	                     progress);
 }
 
 autolabor::pm1::result<void>
+autolabor::pm1::go_arc_ws(double w,
+                          double r,
+                          double s,
+                          double *progress) {
+	if (r == 0) return {"illegal action parameter"};
+	if (s == 0) return {};
+	if (w == 0) return {infinite_action};
+	if (s < 0) return {negative_target};
+	
+	return drive_spatial(w * r, w,
+	                     native::spatium_calculate(s, s / r),
+	                     progress);
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_arc_wa(double w,
+                          double r,
+                          double a,
+                          double *progress) {
+	if (r == 0) return {"illegal action parameter"};
+	if (a == 0) return {};
+	if (w == 0) return {infinite_action};
+	if (a < 0) return {negative_target};
+	
+	return drive_spatial(w * r, w,
+	                     native::spatium_calculate(a * r, a),
+	                     progress);
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_arc_vt(double v,
+                          double r,
+                          double t,
+                          double *progress) {
+	if (r == 0) return {"illegal action parameter"};
+	if (t == 0) return {};
+	if (t < 0) return {negative_target};
+	
+	return drive_timing(v, v / r, t, progress);
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::go_arc_wt(double w,
+                          double r,
+                          double t,
+                          double *progress) {
+	if (r == 0) return {"illegal action parameter"};
+	if (t == 0) return {};
+	if (t < 0) return {negative_target};
+	
+	return drive_timing(w * r, w, t, progress);
+}
+
+void
 autolabor::pm1::pause() {
 	native::pause();
-	return {};
 }
 
-autolabor::pm1::result<void>
+void
 autolabor::pm1::resume() {
 	native::resume();
-	return {};
 }
 
-autolabor::pm1::result<void>
-autolabor::pm1::cancel_all() {
+bool autolabor::pm1::is_paused() {
+	return native::is_paused();
+}
+
+void
+autolabor::pm1::cancel_action() {
 	native::cancel_action();
-	return {};
 }
