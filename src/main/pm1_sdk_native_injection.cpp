@@ -223,6 +223,72 @@ turn_around_timing(double speed,
 
 handler_t
 STD_CALL autolabor::pm1::native::
+go_arc_vs(double v,
+          double r,
+          double s,
+          double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+go_arc_va(double v,
+          double r,
+          double a,
+          double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+go_arc_ws(double w,
+          double r,
+          double s,
+          double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+go_arc_wa(double w,
+          double r,
+          double a,
+          double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+go_arc_vt(double v,
+          double r,
+          double t,
+          double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+go_arc_wt(double w,
+          double r,
+          double t,
+          double &progress) noexcept {
+	handler_t id = ++task_id;
+	progress = 1;
+	return id;
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
 adjust_rudder(double offset,
               double &progress) noexcept {
 	handler_t id = ++task_id;

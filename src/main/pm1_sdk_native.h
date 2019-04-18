@@ -187,6 +187,57 @@ namespace autolabor {
 			                   double &progress) noexcept;
 			
 			/**
+			 * 按圆弧行驶（线速度、半径、距离约束）
+	 		 */
+			DLL_EXPORT handler_t STD_CALL
+			go_arc_vs(double v,
+			          double r,
+			          double s,
+			          double &progress) noexcept;
+			/**
+  			 * 按圆弧行驶（线速度、半径、角度约束）
+ 			 */
+			DLL_EXPORT handler_t STD_CALL
+			go_arc_va(double v,
+			          double r,
+			          double a,
+			          double &progress) noexcept;
+			/**
+  			 * 按圆弧行驶（角速度、半径、距离约束）
+	 		 */
+			DLL_EXPORT handler_t STD_CALL
+			go_arc_ws(double w,
+			          double r,
+			          double s,
+			          double &progress) noexcept;
+			/**
+  			 * 按圆弧行驶（角速度、半径、角度约束）
+	 		 */
+			DLL_EXPORT handler_t STD_CALL
+			go_arc_wa(double w,
+			          double r,
+			          double a,
+			          double &progress) noexcept;
+			
+			/**
+		   	 * 按圆弧行驶（线速度、半径、时间约束）
+		  	 */
+			DLL_EXPORT handler_t STD_CALL
+			go_arc_vt(double v,
+			          double r,
+			          double t,
+			          double &progress) noexcept;
+			
+			/**
+			 * 按圆弧行驶（角速度、半径、时间约束）
+   			 */
+			DLL_EXPORT handler_t STD_CALL
+			go_arc_wt(double w,
+			          double r,
+			          double t,
+			          double &progress) noexcept;
+			
+			/**
 			 * 矫正后轮
 			 */
 			DLL_EXPORT handler_t STD_CALL
