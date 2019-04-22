@@ -17,11 +17,10 @@ extern "C" {
 }
 
 autolabor::pm1::result<void>
-on_native(std::function < autolabor::pm1::native::handler_t() > && block) {
+on_native(autolabor::pm1::native::handler_t handler) {
 	using namespace autolabor::pm1;
 	
-	auto handler = block();
-	auto error   = std::string(native::get_error_info(handler));
+	auto error = std::string(native::get_error_info(handler));
 	native::remove_error_info(handler);
 	return {error};
 }
@@ -48,7 +47,35 @@ autolabor::pm1::initialize(const std::string &port,
 
 autolabor::pm1::result<void>
 autolabor::pm1::shutdown() {
-	return on_native([] { return native::shutdown(); });
+	return on_native(native::shutdown());
+}
+
+double
+autolabor::pm1::get_defualt_parameter(autolabor::pm1::parameter_id id) {
+	return native::get_default_parameter(static_cast<native::handler_t>(id));
+}
+
+autolabor::pm1::result<double>
+autolabor::pm1::get_parameter(autolabor::pm1::parameter_id id) {
+	double value;
+	auto   result = on_native(
+		native::get_parameter(
+			static_cast<native::handler_t>(id), value));
+	return {result.error_info, value};
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::set_parameter(autolabor::pm1::parameter_id id, double value) {
+	return on_native(
+		native::set_parameter(
+			static_cast<native::handler_t>(id), value));
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::reset_parameter(autolabor::pm1::parameter_id id) {
+	return on_native(
+		native::reset_parameter(
+			static_cast<native::handler_t>(id)));
 }
 
 autolabor::pm1::result<autolabor::pm1::odometry>
@@ -67,16 +94,16 @@ autolabor::pm1::get_odometry() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::reset_odometry() {
-	return on_native([] { return native::reset_odometry(); });
+	return on_native(native::reset_odometry());
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::lock() {
-	return on_native([] { return native::lock(); });
+	return on_native(native::lock());
 }
 
 autolabor::pm1::result<void> autolabor::pm1::unlock() {
-	return on_native([] { return native::unlock(); });
+	return on_native(native::unlock());
 }
 
 autolabor::pm1::chassis_state
@@ -91,22 +118,22 @@ autolabor::pm1::delay(double time) {
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive_physical(double speed, double rudder) {
-	return on_native([=] { return native::drive_physical(speed, rudder); });
+	return on_native(native::drive_physical(speed, rudder));
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive_wheels(double left, double right) {
-	return on_native([=] { return native::drive_wheels(left, right); });
+	return on_native(native::drive_wheels(left, right));
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive_velocity(double v, double w) {
-	return on_native([=] { return native::drive_velocity(v, w); });
+	return on_native(native::drive_velocity(v, w));
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive(double v, double w) {
-	return on_native([=] { return native::drive_velocity(v, w); });
+	return on_native(native::drive_velocity(v, w));
 }
 
 autolabor::pm1::result<void>
@@ -115,11 +142,10 @@ autolabor::pm1::drive_spatial(double v,
                               double spatium,
                               double *progress) {
 	double _progress;
-	return on_native([&] {
-		return native::drive_spatial(
+	return on_native(
+		native::drive_spatial(
 			v, w, spatium,
-			progress ? *progress : _progress);
-	});
+			progress ? *progress : _progress));
 }
 
 autolabor::pm1::result<void>
@@ -128,11 +154,10 @@ autolabor::pm1::drive_timing(double v,
                              double time,
                              double *progress) {
 	double _progress;
-	return on_native([&] {
-		return native::drive_timing(
+	return on_native(
+		native::drive_timing(
 			v, w, time,
-			progress ? *progress : _progress);
-	});
+			progress ? *progress : _progress));
 }
 
 constexpr auto

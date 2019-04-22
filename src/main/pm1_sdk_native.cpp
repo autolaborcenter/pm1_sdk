@@ -84,9 +84,9 @@ get_current_port() noexcept {
 	return current_port.c_str();
 }
 
-enum parameter_id : handler_t {
-	length,
+enum class parameter_id : handler_t {
 	width,
+	length,
 	wheel_radius,
 	optimize_width,
 	acceleration,
@@ -97,20 +97,20 @@ enum parameter_id : handler_t {
 double
 STD_CALL autolabor::pm1::native::
 get_default_parameter(handler_t id) noexcept {
-	switch ((parameter_id) id) {
-		case length:
+	switch (static_cast<parameter_id>(id)) {
+		case parameter_id::length:
 			return default_config.length;
-		case width:
+		case parameter_id::width:
 			return default_config.width;
-		case wheel_radius:
+		case parameter_id::wheel_radius:
 			return default_config.radius;
-		case optimize_width:
+		case parameter_id::optimize_width:
 			return pi_f / 4;
-		case acceleration:
+		case parameter_id::acceleration:
 			return 2 * pi_f;
-		case max_v:
+		case parameter_id::max_v:
 			return INFINITY;
-		case max_w:
+		case parameter_id::max_w:
 			return pi_f / 3;
 	}
 }
@@ -119,20 +119,20 @@ handler_t
 STD_CALL autolabor::pm1::native::
 get_parameter(handler_t id, double &value) noexcept {
 	return use_ptr([id, &value](ptr_t ptr) {
-		switch ((parameter_id) id) {
-			case length:
+		switch (static_cast<parameter_id>(id)) {
+			case parameter_id::length:
 				value = ptr->config.length;
-			case width:
+			case parameter_id::width:
 				value = ptr->config.width;
-			case wheel_radius:
+			case parameter_id::wheel_radius:
 				value = ptr->config.radius;
-			case optimize_width:
+			case parameter_id::optimize_width:
 				value = ptr->optimize_width;
-			case acceleration:
+			case parameter_id::acceleration:
 				value = ptr->acceleration;
-			case max_v:
+			case parameter_id::max_v:
 				value = ptr->max_v;
-			case max_w:
+			case parameter_id::max_w:
 				value = ptr->max_w;
 		}
 	});
@@ -142,20 +142,20 @@ handler_t
 STD_CALL autolabor::pm1::native::
 set_parameter(handler_t id, double value) noexcept {
 	return use_ptr([=](ptr_t ptr) {
-		switch ((parameter_id) id) {
-			case length:
+		switch (static_cast<parameter_id>(id)) {
+			case parameter_id::length:
 				ptr->config.length  = value;
-			case width:
+			case parameter_id::width:
 				ptr->config.width   = value;
-			case wheel_radius:
+			case parameter_id::wheel_radius:
 				ptr->config.radius  = value;
-			case optimize_width:
+			case parameter_id::optimize_width:
 				ptr->optimize_width = value;
-			case acceleration:
+			case parameter_id::acceleration:
 				ptr->acceleration   = value;
-			case max_v:
+			case parameter_id::max_v:
 				ptr->max_v          = value;
-			case max_w:
+			case parameter_id::max_w:
 				ptr->max_w          = value;
 		}
 	});

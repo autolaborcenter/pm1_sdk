@@ -81,6 +81,16 @@ namespace autolabor {
 			       max_w          = NAN;
 		};
 		
+		enum class parameter_id : uint32_t {
+			width,
+			length,
+			wheel_radius,
+			optimize_width,
+			acceleration,
+			max_v,
+			max_w
+		};
+		
 		/**
 		 * 底盘状态
 		 */
@@ -123,6 +133,34 @@ namespace autolabor {
 		 */
 		DLL_EXPORT result<void>
 		shutdown();
+		
+		/**
+		 * 获取参数默认值
+		 *
+		 * @return 参数默认值
+		 */
+		DLL_EXPORT double
+		get_defualt_parameter(parameter_id);
+		
+		/**
+		 * 获取参数当前值
+		 *
+		 * @return 参数当前值
+		 */
+		DLL_EXPORT result<double>
+		get_parameter(parameter_id);
+		
+		/**
+		 * 设置参数
+		 */
+		DLL_EXPORT result<void>
+		set_parameter(parameter_id, double);
+		
+		/**
+		 * 重置参数
+		 */
+		DLL_EXPORT result<void>
+		reset_parameter(parameter_id);
 		
 		/**
 		 * 获取里程计值
