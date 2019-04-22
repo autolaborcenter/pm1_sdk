@@ -113,10 +113,8 @@ namespace autolabor {
 		 * @returns 执行结果
 		 */
 		DLL_EXPORT result<std::string>
-		initialize(
-			const std::string &port = "",
-			const chassis_config &config = {},
-			double *progress = nullptr);
+		initialize(const std::string &port = "",
+		           double *progress = nullptr);
 		
 		/**
 		 * 关闭

@@ -44,29 +44,10 @@ namespace autolabor {
 			get_current_port() noexcept;
 			
 			/**
-			 * 获取默认参数
-			 */
-			DLL_EXPORT void STD_CALL
-			get_default_chassis_config(double &width,
-			                           double &length,
-			                           double &wheel_radius,
-			                           double &optimize_width,
-			                           double &max_v,
-			                           double &max_w,
-			                           double &acceleration) noexcept;
-			
-			/**
 			 * 初始化
 			 */
 			DLL_EXPORT handler_t STD_CALL
 			initialize(const char *port,
-			           double width,
-			           double length,
-			           double wheel_radius,
-			           double optimize_width,
-			           double acceleration,
-			           double max_v,
-			           double max_w,
 			           double &progress) noexcept;
 			
 			/**
@@ -74,6 +55,30 @@ namespace autolabor {
 			 */
 			DLL_EXPORT handler_t STD_CALL
 			shutdown() noexcept;
+			
+			/**
+			 * 获取默认参数
+			 */
+			DLL_EXPORT double STD_CALL
+			get_default_parameter(handler_t id) noexcept;
+			
+			/**
+			 * 获取参数
+			 */
+			DLL_EXPORT handler_t STD_CALL
+			get_parameter(handler_t id, double &value) noexcept;
+			
+			/**
+			 * 设置参数
+			 */
+			DLL_EXPORT handler_t STD_CALL
+			set_parameter(handler_t id, double value) noexcept;
+			
+			/**
+			 * 重置参数
+			 */
+			DLL_EXPORT handler_t STD_CALL
+			reset_parameter(handler_t id) noexcept;
 			
 			/**
 			 * 获取里程计值

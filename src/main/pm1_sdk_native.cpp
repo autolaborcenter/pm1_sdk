@@ -84,34 +84,92 @@ get_current_port() noexcept {
 	return current_port.c_str();
 }
 
-void
+enum parameter_id : handler_t {
+	length,
+	width,
+	wheel_radius,
+	optimize_width,
+	acceleration,
+	max_v,
+	max_w
+};
+
+double
 STD_CALL autolabor::pm1::native::
-get_default_chassis_config(double &width,
-                           double &length,
-                           double &wheel_radius,
-                           double &optimize_width,
-                           double &acceleration,
-                           double &max_v,
-                           double &max_w) noexcept {
-	width          = default_config.width;
-	length         = default_config.length;
-	wheel_radius   = default_config.radius;
-	optimize_width = pi_f / 4;
-	acceleration   = 2 * pi_f;
-	max_v          = INFINITY;
-	max_w          = INFINITY;
+get_default_parameter(handler_t id) noexcept {
+	switch ((parameter_id) id) {
+		case length:
+			return default_config.length;
+		case width:
+			return default_config.width;
+		case wheel_radius:
+			return default_config.radius;
+		case optimize_width:
+			return pi_f / 4;
+		case acceleration:
+			return 2 * pi_f;
+		case max_v:
+			return INFINITY;
+		case max_w:
+			return pi_f / 3;
+	}
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+get_parameter(handler_t id, double &value) noexcept {
+	return use_ptr([id, &value](ptr_t ptr) {
+		switch ((parameter_id) id) {
+			case length:
+				value = ptr->config.length;
+			case width:
+				value = ptr->config.width;
+			case wheel_radius:
+				value = ptr->config.radius;
+			case optimize_width:
+				value = ptr->optimize_width;
+			case acceleration:
+				value = ptr->acceleration;
+			case max_v:
+				value = ptr->max_v;
+			case max_w:
+				value = ptr->max_w;
+		}
+	});
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+set_parameter(handler_t id, double value) noexcept {
+	return use_ptr([=](ptr_t ptr) {
+		switch ((parameter_id) id) {
+			case length:
+				ptr->config.length  = value;
+			case width:
+				ptr->config.width   = value;
+			case wheel_radius:
+				ptr->config.radius  = value;
+			case optimize_width:
+				ptr->optimize_width = value;
+			case acceleration:
+				ptr->acceleration   = value;
+			case max_v:
+				ptr->max_v          = value;
+			case max_w:
+				ptr->max_w          = value;
+		}
+	});
+}
+
+handler_t
+STD_CALL autolabor::pm1::native::
+reset_parameter(handler_t id) noexcept {
+	return set_parameter(id, get_default_parameter(id));
 }
 
 handler_t
 STD_CALL autolabor::pm1::native::
 initialize(const char *port,
-           double width,
-           double length,
-           double wheel_radius,
-           double optimize_width,
-           double acceleration,
-           double max_v,
-           double max_w,
            double &progress) noexcept {
 	const static auto serial_ports = [] {
 		auto                     info = serial::list_ports();
@@ -123,14 +181,6 @@ initialize(const char *port,
 	
 	handler_t id = ++task_id;
 	progress = 0;
-	
-	const static auto if_nan = [](double expect, double default_value) {
-		return static_cast<float>(std::isnan(expect) ? default_value : expect);
-	};
-	
-	chassis_config_t config{if_nan(width, default_config.width),
-	                        if_nan(length, default_config.length),
-	                        if_nan(wheel_radius, default_config.radius)};
 	
 	auto list = port == nullptr || std::strlen(port) == 0
 	            ? serial_ports()
@@ -144,19 +194,14 @@ initialize(const char *port,
 		for (auto i = list.begin();;) {
 			progress = static_cast<double>(i - list.begin()) / list.size();
 			try {
-				auto ptr = std::make_shared<chassis>
-					(*i, config,
-					 if_nan(optimize_width, pi_f / 4),
-					 if_nan(acceleration, 2 * pi_f));
+				auto ptr = std::make_shared<chassis>(*i);
 				
 				chassis_ptr(ptr);
 				builder.str("");
 				odometry_mark = ptr->odometry();
-				ptr->max_v = if_nan(max_v, INFINITY);
-				ptr->max_w = if_nan(max_w, INFINITY);
-				current_port = *i;
-				pause_flag   = false;
-				cancel_flag  = false;
+				current_port  = *i;
+				pause_flag    = false;
+				cancel_flag   = false;
 				break;
 			}
 			catch (std::exception &e) {

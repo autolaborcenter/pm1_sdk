@@ -47,13 +47,16 @@ namespace autolabor {
 		/** 底盘 */
 		class chassis final {
 		public:
-			// 速度矢量空间限幅
-			float max_v, max_w;
+			/** 机械参数 */
+			chassis_config_t config;
 			
-			explicit chassis(const std::string &port_name,
-			                 const chassis_config_t & = default_config,
-			                 float optimize_width = pi_f / 4,
-			                 float acceleration = INFINITY);
+			/** 控制参数 */
+			float optimize_width,
+			      acceleration,
+			      max_v,
+			      max_w;
+			
+			explicit chassis(const std::string &port_name);
 			
 			/** 析构 */
 			~chassis();

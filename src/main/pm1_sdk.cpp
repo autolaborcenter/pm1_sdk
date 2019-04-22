@@ -36,17 +36,9 @@ std::vector<std::string> autolabor::pm1::serial_ports() {
 
 autolabor::pm1::result<std::string>
 autolabor::pm1::initialize(const std::string &port,
-                           const autolabor::pm1::chassis_config &config,
                            double *progress) {
 	double _progress;
 	auto   handler = native::initialize(port.c_str(),
-	                                    config.width,
-	                                    config.length,
-	                                    config.wheel_radius,
-	                                    config.optimize_width,
-	                                    config.acceleration,
-	                                    config.max_v,
-	                                    config.max_w,
 	                                    progress ? *progress : _progress);
 	auto   error   = std::string(native::get_error_info(handler));
 	native::remove_error_info(handler);

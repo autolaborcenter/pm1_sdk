@@ -56,14 +56,15 @@ constexpr long long int count_ms(t time) {
 
 // endregion
 
-chassis::chassis(const std::string &port_name,
-                 const chassis_config_t &chassis_config,
-                 float optimize_width,
-                 float acceleration)
+chassis::chassis(const std::string &port_name)
 	: port(port_name, 115200),
 	  running(true),
+	  config(default_config),
+	  optimize_width(pi_f / 4),
+	  acceleration(INFINITY),
 	  max_v(INFINITY),
 	  max_w(INFINITY) {
+	
 	using namespace std::chrono_literals;
 	using result_t  = autolabor::can::parser::result_type;
 	
@@ -218,10 +219,11 @@ chassis::chassis(const std::string &port_name,
 					
 					_left.update(_now, value);
 					
+					
 					if (right_ready) {
-						odometry_t delta = delta_differential_t{chassis_config.width,
-						                                        chassis_config.radius * delta_left,
-						                                        chassis_config.radius * delta_right,
+						odometry_t delta = delta_differential_t{config.width,
+						                                        config.radius * delta_left,
+						                                        config.radius * delta_right,
 						                                        _now - time};
 						atomic_plus_assign(_odometry, delta);
 						right_ready = false;
@@ -237,9 +239,9 @@ chassis::chassis(const std::string &port_name,
 					_right.update(_now, value);
 					
 					if (left_ready) {
-						odometry_t delta = delta_differential_t{chassis_config.width,
-						                                        chassis_config.radius * delta_left,
-						                                        chassis_config.radius * delta_right,
+						odometry_t delta = delta_differential_t{config.width,
+						                                        config.radius * delta_left,
+						                                        config.radius * delta_right,
 						                                        _now - time};
 						atomic_plus_assign(_odometry, delta);
 						left_ready = false;
@@ -259,13 +261,13 @@ chassis::chassis(const std::string &port_name,
 					auto     optimized = optimize(&target, &current, optimize_width, acceleration);
 					speed = optimized.speed;
 					
-					auto     limiting = physical_to_velocity(&optimized, &chassis_config);
+					auto     limiting = physical_to_velocity(&optimized, &config);
 					auto     ratio    = std::max({1.0f,
 					                              std::abs(limiting.v / this->max_v),
 					                              std::abs(limiting.w / this->max_w)});
 					physical limited{optimized.speed / ratio, optimized.rudder};
 					
-					auto wheels = physical_to_wheels(&limited, &chassis_config);
+					auto wheels = physical_to_wheels(&limited, &config);
 					auto left   = PULSES_OF(wheels.left, default_wheel_k);
 					auto right  = PULSES_OF(wheels.right, default_wheel_k);
 					auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
