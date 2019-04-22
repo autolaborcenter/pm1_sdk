@@ -11,7 +11,7 @@
 #define STD_CALL   __stdcall
 #else
 #define DLL_EXPORT
-#define STD_CALL
+#define STD_CALL   __artribute__((stdcall))
 #endif // _MSC_VER
 
 namespace autolabor {

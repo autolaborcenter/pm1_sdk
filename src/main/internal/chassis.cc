@@ -255,19 +255,19 @@ chassis::chassis(const std::string &port_name)
 					_rudder.update(_now, value);
 					
 					if (std::isnan(target.rudder) || now() - request_time > control_timeout)
-						target         = {0, value};
+						target = {0, value};
+					
+					auto     limiting  = physical_to_velocity(&target, &config);
+					auto     ratio     = std::max({1.0f,
+					                               std::abs(limiting.v / this->max_v),
+					                               std::abs(limiting.w / this->max_w)});
+					physical limited{target.speed / ratio, target.rudder};
 					
 					physical current{speed, value};
 					auto     optimized = optimize(&target, &current, optimize_width, acceleration);
 					speed = optimized.speed;
 					
-					auto     limiting = physical_to_velocity(&optimized, &config);
-					auto     ratio    = std::max({1.0f,
-					                              std::abs(limiting.v / this->max_v),
-					                              std::abs(limiting.w / this->max_w)});
-					physical limited{optimized.speed / ratio, optimized.rudder};
-					
-					auto wheels = physical_to_wheels(&limited, &config);
+					auto wheels = physical_to_wheels(&optimized, &config);
 					auto left   = PULSES_OF(wheels.left, default_wheel_k);
 					auto right  = PULSES_OF(wheels.right, default_wheel_k);
 					auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
