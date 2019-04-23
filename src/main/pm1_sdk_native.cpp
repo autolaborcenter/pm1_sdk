@@ -122,18 +122,25 @@ get_parameter(handler_t id, double &value) noexcept {
 		switch (static_cast<parameter_id>(id)) {
 			case parameter_id::length:
 				value = ptr->config.length;
+				break;
 			case parameter_id::width:
 				value = ptr->config.width;
+				break;
 			case parameter_id::wheel_radius:
 				value = ptr->config.radius;
+				break;
 			case parameter_id::optimize_width:
 				value = ptr->optimize_width;
+				break;
 			case parameter_id::acceleration:
 				value = ptr->acceleration;
+				break;
 			case parameter_id::max_v:
 				value = ptr->max_v;
+				break;
 			case parameter_id::max_w:
 				value = ptr->max_w;
+				break;
 		}
 	});
 }
