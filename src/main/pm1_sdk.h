@@ -69,26 +69,16 @@ namespace autolabor {
 		};
 		
 		/**
-		 * 底盘初始设定项
+		 * 读写底盘状态使用的序列号
 		 */
-		struct chassis_config {
-			double width          = NAN,
-			       length         = NAN,
-			       wheel_radius   = NAN,
-			       optimize_width = NAN,
-			       acceleration   = NAN,
-			       max_v          = NAN,
-			       max_w          = NAN;
-		};
-		
 		enum class parameter_id : uint32_t {
-			width,
-			length,
-			wheel_radius,
-			optimize_width,
-			acceleration,
-			max_v,
-			max_w
+			width,          // 宽度（轮间距）
+			length,         // 长度（轴间距）
+			wheel_radius,   // 轮半径
+			optimize_width, // 优化函数宽度
+			acceleration,   // 最大轮角加速度
+			max_v,          // 最大线速度
+			max_w           // 最大角速度
 		};
 		
 		/**
@@ -120,7 +110,6 @@ namespace autolabor {
 		 * @param port     串口名字
 		 * @param config   初始设定参数
 		 * @param progress 进度
-		 * @returns 执行结果
 		 */
 		DLL_EXPORT result<std::string>
 		initialize(const std::string &port = "",
@@ -128,8 +117,6 @@ namespace autolabor {
 		
 		/**
 		 * 关闭
-		 *
-		 * @returns 执行结果
 		 */
 		DLL_EXPORT result<void>
 		shutdown();
@@ -137,30 +124,37 @@ namespace autolabor {
 		/**
 		 * 获取参数默认值
 		 *
+		 * @param id 要获取的参数项
 		 * @return 参数默认值
 		 */
 		DLL_EXPORT double
-		get_defualt_parameter(parameter_id);
+		get_defualt_parameter(parameter_id id);
 		
 		/**
 		 * 获取参数当前值
 		 *
+		 * @param id 要获取的参数项
 		 * @return 参数当前值
 		 */
 		DLL_EXPORT result<double>
-		get_parameter(parameter_id);
+		get_parameter(parameter_id id);
 		
 		/**
 		 * 设置参数
+		 *
+		 * @param id    要设置的参数项
+		 * @param value 参数值
 		 */
 		DLL_EXPORT result<void>
-		set_parameter(parameter_id, double);
+		set_parameter(parameter_id id, double value);
 		
 		/**
 		 * 重置参数
+		 *
+		 * @param id 要重置的参数项
 		 */
 		DLL_EXPORT result<void>
-		reset_parameter(parameter_id);
+		reset_parameter(parameter_id id);
 		
 		/**
 		 * 获取里程计值
@@ -172,24 +166,18 @@ namespace autolabor {
 		
 		/**
 		 * 清除里程计累计值
-		 *
-		 * @returns 执行结果
 		 */
 		DLL_EXPORT result<void>
 		reset_odometry();
 		
 		/**
 		 * 锁定底盘
-		 *
-		 * @returns 执行结果
 		 */
 		DLL_EXPORT result<void>
 		lock();
 		
 		/**
 		 * 解锁底盘
-		 *
-		 * @returns 执行结果
 		 */
 		DLL_EXPORT result<void>
 		unlock();
@@ -197,18 +185,18 @@ namespace autolabor {
 		/**
 		 * 检查节点状态
 		 *
-		 * @returns 执行结果
+		 * @returns 机器人状态
 		 */
 		DLL_EXPORT chassis_state
 		check_state();
 		
 		/**
-		 * 延时
+		 * 阻塞线程延时
 		 *
-		 * @param time 时间
+		 * @param seconds 时间
 		 */
 		DLL_EXPORT void
-		delay(double time);
+		delay(double seconds);
 		
 		/**
  		 * 控制机器人运行
@@ -248,6 +236,11 @@ namespace autolabor {
 		
 		/**
 		 * 控制机器人按空间约束运行指定动作
+		 *
+		 * @param v        线速度
+		 * @param w        角速度
+		 * @param spatium  空间约束
+		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		drive_spatial(double v,
@@ -257,6 +250,11 @@ namespace autolabor {
 		
 		/**
 		 * 控制机器人按时间约束运行指定动作
+		 *
+		 * @param v        线速度
+		 * @param w        角速度
+		 * @param time     时间约束
+		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		drive_timing(double v,
@@ -267,8 +265,9 @@ namespace autolabor {
 		/**
 		 * 走直线
 		 *
-		 * @param speed  线速度
-		 * @param meters 距离
+		 * @param speed    线速度
+		 * @param meters   距离
+		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		go_straight(double speed,
@@ -278,8 +277,9 @@ namespace autolabor {
 		/**
 		 * 走直线
 		 *
-		 * @param speed   线速度
-		 * @param seconds 时间
+		 * @param speed    线速度
+		 * @param seconds  时间
+		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		go_straight_timing(double speed,
@@ -289,8 +289,9 @@ namespace autolabor {
 		/**
 		 * 原地转
 		 *
-		 * @param speed 角速度
-		 * @param rad   弧度
+		 * @param speed    角速度
+		 * @param rad      弧度
+		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		turn_around(double speed,
@@ -300,8 +301,9 @@ namespace autolabor {
 		/**
 		 * 原地转
 		 *
-		 * @param speed 角速度
-		 * @param time  时间
+		 * @param speed    角速度
+		 * @param time     时间
+		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		turn_around_timing(double speed,
@@ -311,6 +313,9 @@ namespace autolabor {
 		/**
 		 * 走圆弧
 		 *
+		 * @param v        线速度
+		 * @param r        转弯半径
+		 * @param s        路程约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
@@ -321,6 +326,9 @@ namespace autolabor {
 		/**
 		 * 走圆弧
 		 *
+		 * @param v        线速度
+		 * @param r        转弯半径
+		 * @param a        转向约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
@@ -331,6 +339,9 @@ namespace autolabor {
 		/**
 		 * 走圆弧
 		 *
+		 * @param w        角速度
+		 * @param r        转弯半径
+		 * @param s        路程约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
@@ -341,6 +352,9 @@ namespace autolabor {
 		/**
 		 * 走圆弧
 		 *
+		 * @param w        角速度
+		 * @param r        转弯半径
+		 * @param a        转向约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
@@ -351,6 +365,9 @@ namespace autolabor {
 		/**
 		 * 走圆弧
 		 *
+		 * @param v        线速度
+		 * @param r        转弯半径
+		 * @param t        时间约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
@@ -361,6 +378,9 @@ namespace autolabor {
 		/**
 		 * 走圆弧
 		 *
+		 * @param w        角速度
+		 * @param r        转弯半径
+		 * @param t        时间约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
