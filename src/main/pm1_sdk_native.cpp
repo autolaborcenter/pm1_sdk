@@ -440,10 +440,19 @@ drive_spatial(double v,
               double w,
               double spatium,
               double &progress) noexcept {
+	odometry_t origin{};
+	
+	try {
+		origin = chassis_ptr.read<odometry_t>([](ptr_t ptr) { return ptr->odometry(); });
+	} catch (std::exception &e) {
+		handler_t id = ++task_id;
+		exceptions.set(id, e.what());
+		return id;
+	}
+	
 	return block(v, w, spatium,
 	             {0.5, 0.1, 12, 4},
-	             [origin = chassis_ptr.read<odometry_t>([](ptr_t ptr) { return ptr->odometry(); })]
-		             (ptr_t ptr) {
+	             [origin](ptr_t ptr) {
 		             auto odometry = ptr->odometry() - origin;
 		             return spatium_calculate(odometry.s, odometry.sa);
 	             },

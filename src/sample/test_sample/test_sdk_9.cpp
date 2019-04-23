@@ -12,10 +12,10 @@ int main() {
 	
 	std::thread([&] {
 		while (true) {
-			//			std::cout << autolabor::pm1::get_odometry().value.yaw << ", "
-			//			          << progress
-			//			          << std::endl;
-			//			autolabor::pm1::delay(0.1);
+			std::cout << autolabor::pm1::get_odometry().value.yaw << ", "
+			          << progress
+			          << std::endl;
+			autolabor::pm1::delay(0.1);
 		}
 	}).detach();
 	
