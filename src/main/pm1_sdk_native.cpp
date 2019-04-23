@@ -151,19 +151,26 @@ set_parameter(handler_t id, double value) noexcept {
 	return use_ptr([=](ptr_t ptr) {
 		switch (static_cast<parameter_id>(id)) {
 			case parameter_id::length:
-				ptr->config.length  = value;
+				ptr->config.length = value;
+				break;
 			case parameter_id::width:
-				ptr->config.width   = value;
+				ptr->config.width = value;
+				break;
 			case parameter_id::wheel_radius:
-				ptr->config.radius  = value;
+				ptr->config.radius = value;
+				break;
 			case parameter_id::optimize_width:
 				ptr->optimize_width = value;
+				break;
 			case parameter_id::acceleration:
-				ptr->acceleration   = value;
+				ptr->acceleration = value;
+				break;
 			case parameter_id::max_v:
-				ptr->max_v          = value;
+				ptr->max_v = value;
+				break;
 			case parameter_id::max_w:
-				ptr->max_w          = value;
+				ptr->max_w = value;
+				break;
 		}
 	});
 }
