@@ -112,6 +112,8 @@ get_default_parameter(handler_t id) noexcept {
 			return INFINITY;
 		case parameter_id::max_w:
 			return pi_f / 3;
+		default:
+			return NAN;
 	}
 }
 
@@ -141,6 +143,8 @@ get_parameter(handler_t id, double &value) noexcept {
 			case parameter_id::max_w:
 				value = ptr->max_w;
 				break;
+			default:
+				throw std::exception("undefined id");
 		}
 	});
 }
@@ -171,6 +175,8 @@ set_parameter(handler_t id, double value) noexcept {
 			case parameter_id::max_w:
 				ptr->max_w = value;
 				break;
+			default:
+				throw std::exception("undefined id");
 		}
 	});
 }

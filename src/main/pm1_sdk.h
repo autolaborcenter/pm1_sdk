@@ -69,40 +69,32 @@ namespace autolabor {
 		};
 		
 		/**
-		 * 读写底盘状态使用的序列号
+		 * 用于访问底盘参数的标识符
 		 */
 		enum class parameter_id : uint32_t {
 			width,          // 宽度（轮间距）
 			length,         // 长度（轴间距）
 			wheel_radius,   // 轮半径
-			optimize_width, // 优化函数宽度
-			acceleration,   // 最大轮角加速度
-			max_v,          // 最大线速度
-			max_w           // 最大角速度
+			optimize_width, // 优化函数半宽度
+			acceleration,   // 最大动力轮角加速度
+			max_v,          // 最大底盘线速度
+			max_w           // 最大底盘角速度
 		};
 		
 		/**
-		 * 底盘状态
+		 * 表示底盘状态的标识符
 		 */
 		enum class chassis_state : uint8_t {
-			unknown  = 0x00, // 未知（离线）
+			offline  = 0x00, // 未知（离线）
 			unlocked = 0x01, // 未锁定
 			error    = 0x7f, // 已连接但异常
 			locked   = 0xff  // 已锁定
 		};
 		
 		/**
-		 * 里程计
+		 * 里程，里程计读数
 		 */
 		struct odometry { double x, y, yaw, vx, vy, w; };
-		
-		/**
-		 * 获取串口列表
-		 * 
-		 * @return 全部串口的名字列表
-		 */
-		DLL_EXPORT std::vector<std::string>
-		serial_ports();
 		
 		/**
 		 * 初始化
@@ -122,7 +114,7 @@ namespace autolabor {
 		shutdown();
 		
 		/**
-		 * 获取参数默认值
+		 * 获取底盘参数默认值
 		 *
 		 * @param id 要获取的参数项
 		 * @return 参数默认值
@@ -131,7 +123,7 @@ namespace autolabor {
 		get_defualt_parameter(parameter_id id);
 		
 		/**
-		 * 获取参数当前值
+		 * 获取底盘参数当前值
 		 *
 		 * @param id 要获取的参数项
 		 * @return 参数当前值
@@ -140,7 +132,7 @@ namespace autolabor {
 		get_parameter(parameter_id id);
 		
 		/**
-		 * 设置参数
+		 * 设置底盘参数
 		 *
 		 * @param id    要设置的参数项
 		 * @param value 参数值
@@ -157,7 +149,7 @@ namespace autolabor {
 		reset_parameter(parameter_id id);
 		
 		/**
-		 * 获取里程计值
+		 * 读取里程计
 		 *
 		 * @return 里程计值或异常信息
 		 */
@@ -189,14 +181,6 @@ namespace autolabor {
 		 */
 		DLL_EXPORT chassis_state
 		check_state();
-		
-		/**
-		 * 阻塞线程延时
-		 *
-		 * @param seconds 时间
-		 */
-		DLL_EXPORT void
-		delay(double seconds);
 		
 		/**
  		 * 控制机器人运行
@@ -414,6 +398,22 @@ namespace autolabor {
 		 */
 		DLL_EXPORT void
 		cancel_action();
+		
+		/**
+		 * 获取串口列表
+		 *
+		 * @return 全部串口的名字列表
+		 */
+		DLL_EXPORT std::vector<std::string>
+		serial_ports();
+		
+		/**
+		 * 阻塞线程延时
+		 *
+		 * @param seconds 时间
+		 */
+		DLL_EXPORT void
+		delay(double seconds);
 	}
 }
 

@@ -6,7 +6,9 @@
 #include "pm1_sdk.h"
 
 int main() {
-	auto result = autolabor::pm1::initialize();
+	using namespace autolabor::pm1;
+	
+	auto result = initialize();
 	if (result)
 		std::cout << "connected to " << result.value
 		          << ", which may be a pm1 chassis" << std::endl;

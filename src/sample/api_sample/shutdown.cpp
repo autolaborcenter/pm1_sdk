@@ -7,15 +7,17 @@
 #include "pm1_sdk.h"
 
 int main() {
+	using namespace autolabor::pm1;
+	
 	std::thread([] {
 		while (true) {
-			std::cout << (int) autolabor::pm1::get_chassis_state().value._ecu0 << std::endl;
-			autolabor::pm1::delay(0.1);
+			std::cout << static_cast<int>(check_state()) << std::endl;
+			delay(0.1);
 		}
 	}).detach();
 	
-	if (!autolabor::pm1::initialize()) return 1;
-	autolabor::pm1::delay(1);
-	autolabor::pm1::shutdown();
-	autolabor::pm1::delay(1);
+	if (!initialize()) return 1;
+	delay(1);
+	shutdown();
+	delay(1);
 }
