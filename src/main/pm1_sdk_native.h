@@ -139,7 +139,7 @@ namespace autolabor {
 			 * 计算里程度量
 			 */
 			DLL_EXPORT double STD_CALL
-			spatium_calculate(double spatium, double angle) noexcept;
+			calculate_spatium(double spatium, double angle) noexcept;
 			
 			/**
 			 * 按里程度量约束行驶

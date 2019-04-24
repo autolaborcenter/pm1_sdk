@@ -433,7 +433,7 @@ handler_t block(double v,
 
 double
 STD_CALL autolabor::pm1::native::
-spatium_calculate(double spatium, double angle) noexcept {
+calculate_spatium(double spatium, double angle) noexcept {
 	const static auto w_2 = default_config.width / 2;
 	
 	return std::abs(spatium + w_2 * angle) +
@@ -460,7 +460,7 @@ drive_spatial(double v,
 	             {0.5, 0.1, 12, 4},
 	             [origin](ptr_t ptr) {
 		             auto odometry = ptr->odometry() - origin;
-		             return spatium_calculate(odometry.s, odometry.sa);
+		             return calculate_spatium(odometry.s, odometry.sa);
 	             },
 	             progress);
 }

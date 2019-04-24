@@ -175,7 +175,7 @@ namespace autolabor {
 		unlock();
 		
 		/**
-		 * 检查节点状态
+		 * 检查底盘状态
 		 *
 		 * @returns 机器人状态
 		 */
@@ -183,7 +183,7 @@ namespace autolabor {
 		check_state();
 		
 		/**
- 		 * 控制机器人运行
+ 		 * 按物理模型描述控制机器人运行
  		 *
  		 * @param speed  轮速
  		 * @param rudder 舵轮转角
@@ -192,7 +192,7 @@ namespace autolabor {
 		drive_physical(double speed, double rudder);
 		
 		/**
-		 * 控制机器人运行
+		 * 按差动模型描述控制机器人运行
 		 *
 		 * @param left  左轮角速度
 		 * @param right 右轮角速度
@@ -201,7 +201,7 @@ namespace autolabor {
 		drive_wheels(double left, double right);
 		
 		/**
-		 * 控制机器人运行
+		 * 按运动模型描述控制机器人运行
 		 *
 		 * @param v 线速度
 		 * @param w 角速度
@@ -210,7 +210,7 @@ namespace autolabor {
 		drive_velocity(double v, double w);
 		
 		/**
-		 * 控制机器人运行
+		 * 按运动模型描述控制机器人运行（缩写）
 		 *
 		 * @param v 线速度
 		 * @param w 角速度
@@ -219,35 +219,44 @@ namespace autolabor {
 		drive(double v, double w);
 		
 		/**
+		 * 计算动作的空间尺度
+		 *
+		 * @param spatium 路程（弧长）
+		 * @param angle 角度（圆心角）
+		 */
+		DLL_EXPORT double
+		calculate_spatium(double spatium, double angle);
+		
+		/**
 		 * 控制机器人按空间约束运行指定动作
 		 *
 		 * @param v        线速度
 		 * @param w        角速度
-		 * @param spatium  空间约束
+		 * @param s        空间约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		drive_spatial(double v,
 		              double w,
-		              double spatium,
-		              double *progress);
+		              double s,
+		              double *progress = nullptr);
 		
 		/**
 		 * 控制机器人按时间约束运行指定动作
 		 *
 		 * @param v        线速度
 		 * @param w        角速度
-		 * @param time     时间约束
+		 * @param t        时间约束
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		drive_timing(double v,
 		             double w,
-		             double time,
-		             double *progress);
+		             double t,
+		             double *progress = nullptr);
 		
 		/**
-		 * 走直线
+		 * 直线行驶
 		 *
 		 * @param speed    线速度
 		 * @param meters   距离
@@ -286,12 +295,12 @@ namespace autolabor {
 		 * 原地转
 		 *
 		 * @param speed    角速度
-		 * @param time     时间
+		 * @param seconds  时间
 		 * @param progress 进度
 		 */
 		DLL_EXPORT result<void>
 		turn_around_timing(double speed,
-		                   double time,
+		                   double seconds,
 		                   double *progress = nullptr);
 		
 		/**
@@ -374,13 +383,13 @@ namespace autolabor {
 		          double *progress = nullptr);
 		
 		/**
-		 * 暂停执行阻塞控制
+		 * 暂停动作执行
 		 */
 		DLL_EXPORT void
 		pause();
 		
 		/**
-		 * 恢复执行阻塞控制
+		 * 恢复动作执行
 		 */
 		DLL_EXPORT void
 		resume();

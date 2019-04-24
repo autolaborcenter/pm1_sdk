@@ -136,6 +136,11 @@ autolabor::pm1::drive(double v, double w) {
 	return on_native(native::drive_velocity(v, w));
 }
 
+double
+autolabor::pm1::calculate_spatium(double spatium, double angle) {
+	return native::calculate_spatium(spatium, angle);
+}
+
 autolabor::pm1::result<void>
 autolabor::pm1::drive_spatial(double v,
                               double w,
@@ -173,7 +178,7 @@ autolabor::pm1::go_straight(double speed,
 	if (meters < 0) return {negative_target};
 	
 	return drive_spatial(speed, 0,
-	                     native::spatium_calculate(meters, 0),
+	                     calculate_spatium(meters, 0),
 	                     progress);
 }
 
@@ -198,7 +203,7 @@ autolabor::pm1::turn_around(double speed,
 	if (rad < 0) return {negative_target};
 	
 	return drive_spatial(0, speed,
-	                     native::spatium_calculate(0, rad),
+	                     calculate_spatium(0, rad),
 	                     progress);
 }
 
@@ -226,7 +231,7 @@ autolabor::pm1::go_arc_vs(double v,
 	if (s < 0) return {negative_target};
 	
 	return drive_spatial(v, v / r,
-	                     native::spatium_calculate(s, s / r),
+	                     calculate_spatium(s, s / r),
 	                     progress);
 }
 
@@ -241,7 +246,7 @@ autolabor::pm1::go_arc_va(double v,
 	if (a < 0) return {negative_target};
 	
 	return drive_spatial(v, v / r,
-	                     native::spatium_calculate(a * r, a),
+	                     calculate_spatium(a * r, a),
 	                     progress);
 }
 
@@ -256,7 +261,7 @@ autolabor::pm1::go_arc_ws(double w,
 	if (s < 0) return {negative_target};
 	
 	return drive_spatial(w * r, w,
-	                     native::spatium_calculate(s, s / r),
+	                     calculate_spatium(s, s / r),
 	                     progress);
 }
 
@@ -271,7 +276,7 @@ autolabor::pm1::go_arc_wa(double w,
 	if (a < 0) return {negative_target};
 	
 	return drive_spatial(w * r, w,
-	                     native::spatium_calculate(a * r, a),
+	                     calculate_spatium(a * r, a),
 	                     progress);
 }
 
