@@ -105,13 +105,13 @@ get_default_parameter(handler_t id) noexcept {
 		case parameter_id::wheel_radius:
 			return default_config.radius;
 		case parameter_id::optimize_width:
-			return pi_f / 4;
+			return chassis::default_optimize_width;
 		case parameter_id::acceleration:
-			return 2 * pi_f;
+			return chassis::default_acceleration;
 		case parameter_id::max_v:
-			return INFINITY;
+			return chassis::default_max_v;
 		case parameter_id::max_w:
-			return pi_f / 3;
+			return chassis::default_max_w;
 		default:
 			return NAN;
 	}

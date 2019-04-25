@@ -56,14 +56,20 @@ constexpr long long int count_ms(t time) {
 
 // endregion
 
+const double
+	chassis::default_optimize_width = pi_f / 4,
+	chassis::default_acceleration   = pi_f * 5,
+	chassis::default_max_v          = 2,
+	chassis::default_max_w          = pi_f / 4;
+
 chassis::chassis(const std::string &port_name)
 	: port(port_name, 115200),
 	  running(true),
 	  config(default_config),
-	  optimize_width(pi_f / 4),
-	  acceleration(INFINITY),
-	  max_v(INFINITY),
-	  max_w(INFINITY) {
+	  optimize_width(default_optimize_width),
+	  acceleration(default_acceleration),
+	  max_v(default_max_v),
+	  max_w(default_max_w) {
 	
 	using namespace std::chrono_literals;
 	using result_t  = autolabor::can::parser::result_type;

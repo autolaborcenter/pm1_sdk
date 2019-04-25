@@ -37,7 +37,7 @@ namespace autolabor {
 	namespace pm1 {
 		/** 底盘状态 */
 		struct chassis_state_t {
-			node_state_t _ecu0, _ecu1, _tcu, _vcu, _mcu;
+			node_state_t _ecu0, _ecu1, _tcu, _vcu;
 			
 			std::vector<node_state_t> as_vector() const;
 			
@@ -47,6 +47,12 @@ namespace autolabor {
 		/** 底盘 */
 		class chassis final {
 		public:
+			const static double
+				default_optimize_width,
+				default_acceleration,
+				default_max_v,
+				default_max_w;
+			
 			/** 机械参数 */
 			chassis_config_t config;
 			
