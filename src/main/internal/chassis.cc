@@ -76,9 +76,9 @@ chassis::chassis(const std::string &port_name)
 	constexpr static auto check_timeout       = 1000ms;
 	constexpr static auto check_state_timeout = 100ms;
 	
-	_left.time = _right.time = _rudder.time = now();
+	constexpr static auto frequency = 1000.0 / count_ms(rudder_interval);
 	
-	acceleration /= 1000.0 / count_ms(rudder_interval);
+	_left.time = _right.time = _rudder.time = now();
 	
 	// region check nodes
 	{
@@ -255,16 +255,13 @@ chassis::chassis(const std::string &port_name)
 					_rudder.update(_now, value);
 					
 					if (std::isnan(target.rudder) || now() - request_time > control_timeout)
-						target = {0, value};
-					
-					auto     limiting  = physical_to_velocity(&target, &config);
-					auto     ratio     = std::max({1.0f,
-					                               std::abs(limiting.v / this->max_v),
-					                               std::abs(limiting.w / this->max_w)});
-					physical limited{target.speed / ratio, target.rudder};
+						target         = {0, value};
 					
 					physical current{speed, value};
-					auto     optimized = optimize(&target, &current, optimize_width, acceleration);
+					auto     optimized = optimize(&target,
+					                              &current,
+					                              optimize_width,
+					                              acceleration / frequency);
 					speed = optimized.speed;
 					
 					auto wheels = physical_to_wheels(&optimized, &config);
@@ -348,9 +345,13 @@ void chassis::disable() {
 }
 
 void chassis::set_target(double speed, double rudder) {
-	request_time = now();
-	target       = {static_cast<float>(speed),
-	                static_cast<float>(rudder)};
+	request_time      = now();
+	physical temp{static_cast<float>(speed), static_cast<float>(rudder)};
+	auto     limiting = physical_to_velocity(&temp, &config);
+	auto     ratio    = std::max({1.0f,
+	                              std::abs(limiting.v / this->max_v),
+	                              std::abs(limiting.w / this->max_w)});
+	target = {temp.speed / ratio, temp.rudder};
 	legalize_physical(&target, 6 * pi_f);
 }
 
