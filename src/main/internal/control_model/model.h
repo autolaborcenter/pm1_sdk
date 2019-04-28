@@ -45,19 +45,12 @@ struct velocity wheels_to_velocity(
 
 /** 在速度空间中限速 */
 void limit_in_velocity(struct physical *,
-                       const struct chassis_config_t *,
                        float max_v,
-                       float max_w);
+                       float max_w,
+                       const struct chassis_config_t *);
 
-/** 在物理空间按最大轮速合法化 */
-void legalize_physical(struct physical *, float);
-
-/** 在差动轮速空间按最大轮速合法化 */
-void legalize_wheels(struct wheels *, float);
-
-/** 在速度矢量空间按最大轮速合法化 */
-void legalize_velocity(struct velocity *,
-                       const struct chassis_config_t *,
+/** 在物理模型空间中限速 */
+void limit_in_physical(struct physical *,
                        float);
 
 

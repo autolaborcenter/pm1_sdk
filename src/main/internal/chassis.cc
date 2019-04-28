@@ -57,20 +57,22 @@ constexpr long long int count_ms(t time) {
 
 // endregion
 
-const double
-	chassis::default_optimize_width = pi_f / 4,
-	chassis::default_acceleration   = pi_f * 5,
-	chassis::default_max_v          = 2,
-	chassis::default_max_w          = pi_f / 4;
+const float
+	chassis::default_max_wheel_speed = pi_f * 4,
+	chassis::default_max_v           = 1.25,
+	chassis::default_max_w           = pi_f / 4,
+	chassis::default_optimize_width  = pi_f / 4,
+	chassis::default_acceleration    = default_max_wheel_speed;
 
 chassis::chassis(const std::string &port_name)
 	: port(port_name, 115200),
 	  running(true),
 	  config(default_config),
-	  optimize_width(default_optimize_width),
-	  acceleration(default_acceleration),
 	  max_v(default_max_v),
-	  max_w(default_max_w) {
+	  max_w(default_max_w),
+	  max_wheel_speed(default_max_wheel_speed),
+	  optimize_width(default_optimize_width),
+	  acceleration(default_acceleration) {
 	
 	using namespace std::chrono_literals;
 	using result_t  = autolabor::can::parser::result_type;
@@ -359,8 +361,8 @@ void chassis::set_target(double speed, double rudder) {
 	
 	request_time = now();
 	target       = {static_cast<float>(speed), static_cast<float>(rudder)};
-	limit_in_velocity(&target, &config, max_v, max_w);
-	legalize_physical(&target, 6 * pi_f);
+	limit_in_velocity(&target, max_v, max_w, &config);
+	limit_in_physical(&target, max_wheel_speed);
 }
 
 void chassis::reset_rudder() {

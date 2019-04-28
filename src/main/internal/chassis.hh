@@ -50,11 +50,12 @@ namespace autolabor {
 		class chassis final {
 		public:
 			/** 默认参数 */
-			const static double
+			const static float
 				default_optimize_width,
 				default_acceleration,
 				default_max_v,
-				default_max_w;
+				default_max_w,
+				default_max_wheel_speed;
 			
 			/** 机械参数 */
 			chassis_config_t config;
@@ -63,7 +64,8 @@ namespace autolabor {
 			float optimize_width,
 			      acceleration,
 			      max_v,
-			      max_w;
+			      max_w,
+			      max_wheel_speed;
 			
 			explicit chassis(const std::string &port_name);
 			
