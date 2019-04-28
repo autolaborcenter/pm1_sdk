@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include "can/parse_engine.hh"
+#include "raii/weak_shared_lock.hh"
 
 extern "C" {
 #include "control_model/motor_map.h"
@@ -336,7 +337,7 @@ autolabor::odometry_t chassis::odometry() const {
 	return _odometry;
 }
 
-bool chassis::is_running() const {
+bool chassis::is_threads_running() const {
 	return running;
 }
 
@@ -351,13 +352,14 @@ void chassis::disable() {
 }
 
 void chassis::set_target(double speed, double rudder) {
-	request_time      = now();
-	physical temp{static_cast<float>(speed), static_cast<float>(rudder)};
-	auto     limiting = physical_to_velocity(&temp, &config);
-	auto     ratio    = std::max({1.0f,
-	                              std::abs(limiting.v / this->max_v),
-	                              std::abs(limiting.w / this->max_w)});
-	target = {temp.speed / ratio, temp.rudder};
+	weak_shared_lock l0(action_mutex);
+	if (!l0) throw std::exception("an action is invoking.");
+	
+	std::lock_guard<decltype(target_mutex)> l1(target_mutex);
+	
+	request_time = now();
+	target       = {static_cast<float>(speed), static_cast<float>(rudder)};
+	limit_in_velocity(&target, &config, max_v, max_w);
 	legalize_physical(&target, 6 * pi_f);
 }
 

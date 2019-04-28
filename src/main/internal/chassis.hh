@@ -8,6 +8,8 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include <shared_mutex>
+
 #include "serial/serial_port.hh"
 #include "can_define.h"
 #include "odometry_t.hh"
@@ -47,6 +49,7 @@ namespace autolabor {
 		/** 底盘 */
 		class chassis final {
 		public:
+			/** 默认参数 */
 			const static double
 				default_optimize_width,
 				default_acceleration,
@@ -89,7 +92,7 @@ namespace autolabor {
 			odometry_t odometry() const;
 			
 			/** 线程是否正常运行 */
-			bool is_running() const;
+			bool is_threads_running() const;
 			
 			/** 锁定 */
 			void enable();
@@ -123,6 +126,12 @@ namespace autolabor {
 			
 			std::thread read_thread,
 			            write_thread;
+			
+			/** 托管动作锁 */
+			std::shared_mutex action_mutex;
+			
+			/** 目标设定锁 */
+			std::mutex target_mutex;
 			
 			/** 目标运动 */
 			physical target{};
