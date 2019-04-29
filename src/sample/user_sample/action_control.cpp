@@ -2,14 +2,17 @@
 #include <iomanip>
 #include <thread>
 #include <conio.h>
+
 #include "pm1_sdk.h"                 // 头文件
 using namespace autolabor::pm1;      // 命名空间
 using namespace std;
 
-#ifdef _DEBUG                        // 静态库
+#ifdef _MSC_VER
+#ifdef DEBUG
 #pragma comment(lib, "pm1_sdk_debug.lib")
 #else
 #pragma comment(lib, "pm1_sdk.lib")
+#endif
 #endif
 
 int main()
@@ -19,8 +22,8 @@ int main()
 	if (result)
 	{
 		cout << "connected to " << result.value << "[PM1"
-			<< (check_state() == chassis_state::unlocked ? 
-				"解锁]" : "锁定/错误]") << endl;
+		     << (check_state() == chassis_state::unlocked ?
+		         "解锁]" : "锁定/错误]") << endl;
 		cout << "动作" << endl
 			<< "[quit:		退出" << endl
 			<< " lock:		锁定" << endl
