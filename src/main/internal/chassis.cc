@@ -58,8 +58,8 @@ constexpr long long int count_ms(t time) {
 // endregion
 
 const float
-	chassis::default_max_wheel_speed = pi_f * 4,
-	chassis::default_max_v           = 1.25,
+	chassis::default_max_wheel_speed = pi_f * 3.5,
+	chassis::default_max_v           = 1.1,
 	chassis::default_max_w           = pi_f / 4,
 	chassis::default_optimize_width  = pi_f / 4,
 	chassis::default_acceleration    = default_max_wheel_speed;
