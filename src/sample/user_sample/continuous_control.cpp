@@ -1,9 +1,14 @@
 #include <iostream>
 #include <windows.h>
-
 #include "pm1_sdk.h"                 // 头文件
 using namespace autolabor::pm1;      // 命名空间
 using namespace std;
+
+#ifdef _DEBUG                        // 静态库
+#pragma comment(lib, "pm1_sdk_debug.lib")
+#else
+#pragma comment(lib, "pm1_sdk.lib")
+#endif
 
 int main()
 {

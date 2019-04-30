@@ -1,92 +1,97 @@
-ï»¿#include <iostream>
+#include <iostream>
 #include <iomanip>
 #include <thread>
 #include <conio.h>
-
-#include "pm1_sdk.h"                 // Í·ï¿½Ä¼ï¿½
-using namespace autolabor::pm1;      // ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½
+#include "pm1_sdk.h"                 // Í·ÎÄ¼þ
+using namespace autolabor::pm1;      // ÃüÃû¿Õ¼ä
 using namespace std;
+
+#ifdef _DEBUG                        // ¾²Ì¬¿â
+#pragma comment(lib, "pm1_sdk_debug.lib")
+#else
+#pragma comment(lib, "pm1_sdk.lib")
+#endif
 
 int main()
 {
 	cout << "initializing..." << endl;
-	auto result = initialize();     // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	auto result = initialize();     // ³õÊ¼»¯Á¬½Ó
 	if (result)
 	{
 		cout << "connected to " << result.value << "[PM1"
-		     << (check_state() == chassis_state::unlocked ?
-		         "ï¿½ï¿½ï¿½ï¿½]" : "ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½]") << endl;
-		cout << "ï¿½ï¿½ï¿½ï¿½" << endl
-			<< "[quit:		ï¿½Ë³ï¿½" << endl
-			<< " lock:		ï¿½ï¿½ï¿½ï¿½" << endl
-			<< " unlock:	ï¿½ï¿½ï¿½ï¿½" << endl
-			<< " front:		Ö±ï¿½ï¿½1m" << endl
-			<< " back:		ï¿½ï¿½ï¿½ï¿½1m" << endl
-			<< " left:		ï¿½ï¿½×ª90ï¿½ï¿½" << endl
-			<< " left-:		ï¿½ï¿½ï¿½ï¿½ï¿½90ï¿½ï¿½" << endl
-			<< " right:		ï¿½ï¿½×ª90ï¿½ï¿½" << endl
-			<< " right-:	ï¿½Òºï¿½ï¿½ï¿½90ï¿½ï¿½" << endl
-			<< " inverse:	ï¿½ï¿½Ê±ï¿½ï¿½×ª90ï¿½ï¿½" << endl
-			<< " clockwise:	Ë³Ê±ï¿½ï¿½×ª90ï¿½ï¿½]" << endl;
+			<< (check_state() == chassis_state::unlocked ? 
+				"½âËø]" : "Ëø¶¨/´íÎó]") << endl;
+		cout << "¶¯×÷" << endl
+			<< "[quit:		ÍË³ö" << endl
+			<< " lock:		Ëø¶¨" << endl
+			<< " unlock:	½âËø" << endl
+			<< " front:		Ö±ÐÐ1m" << endl
+			<< " back:		ºóÍË1m" << endl
+			<< " left:		×ó×ª90¡ã" << endl
+			<< " left-:		×óºóÍË90¡ã" << endl
+			<< " right:		ÓÒ×ª90¡ã" << endl
+			<< " right-:	ÓÒºóÍË90¡ã" << endl
+			<< " inverse:	ÄæÊ±Õë×ª90¡ã" << endl
+			<< " clockwise:	Ë³Ê±Õë×ª90¡ã]" << endl;
 		string cmd = "";
 		while (true)
 		{
 			cin >> cmd;
-			if (cmd == "quit")			// ï¿½Ë³ï¿½
+			if (cmd == "quit")			// ÍË³ö
 			{
 				break;
 			}
-			else if (cmd == "lock")		// ï¿½ï¿½ï¿½ï¿½
+			else if (cmd == "lock")		// Ëø¶¨
 			{
 				lock();
 				while (check_state() != chassis_state::locked)
 				{
 					delay(0.1);
 				}
-				cout << "[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]" << endl;
+				cout << "[ÒÑËø¶¨]" << endl;
 			}
-			else if (cmd == "unlock")	// ï¿½ï¿½ï¿½ï¿½
+			else if (cmd == "unlock")	// ½âËø
 			{
 				unlock();
 				while (check_state() != chassis_state::unlocked)
 				{
 					delay(0.1);
 				}
-				cout << "[ï¿½Ñ½ï¿½ï¿½ï¿½]" << endl;
+				cout << "[ÒÑ½âËø]" << endl;
 			}
 			else
 			{
 				double progress = 0;
 				thread t;
-				if (cmd == "front")			// Ö±ï¿½ï¿½1m
+				if (cmd == "front")			// Ö±ÐÐ1m
 				{
 					t = thread([&] { go_straight(0.1, 1, &progress); });
 				}
-				else if (cmd == "back")		// ï¿½ï¿½ï¿½ï¿½1m
+				else if (cmd == "back")		// ºóÍË1m
 				{
 					t = thread([&] { go_straight(-0.1, 1, &progress); });
 				}
-				else if (cmd == "left")		// ï¿½ï¿½×ª90ï¿½ï¿½
+				else if (cmd == "left")		// ×ó×ª90¡ã
 				{
 					t = thread([&] { go_arc_va(0.1, 0.5, 3.14 / 2, &progress); });
 				}
-				else if (cmd == "left-")	// ï¿½ï¿½ï¿½ï¿½ï¿½90ï¿½ï¿½
+				else if (cmd == "left-")	// ×óºóÍË90¡ã
 				{
 					t = thread([&] { go_arc_va(-0.1, 0.5, 3.14 / 2, &progress); });
 				}
-				else if (cmd == "right")	// ï¿½ï¿½×ª90ï¿½ï¿½
+				else if (cmd == "right")	// ÓÒ×ª90¡ã
 				{
 					t = thread([&] { go_arc_va(0.1, -0.5, 3.14 / 2, &progress); });
 				}
-				else if (cmd == "right-")	// ï¿½Òºï¿½ï¿½ï¿½90ï¿½ï¿½
+				else if (cmd == "right-")	// ÓÒºóÍË90¡ã
 				{
 					t = thread([&] { go_arc_va(-0.1, -0.5, 3.14 / 2, &progress); });
 				}
-				else if (cmd == "inverse")	// ï¿½ï¿½Ê±ï¿½ï¿½×ª90ï¿½ï¿½
+				else if (cmd == "inverse")	// ÄæÊ±Õë×ª90¡ã
 				{
 					t = thread([&] { turn_around(0.25, 3.14 / 2, &progress); });
 				}
-				else if (cmd == "clockwise")// Ë³Ê±ï¿½ï¿½×ª90ï¿½ï¿½
+				else if (cmd == "clockwise")// Ë³Ê±Õë×ª90¡ã
 				{
 					t = thread([&] { turn_around(-0.25, 3.14 / 2, &progress); });
 				}
@@ -95,7 +100,7 @@ int main()
 					cout << "[unknown command]" << endl;
 					continue;
 				}
-				cout << "[ï¿½ï¿½ï¿½ï¿½Escï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ÐµÄ¶ï¿½ï¿½ï¿½]" << endl;
+				cout << "[°´ÏÂEsc¼ü¿ÉÖÕÖ¹ÕýÔÚÖ´ÐÐµÄ¶¯×÷]" << endl;
 				cout << "[ 0%]";
 				double last = 0;
 				while (progress < 1)
@@ -111,10 +116,10 @@ int main()
 						last = progress;
 					}
 					cout << setw(2) << int(progress * 100) << "%]";
-					if (_kbhit() && _getch() == 27) // Escï¿½ï¿½
+					if (_kbhit() && _getch() == 27) // Esc¼ü
 					{
 						cancel_action();
-						cout << "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¹";
+						cout << "¶¯×÷ÒÑÖÕÖ¹";
 						break;
 					}
 				}
@@ -122,7 +127,7 @@ int main()
 				cout << endl;
 			}
 		}
-		shutdown();		// ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½
+		shutdown();		// ¶Ï¿ªÁ¬½Ó
 	}
 	else
 	{
