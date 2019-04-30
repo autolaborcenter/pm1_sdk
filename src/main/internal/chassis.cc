@@ -72,7 +72,8 @@ chassis::chassis(const std::string &port_name)
       max_w(default_max_w),
       max_wheel_speed(default_max_wheel_speed),
       optimize_width(default_optimize_width),
-      acceleration(default_acceleration) {
+      acceleration(default_acceleration),
+      enabled_target(false) {
     
     using namespace std::chrono_literals;
     using result_t  = autolabor::can::parser::result_type;
@@ -147,6 +148,7 @@ chassis::chassis(const std::string &port_name)
     // endregion
     
     port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
+         << can::pack<unit<>::emergency_stop>()
          << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
     
     // region ask

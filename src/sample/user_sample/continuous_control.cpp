@@ -1,28 +1,23 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <windows.h>
-#include "pm1_sdk.h"                 // Í·ÎÄ¼ş
-using namespace autolabor::pm1;      // ÃüÃû¿Õ¼ä
-using namespace std;
+#include "pm1_sdk.h"                 // å¤´æ–‡ä»¶
 
-#ifdef _DEBUG                        // ¾²Ì¬¿â
-#pragma comment(lib, "pm1_sdk_debug.lib")
-#else
-#pragma comment(lib, "pm1_sdk.lib")
-#endif
+using namespace autolabor::pm1;      // å‘½åç©ºé—´
+using namespace std;
 
 int main()
 {
 	cout << "initializing..." << endl;
-	auto result = initialize();	// ³õÊ¼»¯Á¬½Ó
+    auto result = initialize();    // åˆå§‹åŒ–è¿æ¥
 	if (result)
 	{
 		cout << "connected to " << result.value << endl;
-		unlock();				// ½âËø
+        unlock();                // è§£é”
 		while (check_state() != chassis_state::unlocked)
 		{
 			delay(0.1);
 		}
-		cout << "²Ù×÷\n[·½Ïò¼ü¿ØÖÆÇ°ºó×óÓÒ]\n[Esc¼üÍË³ö³ÌĞò]" << endl;
+        cout << "æ“ä½œ\n[æ–¹å‘é”®æ§åˆ¶å‰åå·¦å³]\n[Escé”®é€€å‡ºç¨‹åº]" << endl;
 		while (GetKeyState(VK_ESCAPE) >= 0)
 		{
 			double v = 0, w = 0;
@@ -30,42 +25,35 @@ int main()
 			bool down = GetKeyState(VK_DOWN) < 0;
 			bool left = GetKeyState(VK_LEFT) < 0;
 			bool right = GetKeyState(VK_RIGHT) < 0;
-			if (up && !down && !left && !right)		// Ç°
+            if (up && !down && !left && !right)        // å‰
 			{
 				v = 0.1;
 				w = 0;
-			}
-			else if (up && !down && left && !right)	// ×óÇ°
+			} else if (up && !down && left && !right)    // å·¦å‰
 			{
 				v = 0.1;
 				w = 0.2;
-			}
-			else if (up && !down && !left && right)	// ÓÒÇ°
+			} else if (up && !down && !left && right)    // å³å‰
 			{
 				v = 0.1;
 				w = -0.2;
-			}
-			else if (!up && down && !left && !right)// ºó
+			} else if (!up && down && !left && !right)// å
 			{
 				v = -0.1;
 				w = 0;
-			}
-			else if (!up && down && left && !right)	// ×óºó
+			} else if (!up && down && left && !right)    // å·¦å
 			{
 				v = -0.1;
 				w = -0.2;
-			}
-			else if (!up && down && !left && right)	// ÓÒºó
+			} else if (!up && down && !left && right)    // å³å
 			{
 				v = -0.1;
 				w = 0.2;
-			}
-			else if (!up && !down && left && !right)// ÄæÊ±ÕëÔ­µØ×ª
+			} else if (!up && !down && left && !right)// é€†æ—¶é’ˆåŸåœ°è½¬
 			{
 				v = 0;
 				w = 0.2;
-			}
-			else if (!up && !down && !left && right)// Ë³Ê±ÕëÔ­µØ×ª
+			} else if (!up && !down && !left && right)// é¡ºæ—¶é’ˆåŸåœ°è½¬
 			{
 				v = 0;
 				w = -0.2;
@@ -73,7 +61,7 @@ int main()
 			drive(v, w);
 			delay(0.1);
 		}
-		shutdown();		// ¶Ï¿ªÁ¬½Ó
+        shutdown();        // æ–­å¼€è¿æ¥
 	}
 	else
 	{

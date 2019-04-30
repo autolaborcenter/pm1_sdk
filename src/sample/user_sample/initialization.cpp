@@ -1,32 +1,28 @@
-#include <iostream>
-#include "pm1_sdk.h"                 // Í·ÎÄ¼ş
-using namespace autolabor::pm1;      // ÃüÃû¿Õ¼ä
+ï»¿#include <iostream>
+#include "pm1_sdk.h"                 // å¤´æ–‡ä»¶
 
-#ifdef _DEBUG                        // ¾²Ì¬¿â
-#pragma comment(lib, "pm1_sdk_debug.lib")
-#else
-#pragma comment(lib, "pm1_sdk.lib")
-#endif
+using namespace autolabor::pm1;      // å‘½åç©ºé—´
+using namespace std;
 
 int main()
 {
-	std::cout << "initializing..." << std::endl;
-	auto result = initialize();     // ³õÊ¼»¯Á¬½Ó
+    cout << "initializing..." << endl;
+    auto result = initialize();     // åˆå§‹åŒ–è¿æ¥
 	if (result)
 	{
-		std::cout << "connected to " << result.value << std::endl;
-		unlock();                   // ½âËø
+        cout << "connected to " << result.value << endl;
+        unlock();                   // è§£é”
 		while (check_state() != chassis_state::unlocked)
 		{
 			delay(0.1);
 		}
-		std::cout << "moving..." << std::endl;
-		turn_around(0.25, 1.57);    // ÒÔ0.25rad/sµÄËÙ¶ÈÔ­µØ×ª90¡ã
-		shutdown();                 // ¶Ï¿ªÁ¬½Ó
+        cout << "moving..." << endl;
+        turn_around(0.25, 1.57);    // ä»¥0.25rad/sçš„é€Ÿåº¦åŸåœ°è½¬90Â°
+        shutdown();                 // æ–­å¼€è¿æ¥
 	}
 	else
 	{
-		std::cerr << result.error_info << std::endl;
+        cerr << result.error_info << endl;
 	}
 	system("pause");
 	return 0;
