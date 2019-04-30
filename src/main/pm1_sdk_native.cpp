@@ -174,31 +174,31 @@ handler_t
 STD_CALL
 autolabor::pm1::native::
 set_parameter(handler_t id, double value) noexcept {
-    return use_ptr([=](ptr_t ptr) {
+    return use_ptr([id, temp = static_cast<float>(value)](ptr_t ptr) {
         switch (static_cast<parameter_id>(id)) {
             case parameter_id::length:
-                ptr->config.length = value;
+                ptr->config.length = temp;
                 break;
             case parameter_id::width:
-                ptr->config.width = value;
+                ptr->config.width = temp;
                 break;
             case parameter_id::wheel_radius:
-                ptr->config.radius = value;
+                ptr->config.radius = temp;
                 break;
             case parameter_id::max_wheel_speed:
-                ptr->max_wheel_speed = value;
+                ptr->max_wheel_speed = temp;
                 break;
             case parameter_id::max_v:
-                ptr->max_v = value;
+                ptr->max_v = temp;
                 break;
             case parameter_id::max_w:
-                ptr->max_w = value;
+                ptr->max_w = temp;
                 break;
             case parameter_id::optimize_width:
-                ptr->optimize_width = value;
+                ptr->optimize_width = temp;
                 break;
             case parameter_id::acceleration:
-                ptr->acceleration = value;
+                ptr->acceleration = temp;
                 break;
             default:
                 throw std::exception("undefined id");
