@@ -136,35 +136,6 @@ autolabor::pm1::drive(double v, double w) {
 	return on_native(native::drive_velocity(v, w));
 }
 
-double
-autolabor::pm1::calculate_spatium(double spatium, double angle) {
-	return native::calculate_spatium(spatium, angle);
-}
-
-autolabor::pm1::result<void>
-autolabor::pm1::drive_spatial(double v,
-                              double w,
-                              double spatium,
-                              double *progress) {
-	double _progress;
-	return on_native(
-		native::drive_spatial(
-			v, w, spatium,
-			progress ? *progress : _progress));
-}
-
-autolabor::pm1::result<void>
-autolabor::pm1::drive_timing(double v,
-                             double w,
-                             double time,
-                             double *progress) {
-	double _progress;
-	return on_native(
-		native::drive_timing(
-			v, w, time,
-			progress ? *progress : _progress));
-}
-
 constexpr auto
 	infinite_action = "action never complete",
 	negative_target = "action target argument must be positive";
@@ -321,4 +292,42 @@ bool autolabor::pm1::is_paused() {
 void
 autolabor::pm1::cancel_action() {
 	native::cancel_action();
+}
+
+double
+autolabor::pm1::calculate_spatium(double spatium, double angle) {
+	return native::calculate_spatium(spatium, angle);
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::drive_spatial(double v,
+                              double w,
+                              double spatium,
+                              double *progress) {
+	double _progress;
+	return on_native(
+		native::drive_spatial(
+			v, w, spatium,
+			progress ? *progress : _progress));
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::drive_timing(double v,
+                             double w,
+                             double time,
+                             double *progress) {
+	double _progress;
+	return on_native(
+		native::drive_timing(
+			v, w, time,
+			progress ? *progress : _progress));
+}
+
+autolabor::pm1::result<void>
+autolabor::pm1::adjust_rudder(double offset, double *progress) {
+	double _progress;
+	return on_native(
+		native::adjust_rudder(
+			offset,
+			progress ? *progress : _progress));
 }

@@ -220,43 +220,6 @@ namespace autolabor {
 		drive(double v, double w);
 		
 		/**
-		 * 计算动作的空间尺度
-		 *
-		 * @param spatium 路程（弧长）
-		 * @param angle 角度（圆心角）
-		 */
-		DLL_EXPORT double
-		calculate_spatium(double spatium, double angle);
-		
-		/**
-		 * 控制机器人按空间约束运行指定动作
-		 *
-		 * @param v        线速度
-		 * @param w        角速度
-		 * @param s        空间约束
-		 * @param progress 进度
-		 */
-		DLL_EXPORT result<void>
-		drive_spatial(double v,
-		              double w,
-		              double s,
-		              double *progress = nullptr);
-		
-		/**
-		 * 控制机器人按时间约束运行指定动作
-		 *
-		 * @param v        线速度
-		 * @param w        角速度
-		 * @param t        时间约束
-		 * @param progress 进度
-		 */
-		DLL_EXPORT result<void>
-		drive_timing(double v,
-		             double w,
-		             double t,
-		             double *progress = nullptr);
-		
-		/**
 		 * 直线行驶
 		 *
 		 * @param speed    线速度
@@ -408,6 +371,53 @@ namespace autolabor {
 		 */
 		DLL_EXPORT void
 		cancel_action();
+		
+		/**
+		 * 计算动作的空间尺度
+		 *
+		 * @param spatium 路程（弧长）
+		 * @param angle 角度（圆心角）
+		 */
+		DLL_EXPORT double
+		calculate_spatium(double spatium, double angle);
+		
+		/**
+		 * 控制机器人按空间约束运行指定动作
+		 *
+		 * @param v        线速度
+		 * @param w        角速度
+		 * @param s        空间约束
+		 * @param progress 进度
+		 */
+		DLL_EXPORT result<void>
+		drive_spatial(double v,
+		              double w,
+		              double s,
+		              double *progress = nullptr);
+		
+		/**
+		 * 控制机器人按时间约束运行指定动作
+		 *
+		 * @param v        线速度
+		 * @param w        角速度
+		 * @param t        时间约束
+		 * @param progress 进度
+		 */
+		DLL_EXPORT result<void>
+		drive_timing(double v,
+		             double w,
+		             double t,
+		             double *progress = nullptr);
+		
+		/**
+		 * 调整后轮零位
+		 *
+		 * @param offset   线速度
+		 * @param progress 进度
+		 */
+		DLL_EXPORT result<void>
+		adjust_rudder(double offset,
+		              double *progress = nullptr);
 		
 		/**
 		 * 获取串口列表
