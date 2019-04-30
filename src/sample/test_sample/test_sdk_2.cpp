@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <thread>
 #include "../pm1_sdk.h"
 
@@ -21,7 +21,7 @@ int main() {
 		else
 			std::cerr << result.error_info << std::endl;
 		
-		autolabor::pm1::cancel_all();
+		autolabor::pm1::cancel_action();
 		autolabor::pm1::shutdown();
 	}
 }

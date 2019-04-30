@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <thread>
 #include "../pm1_sdk.h"
 #include "../../main/pm1_sdk_native.h"
@@ -29,10 +29,10 @@ int main() {
 	autolabor::pm1::unlock();
 	while (true) {
 		using namespace autolabor::pm1::native;
-		drive_spatial(+0.1, 0, spatium_calculate(1, 0), progress);
-		drive_spatial(0, +0.34, spatium_calculate(0, pi_f), progress);
-		drive_spatial(+0.1, 0, spatium_calculate(1, 0), progress);
-		drive_spatial(0, -0.34, spatium_calculate(0, pi_f), progress);
+		drive_spatial(+0.1, 0, calculate_spatium(1, 0), progress);
+		drive_spatial(0, +0.34, calculate_spatium(0, pi_f), progress);
+		drive_spatial(+0.1, 0, calculate_spatium(1, 0), progress);
+		drive_spatial(0, -0.34, calculate_spatium(0, pi_f), progress);
 	}
 	autolabor::pm1::shutdown();
 }

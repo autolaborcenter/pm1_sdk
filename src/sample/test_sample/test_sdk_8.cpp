@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <thread>
 #include "../pm1_sdk.h"
 
@@ -20,8 +20,8 @@ int main() {
 	autolabor::pm1::unlock();
 	
 	while (true) {
-		autolabor::pm1::go_arc(+0.2, 1, 0.5);
-		autolabor::pm1::go_arc(-0.2, 1, 0.5);
+		autolabor::pm1::go_arc_va(+0.2, 1, 0.5);
+		autolabor::pm1::go_arc_va(-0.2, 1, 0.5);
 		autolabor::pm1::delay(1);
 	}
 }

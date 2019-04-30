@@ -1,11 +1,11 @@
-#include <iostream>
+﻿#include <iostream>
 #include <thread>
 #include "pm1_sdk.h"
 
 int main() {
 	std::thread([] {
 		while (true) {
-			std::cout << (int) autolabor::pm1::get_chassis_state().data._ecu0 << std::endl;
+			std::cout << (int) autolabor::pm1::check_state() << std::endl;
 			autolabor::pm1::delay(0.1);
 		}
 	}).detach();
@@ -22,7 +22,7 @@ int main() {
 	while (true) {
 		auto result = autolabor::pm1::initialize();
 		if (result)
-			std::cout << result.data << std::endl;
+			std::cout << result.value << std::endl;
 		else
 			std::cerr << result.error_info << std::endl;
 		autolabor::pm1::delay(1);
