@@ -96,11 +96,8 @@ namespace autolabor {
 			/** 线程是否正常运行 */
 			bool is_threads_running() const;
 			
-			/** 锁定 */
-			void enable();
-			
-			/** 解锁 */
-			void disable();
+			/** 设置使能目标 */
+			void set_enabled_target(bool);
 			
 			/** 设置目标控制量 */
 			void set_target(double speed, double rudder);
@@ -137,6 +134,9 @@ namespace autolabor {
 			
 			/** 目标运动 */
 			physical target{};
+			
+			/** 使能目标状态 */
+			bool enabled_target;
 			
 			/** 最后一次请求的时间 */
 			decltype(autolabor::now()) request_time;

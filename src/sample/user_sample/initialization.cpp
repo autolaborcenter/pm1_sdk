@@ -4,14 +4,6 @@
 using namespace autolabor::pm1;      // ÃüÃû¿Õ¼ä
 using namespace std;
 
-#ifdef _MSC_VER
-#ifdef DEBUG
-#pragma comment(lib, "pm1_sdk_debug.lib")
-#else
-#pragma comment(lib, "pm1_sdk.lib")
-#endif
-#endif
-
 int main()
 {
 	std::cout << "initializing..." << std::endl;

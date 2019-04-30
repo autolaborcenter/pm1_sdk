@@ -308,7 +308,7 @@ handler_t
 STD_CALL autolabor::pm1::native::
 lock() noexcept {
 	return use_ptr([](ptr_t ptr) {
-		ptr->disable();
+		ptr->set_enabled_target(false);
 	});
 }
 
@@ -316,7 +316,7 @@ handler_t
 STD_CALL autolabor::pm1::native::
 unlock() noexcept {
 	return use_ptr([](ptr_t ptr) {
-		ptr->enable();
+		ptr->set_enabled_target(true);
 	});
 }
 

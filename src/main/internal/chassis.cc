@@ -209,17 +209,35 @@ chassis::chassis(const std::string &port_name)
 				// 处理
 				const auto msg = result.message;
 				
-				if (unit<ecu<0 >>::state_rx::match(msg)) {
-					chassis_state._ecu0 = parse_state(*msg.data.data);
+				if (unit<ecu<0>>::state_rx::match(msg)) {
 					reply_time[0] = _now;
+					if (node_state_t::enabled == (chassis_state._ecu0 = parse_state(*msg.data.data))) {
+						if (!enabled_target)
+							port << can::pack<unit<ecu<0>>::emergency_stop>();
+					} else {
+						if (enabled_target)
+							port << pack_big_endian<unit<ecu<0>>::release_stop, uint8_t>(0xff);
+					}
 					
-				} else if (unit<ecu<1 >>::state_rx::match(msg)) {
-					chassis_state._ecu1 = parse_state(*msg.data.data);
+				} else if (unit<ecu<1>>::state_rx::match(msg)) {
 					reply_time[1] = _now;
+					if (node_state_t::enabled == (chassis_state._ecu1 = parse_state(*msg.data.data))) {
+						if (!enabled_target)
+							port << can::pack<unit<ecu<1>>::emergency_stop>();
+					} else {
+						if (enabled_target)
+							port << pack_big_endian<unit<ecu<1>>::release_stop, uint8_t>(0xff);
+					}
 					
-				} else if (unit<tcu<0 >>::state_rx::match(msg)) {
-					chassis_state._tcu = parse_state(*msg.data.data);
+				} else if (unit<tcu<0>>::state_rx::match(msg)) {
 					reply_time[2] = _now;
+					if (node_state_t::enabled == (chassis_state._tcu = parse_state(*msg.data.data))) {
+						if (!enabled_target)
+							port << can::pack<unit<tcu<0>>::emergency_stop>();
+					} else {
+						if (enabled_target)
+							port << pack_big_endian<unit<tcu<0>>::release_stop, uint8_t>(0xff);
+					}
 					
 				} else if (ecu<0>::current_position_rx::match(msg)) {
 					
@@ -345,12 +363,10 @@ bool chassis::is_threads_running() const {
 
 //==============================================================
 
-void chassis::enable() {
-	port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff);
-}
-
-void chassis::disable() {
-	port << autolabor::can::pack<unit<>::emergency_stop>();
+void chassis::set_enabled_target(bool state) {
+	(enabled_target = state)
+	? port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff)
+	: port << can::pack<unit<>::emergency_stop>();
 }
 
 void chassis::set_target(double speed, double rudder) {
