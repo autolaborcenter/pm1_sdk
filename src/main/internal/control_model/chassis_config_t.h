@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by ydrml on 2019/3/14.
 //
 
@@ -9,9 +9,9 @@
  * 底盘模型
  */
 struct chassis_config_t {
-	float width,  // 轮距
-	      length, // 轴距
-	      radius; // 轮半径
+    float width,  // 轮距
+          length, // 轴距
+          radius; // 轮半径
 };
 
 extern const float                   pi_f;

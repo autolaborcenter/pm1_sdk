@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by User on 2019/4/2.
 //
 
@@ -15,20 +15,20 @@
  */
 class weak_shared_lock {
 public:
-	explicit weak_shared_lock(std::shared_mutex &core)
-		: core(core), own(core.try_lock_shared()) {}
-	
-	~weak_shared_lock() {
-		if (own) core.unlock_shared();
-	}
-	
-	explicit operator bool() const {
-		return own;
-	}
+    explicit weak_shared_lock(std::shared_mutex &core)
+        : core(core), own(core.try_lock_shared()) {}
+    
+    ~weak_shared_lock() {
+        if (own) core.unlock_shared();
+    }
+    
+    explicit operator bool() const {
+        return own;
+    }
 
 private:
-	bool              own;
-	std::shared_mutex &core;
+    bool              own;
+    std::shared_mutex &core;
 };
 
 

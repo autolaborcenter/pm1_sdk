@@ -1,6 +1,7 @@
 # environment
 .idea/
 .vs/
+.vscode/
 
 # cmake
 out/

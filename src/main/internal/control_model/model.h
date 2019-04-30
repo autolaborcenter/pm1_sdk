@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by ydrml on 2019/3/15.
 //
 
@@ -15,33 +15,33 @@ struct velocity { float v, w; };          // 速度空间（标准单位）
 
 /** 物理空间 -> 差动轮速空间 */
 struct wheels physical_to_wheels(
-		const struct physical *,
-		const struct chassis_config_t *);
+    const struct physical *,
+    const struct chassis_config_t *);
 
 /** 差动轮速空间 -> 物理空间 */
 struct physical wheels_to_physical(
-		const struct wheels *,
-		const struct chassis_config_t *);
+    const struct wheels *,
+    const struct chassis_config_t *);
 
 /** 物理空间 -> 速度矢量空间 */
 struct velocity physical_to_velocity(
-		const struct physical *,
-		const struct chassis_config_t *);
+    const struct physical *,
+    const struct chassis_config_t *);
 
 /** 速度矢量空间 -> 物理空间 */
 struct physical velocity_to_physical(
-		const struct velocity *,
-		const struct chassis_config_t *);
+    const struct velocity *,
+    const struct chassis_config_t *);
 
 /** 速度矢量空间 -> 差动轮速空间 */
 struct wheels velocity_to_wheels(
-		const struct velocity *,
-		const struct chassis_config_t *);
+    const struct velocity *,
+    const struct chassis_config_t *);
 
 /** 差动轮速空间 -> 速度矢量空间 */
 struct velocity wheels_to_velocity(
-		const struct wheels *,
-		const struct chassis_config_t *);
+    const struct wheels *,
+    const struct chassis_config_t *);
 
 /** 在速度空间中限速 */
 void limit_in_velocity(struct physical *,

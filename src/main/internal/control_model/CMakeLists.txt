@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+﻿cmake_minimum_required(VERSION 3.12)
 project(pm1_control_model C)
 
 set(CMAKE_C_STANDARD 11)
