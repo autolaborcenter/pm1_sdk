@@ -4,7 +4,7 @@ project(auto_can)
 set(CMAKE_CXX_STANDARD 11)
 
 add_library(auto_can
-        pack.h
+        info.h
 
         parser.hh
         parser.cc
@@ -12,4 +12,4 @@ add_library(auto_can
         parse_engine.hh
         parse_engine.cc
 
-        info.h)
+        pack.h)

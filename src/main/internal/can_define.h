@@ -5,7 +5,7 @@
 #ifndef PM1_SDK_CAN_DEFINE_H
 #define PM1_SDK_CAN_DEFINE_H
 
-#include "can/info.h"
+#include "can/pack.h"
 
 using namespace autolabor::can;
 
@@ -31,8 +31,8 @@ namespace autolabor {
             
             template<uint8_t msg_type_id>
             struct pack_info_pair {
-                using tx = info<sgn, 0, 0, type_id, node_index, msg_type_id>;
-                using rx = info<msg, 0, 0, type_id, node_index, msg_type_id>;
+                using tx = pack_define_t<sgn, 0, 0, type_id, node_index, msg_type_id>;
+                using rx = pack_define_t<msg, 0, 0, type_id, node_index, msg_type_id>;
             };
             
             // 状态
@@ -74,17 +74,17 @@ namespace autolabor {
             constexpr static uint8_t type_id    = 0x11;
             constexpr static uint8_t node_index = _node_index;
             // 目标速度
-            using target_speed        = info<msg, 0, 0, type_id, node_index, 0x1>;
+            using target_speed        = pack_define_t<msg, 0, 0, type_id, node_index, 0x1>;
             // 当前速度
-            using current_speed_tx    = info<sgn, 0, 0, type_id, node_index, 0x5>;
-            using current_speed_rx    = info<msg, 0, 0, type_id, node_index, 0x5>;
+            using current_speed_tx    = pack_define_t<sgn, 0, 0, type_id, node_index, 0x5>;
+            using current_speed_rx    = pack_define_t<msg, 0, 0, type_id, node_index, 0x5>;
             // 当前编码器读数
-            using current_position_tx = info<sgn, 0, 0, type_id, node_index, 0x6>;
-            using current_position_rx = info<msg, 0, 0, type_id, node_index, 0x6>;
+            using current_position_tx = pack_define_t<sgn, 0, 0, type_id, node_index, 0x6>;
+            using current_position_rx = pack_define_t<msg, 0, 0, type_id, node_index, 0x6>;
             // 编码器清零
-            using clear               = info<sgn, 0, 0, type_id, node_index, 0x7>;
+            using clear               = pack_define_t<sgn, 0, 0, type_id, node_index, 0x7>;
             // 超时时间
-            using timeout             = info<msg, 0, 0, type_id, node_index, 0xa>;
+            using timeout             = pack_define_t<msg, 0, 0, type_id, node_index, 0xa>;
         };
     
         /** 转向控制器包信息协议 */
@@ -94,17 +94,17 @@ namespace autolabor {
             constexpr static uint8_t type_id    = 0x12;
             constexpr static uint8_t node_index = _node_index;
             // 目标角度
-            using target_position     = info<msg, 0, 0, type_id, node_index, 0x1>;
+            using target_position     = pack_define_t<msg, 0, 0, type_id, node_index, 0x1>;
             // 目标角度增量
-            using target_difference   = info<msg, 0, 0, type_id, node_index, 0x2>;
+            using target_difference   = pack_define_t<msg, 0, 0, type_id, node_index, 0x2>;
             // 当前角度
-            using current_position_tx = info<sgn, 0, 0, type_id, node_index, 0x3>;
-            using current_position_rx = info<msg, 0, 0, type_id, node_index, 0x3>;
+            using current_position_tx = pack_define_t<sgn, 0, 0, type_id, node_index, 0x3>;
+            using current_position_rx = pack_define_t<msg, 0, 0, type_id, node_index, 0x3>;
             // 当前速度
-            using current_speed_tx    = info<sgn, 0, 0, type_id, node_index, 0x5>;
-            using current_speed_rx    = info<msg, 0, 0, type_id, node_index, 0x5>;
+            using current_speed_tx    = pack_define_t<sgn, 0, 0, type_id, node_index, 0x5>;
+            using current_speed_rx    = pack_define_t<msg, 0, 0, type_id, node_index, 0x5>;
             // 编码器复位
-            using encoder_reset       = info<sgn, 0, 0, type_id, node_index, 0x6>;
+            using encoder_reset       = pack_define_t<sgn, 0, 0, type_id, node_index, 0x6>;
         };
     
         /**

@@ -42,9 +42,9 @@ set(NATIVE_LIBRARY
         internal/time_extensions.h
         # --------------------------
         # can hub
-        internal/can/pack.h
-
         internal/can/info.h
+
+        internal/can/pack.h
 
         internal/can/parser.hh
         internal/can/parser.cc
