@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_library(auto_can
         pack.h
-        pack.cpp
 
         parser.hh
         parser.cc

@@ -22,55 +22,49 @@ namespace autolabor {
         /** 计算某个长度的位遮盖 */
         constexpr uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
         
-        /** CAN 包信息 */
-        struct info_bytes {
-        public:
-            /** 用两个字节构造 */
-            info_bytes(uint8_t b0, uint8_t b1);
-            
-            /** 网络号 */
-            uint8_t network() const;
-            
-            /** 有无数据域 */
-            bool data_field() const;
-            
-            /** 优先级 */
-            uint8_t property() const;
-            
-            /** 节点类型 */
-            uint8_t node_type() const;
-            
-            /** 节点序号 */
-            uint8_t node_index() const;
-        
-        private:
-            /** 数据存储 */
-            uint16_t data;
-        };
-        
         /** 无数据域 CAN 包 */
         struct pack_no_data {
-            uint8_t head;
-            uint8_t info0;
-            uint8_t info1;
-            uint8_t type;
-            uint8_t reserve;
-            uint8_t crc;
-            
-            info_bytes info() const;
+            uint8_t
+                head,
+        
+                node_type_h : 2,
+                priority    : 3,
+                payload     : 1,
+                network     : 2,
+        
+                node_index  : 4,
+                node_type_l : 4,
+        
+                msg_type,
+                reserve,
+                crc;
+    
+            inline uint8_t node_type() const {
+                return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
+            }
         };
         
         /** 有数据域 CAN 包 */
         struct pack_with_data {
-            uint8_t head;
-            uint8_t info0;
-            uint8_t info1;
-            uint8_t type;
-            uint8_t frame_id;
-            uint8_t data[8];
-            uint8_t crc;
-            
-            info_bytes info() const;
+            uint8_t
+                head,
+        
+                node_type_h : 2,
+                priority    : 3,
+                payload     : 1,
+                network     : 2,
+        
+                node_index  : 4,
+                node_type_l : 4,
+        
+                msg_type,
+                frame_id,
+                data[8],
+                crc;
+    
+            inline uint8_t node_type() const {
+                return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
+            }
         };
         
         /** 无数据域 CAN 包转换器 */
@@ -92,11 +86,11 @@ namespace autolabor {
         inline void reformat(msg_union<t> &msg);
         
         /**
-                 * 显示格式化的消息内容
-                 * @tparam t  消息类型
-                 * @param msg 消息体
-                 * @return 字符串
-                 */
+         * 显示格式化的消息内容
+         * @tparam t  消息类型
+         * @param msg 消息体
+         * @return 字符串
+         */
         template<class t>
         std::ostream &operator<<(std::ostream &, const msg_union<t> &);
     } // namespace can
@@ -137,25 +131,24 @@ bool autolabor::can::crc_check(const msg_union<t> &msg) {
 
 template<class t, int last_index>
 void autolabor::can::reformat(autolabor::can::msg_union<t> &msg) {
-    msg.bytes[0]          = 0xfe;
     msg.bytes[last_index] = crc_calculate(msg);
 }
 
 template<class t>
 std::ostream &autolabor::can::operator<<(std::ostream &ostream, const autolabor::can::msg_union<t> &msg) {
-    auto info = msg.data.info();
     ostream << std::hex
-            << "network:\t0x" << (int) info.network() << std::endl
+            << "head:\t\t0x" << (int) msg.data.head << std::endl
+            << "network:\t0x" << (int) msg.data.network << std::endl
             << std::boolalpha
-            << "data_field:\t" << info.data_field() << std::endl
+            << "data_field:\t" << (bool) msg.data.payload << std::endl
             << std::dec
-            << "property:\t" << (int) info.property() << std::endl
+            << "property:\t" << (int) msg.data.priority << std::endl
             << std::hex
-            << "node_type:\t0x" << (int) info.node_type() << std::endl
+            << "node_type:\t0x" << (int) msg.data.node_type() << std::endl
             << std::dec
-            << "node_index:\t" << (int) info.node_index() << std::endl
+            << "node_index:\t" << (int) msg.data.node_index << std::endl
             << std::hex
-            << "msg_type:\t0x" << (int) msg.data.type << std::endl
+            << "msg_type:\t0x" << (int) msg.data.msg_type << std::endl
             << "crc_check:\t" << crc_check(msg) << std::endl
             << "can pack:\t[ ";
     for (int b : msg.bytes) {

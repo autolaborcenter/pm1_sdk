@@ -86,8 +86,8 @@ namespace autolabor {
             // 超时时间
             using timeout             = info<msg, 0, 0, type_id, node_index, 0xa>;
         };
-        
-        /** 动力控制器包信息协议 */
+    
+        /** 转向控制器包信息协议 */
         template<uint8_t _node_index = any_index>
         class tcu {
         public:
@@ -106,23 +106,44 @@ namespace autolabor {
             // 编码器复位
             using encoder_reset       = info<sgn, 0, 0, type_id, node_index, 0x6>;
         };
-        
+    
+        /**
+         * 从消息数据包提取逐字节序列化的数据
+         *
+         * @tparam data_t 数据类型
+         *
+         * @param msg 消息数据包
+         * @return 数据值
+         */
         template<class data_t>
         inline data_t get_big_endian(const union_with_data &msg) {
+            static_assert(sizeof(data_t) <= 8, "a pack cannot load more than 8 bytes");
+        
             msg_union<data_t> buffer{};
             std::reverse_copy(msg.data.data, msg.data.data + sizeof(data_t), buffer.bytes);
             return buffer.data;
         }
-        
+    
+        /**
+         * 将数据逐字节序列化并写入消息数据包
+         *
+         * @tparam pack_info_t 包类型
+         * @tparam data_t      数据类型
+         *
+         * @param value 数据值
+         * @return 消息数据包
+         */
         template<class pack_info_t, class data_t>
         inline auto pack_big_endian(data_t value)
         -> decltype(pack<pack_info_t>()) {
+            static_assert(sizeof(data_t) <= 8, "a pack cannot load more than 8 bytes");
+        
             msg_union<data_t>      buffer1{};
             std::array<uint8_t, 8> buffer2{};
-            
+        
             buffer1.data = value;
             std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(data_t), buffer2.data());
-            
+        
             return pack<pack_info_t>(buffer2);
         }
         

@@ -43,7 +43,6 @@ set(NATIVE_LIBRARY
         # --------------------------
         # can hub
         internal/can/pack.h
-        internal/can/pack.cpp
 
         internal/can/info.h
 
