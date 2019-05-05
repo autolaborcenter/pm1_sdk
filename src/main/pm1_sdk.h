@@ -70,12 +70,12 @@ namespace autolabor {
          * 用于访问底盘参数的标识符
          */
         enum class parameter_id : uint32_t {
-            width,             // 宽度（轮间距）
-            length,             // 长度（轴间距）
+            width,           // 宽度（轮间距）
+            length,          // 长度（轴间距）
             wheel_radius,    // 轮半径
             max_wheel_speed, // 最大动力轮角速度
-            max_v,             // 最大底盘线速度
-            max_w,             // 最大底盘角速度
+            max_v,           // 最大底盘线速度
+            max_w,           // 最大底盘角速度
             optimize_width,  // 优化函数半宽度
             acceleration,    // 最大动力轮角加速度
         };
@@ -84,10 +84,10 @@ namespace autolabor {
          * 表示底盘状态的标识符
          */
         enum class chassis_state : uint8_t {
-            offline  = 0x00,  // 未知（离线）
+            offline  = 0x00, // 未知（离线）
             unlocked = 0x01, // 未锁定
-            error    = 0x7f,    // 已连接但异常
-            locked   = 0xff    // 已锁定
+            error    = 0x7f, // 已连接但异常
+            locked   = 0xff  // 已锁定
         };
         
         /**
@@ -101,7 +101,6 @@ namespace autolabor {
          * 初始化
          *
          * @param port     串口名字
-         * @param config   初始设定参数
          * @param progress 进度
          */
         DLL_EXPORT result<std::string>
@@ -436,5 +435,7 @@ namespace autolabor {
         delay(double seconds);
     } // namespace pm1
 } // namespace autolabor
+
+#undef DLL_EXPORT
 
 #endif //PM1_SDK_API_H

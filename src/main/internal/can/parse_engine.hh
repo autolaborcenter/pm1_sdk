@@ -22,9 +22,13 @@ namespace autolabor {
             const callback_t    callback;
             
             unsigned int ptr;
-            
-            /** 进行一次尽力而为的解析 */
-            void parse();
+    
+            /**
+             * 进行一次尽力而为的解析
+             * 
+             * @return 这次调用完成解析的包数量
+             */
+            size_t parse();
             
             /** 重新找到帧头 */
             void find_head(int);
@@ -38,9 +42,13 @@ namespace autolabor {
             
             /** 禁止移动 */
             parse_engine(parse_engine &&) = delete;
-            
-            /** 进行解析 */
-            void operator()(uint8_t);
+    
+            /**
+             * 进行解析
+             *
+             * @return 这次调用完成解析的包数量
+             */
+            size_t operator()(uint8_t);
         };
     }
 }
