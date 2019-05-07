@@ -306,11 +306,11 @@ autolabor::pm1::go_arc_wt(double w,
 }
 
 void autolabor::pm1::pause() {
-    native::pause();
+    native::set_paused(true);
 }
 
 void autolabor::pm1::resume() {
-    native::resume();
+    native::set_paused(false);
 }
 
 bool autolabor::pm1::is_paused() {

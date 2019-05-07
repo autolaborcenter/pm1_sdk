@@ -166,16 +166,10 @@ namespace autolabor {
                           double &progress) noexcept;
             
             /**
-             * 暂停执行阻塞控制
+             * 控制暂停状态
              */
             DLL_EXPORT void STD_CALL
-            pause() noexcept;
-            
-            /**
-             * 恢复执行阻塞控制
-             */
-            DLL_EXPORT void STD_CALL
-            resume() noexcept;
+            set_paused(bool) noexcept;
             
             /**
              * 检查当前是否已暂停

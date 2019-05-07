@@ -589,12 +589,7 @@ adjust_rudder(double offset,
 void
 STD_CALL
 autolabor::pm1::native::
-pause() noexcept { pause_flag = true; }
-
-void
-STD_CALL
-autolabor::pm1::native::
-resume() noexcept { pause_flag = false; }
+set_paused(bool paused) noexcept { pause_flag = paused; }
 
 bool
 STD_CALL
