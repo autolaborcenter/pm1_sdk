@@ -22,6 +22,16 @@ namespace autolabor {
             constexpr static uint8_t type_id    = any_type;
             constexpr static uint8_t node_index = any_index;
         };
+    
+        /** 问答结构 */
+        template<class node, uint8_t _msg_type>
+        struct dialog {
+            using sgn = pack_define_t<sgn, 0, 0, node::type_id, node::node_index, _msg_type>;
+            using msg = pack_define_t<msg, 0, 0, node::type_id, node::node_index, _msg_type>;
+        
+            using tx  = sgn;
+            using rx  = msg;
+        };
         
         /** 通用控制器消息 */
         template<class type = any_controller>
@@ -29,42 +39,59 @@ namespace autolabor {
             constexpr static uint8_t type_id    = type::type_id;
             constexpr static uint8_t node_index = type::node_index;
             
-            template<uint8_t msg_type_id>
-            struct pack_info_pair {
-                using tx = pack_define_t<sgn, 0, 0, type_id, node_index, msg_type_id>;
-                using rx = pack_define_t<msg, 0, 0, type_id, node_index, msg_type_id>;
-            };
-            
             // 状态
-            using state_tx       = typename pack_info_pair<0x80>::tx;
-            using state_rx       = typename pack_info_pair<0x80>::rx;
+            using state_tx       = typename dialog<unit, 0x80>::tx;
+            using state_rx       = typename dialog<unit, 0x80>::rx;
             // 版本 id
-            using version_id_tx  = typename pack_info_pair<0x81>::tx;
-            using version_id_rx  = typename pack_info_pair<0x81>::rx;
+            using version_id_tx  = typename dialog<unit, 0x81>::tx;
+            using version_id_rx  = typename dialog<unit, 0x81>::rx;
             // 设备 id
-            using device_id_tx   = typename pack_info_pair<0x82>::tx;
-            using device_id_rx   = typename pack_info_pair<0x82>::rx;
+            using device_id_tx   = typename dialog<unit, 0x82>::tx;
+            using device_id_rx   = typename dialog<unit, 0x82>::rx;
             // 芯片 id
-            using chip_id_tx     = typename pack_info_pair<0x83>::tx;
-            using chip_id_rx     = typename pack_info_pair<0x83>::rx;
+            using chip_id_tx     = typename dialog<unit, 0x83>::tx;
+            using chip_id_rx     = typename dialog<unit, 0x83>::rx;
             // HAL 版本
-            using hal_version_tx = typename pack_info_pair<0x84>::tx;
-            using hal_version_rx = typename pack_info_pair<0x84>::rx;
+            using hal_version_tx = typename dialog<unit, 0x84>::tx;
+            using hal_version_rx = typename dialog<unit, 0x84>::rx;
             // 核心板硬件版本
-            using core_hardware_version_tx  = typename pack_info_pair<0x85>::tx;
-            using core_hardware_version_rx  = typename pack_info_pair<0x85>::rx;
+            using core_hardware_version_tx  = typename dialog<unit, 0x85>::tx;
+            using core_hardware_version_rx  = typename dialog<unit, 0x85>::rx;
             // 扩展板硬件版本
-            using extra_hardware_version_tx = typename pack_info_pair<0x86>::tx;
-            using extra_hardware_version_rx = typename pack_info_pair<0x86>::rx;
+            using extra_hardware_version_tx = typename dialog<unit, 0x86>::tx;
+            using extra_hardware_version_rx = typename dialog<unit, 0x86>::rx;
             // 软件版本
-            using software_version_tx = typename pack_info_pair<0x87>::tx;
-            using software_version_rx = typename pack_info_pair<0x87>::rx;
+            using software_version_tx = typename dialog<unit, 0x87>::tx;
+            using software_version_rx = typename dialog<unit, 0x87>::rx;
             // 累计运行时间
-            using uptime_tx      = typename pack_info_pair<0x88>::tx;
-            using uptime_rx      = typename pack_info_pair<0x88>::rx;
+            using uptime_tx      = typename dialog<unit, 0x88>::tx;
+            using uptime_rx      = typename dialog<unit, 0x88>::rx;
             // 紧急停止
-            using emergency_stop = typename pack_info_pair<0xff>::tx;
-            using release_stop   = typename pack_info_pair<0xff>::rx;
+            using emergency_stop = typename dialog<unit, 0xff>::tx;
+            using release_stop   = typename dialog<unit, 0xff>::rx;
+        };
+    
+        /** 整车控制器包信息协议 */
+        template<uint8_t _node_index = any_index>
+        class vcu {
+        public:
+            constexpr static uint8_t type_id    = 0x10;
+            constexpr static uint8_t node_index = _node_index;
+        
+            // 电池
+            using battery_persent_tx  = typename dialog<vcu, 0x1>::tx;
+            using battery_persent_rx  = typename dialog<vcu, 0x1>::rx;
+            using battery_time_tx     = typename dialog<vcu, 0x2>::tx;
+            using battery_time_rx     = typename dialog<vcu, 0x2>::rx;
+            using battery_quantity_tx = typename dialog<vcu, 0x3>::tx;
+            using battery_quantity_rx = typename dialog<vcu, 0x3>::rx;
+            using battery_voltage_tx  = typename dialog<vcu, 0x4>::tx;
+            using battery_voltage_rx  = typename dialog<vcu, 0x4>::rx;
+            using battery_current_tx  = typename dialog<vcu, 0x5>::tx;
+            using battery_current_rx  = typename dialog<vcu, 0x5>::rx;
+            // 急停开关
+            using power_switch_tx     = typename dialog<vcu, 0x5>::tx;
+            using power_switch_rx     = typename dialog<vcu, 0x5>::rx;
         };
         
         /** 动力控制器包信息协议 */
@@ -74,17 +101,17 @@ namespace autolabor {
             constexpr static uint8_t type_id    = 0x11;
             constexpr static uint8_t node_index = _node_index;
             // 目标速度
-            using target_speed        = pack_define_t<msg, 0, 0, type_id, node_index, 0x1>;
+            using target_speed        = typename dialog<ecu, 0x1>::msg;
             // 当前速度
-            using current_speed_tx    = pack_define_t<sgn, 0, 0, type_id, node_index, 0x5>;
-            using current_speed_rx    = pack_define_t<msg, 0, 0, type_id, node_index, 0x5>;
+            using current_speed_tx    = typename dialog<ecu, 0x5>::tx;
+            using current_speed_rx    = typename dialog<ecu, 0x5>::rx;
             // 当前编码器读数
-            using current_position_tx = pack_define_t<sgn, 0, 0, type_id, node_index, 0x6>;
-            using current_position_rx = pack_define_t<msg, 0, 0, type_id, node_index, 0x6>;
+            using current_position_tx = typename dialog<ecu, 0x6>::tx;
+            using current_position_rx = typename dialog<ecu, 0x6>::rx;
             // 编码器清零
-            using clear               = pack_define_t<sgn, 0, 0, type_id, node_index, 0x7>;
+            using clear               = typename dialog<ecu, 0x7>::sgn;
             // 超时时间
-            using timeout             = pack_define_t<msg, 0, 0, type_id, node_index, 0xa>;
+            using timeout             = typename dialog<ecu, 0xa>::msg;
         };
     
         /** 转向控制器包信息协议 */
@@ -94,17 +121,21 @@ namespace autolabor {
             constexpr static uint8_t type_id    = 0x12;
             constexpr static uint8_t node_index = _node_index;
             // 目标角度
-            using target_position     = pack_define_t<msg, 0, 0, type_id, node_index, 0x1>;
+            using target_position     = typename dialog<tcu, 0x1>::msg;
             // 目标角度增量
-            using target_difference   = pack_define_t<msg, 0, 0, type_id, node_index, 0x2>;
+            using target_difference   = typename dialog<tcu, 0x2>::msg;
             // 当前角度
-            using current_position_tx = pack_define_t<sgn, 0, 0, type_id, node_index, 0x3>;
-            using current_position_rx = pack_define_t<msg, 0, 0, type_id, node_index, 0x3>;
+            using current_position_tx = typename dialog<tcu, 0x3>::tx;
+            using current_position_rx = typename dialog<tcu, 0x3>::rx;
+            // 目标角度增量
+            using target_speed        = typename dialog<tcu, 0x4>::msg;
             // 当前速度
-            using current_speed_tx    = pack_define_t<sgn, 0, 0, type_id, node_index, 0x5>;
-            using current_speed_rx    = pack_define_t<msg, 0, 0, type_id, node_index, 0x5>;
+            using current_speed_tx    = typename dialog<tcu, 0x5>::tx;
+            using current_speed_rx    = typename dialog<tcu, 0x5>::rx;
             // 编码器复位
-            using encoder_reset       = pack_define_t<sgn, 0, 0, type_id, node_index, 0x6>;
+            using encoder_reset       = typename dialog<tcu, 0x6>::sgn;
+            // 超时时间
+            using timeout             = typename dialog<tcu, 0x7>::msg;
         };
     
         /**
