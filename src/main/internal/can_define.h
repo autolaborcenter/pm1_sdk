@@ -28,7 +28,7 @@ namespace autolabor {
         struct dialog {
             using sgn = pack_define_t<sgn, 0, 0, node::type_id, node::node_index, _msg_type>;
             using msg = pack_define_t<msg, 0, 0, node::type_id, node::node_index, _msg_type>;
-        
+    
             using tx  = sgn;
             using rx  = msg;
         };
@@ -77,7 +77,7 @@ namespace autolabor {
         public:
             constexpr static uint8_t type_id    = 0x10;
             constexpr static uint8_t node_index = _node_index;
-        
+    
             // 电池
             using battery_persent_tx  = typename dialog<vcu, 0x1>::tx;
             using battery_persent_rx  = typename dialog<vcu, 0x1>::rx;
@@ -147,11 +147,13 @@ namespace autolabor {
          * @return 数据值
          */
         template<class data_t>
-        inline data_t get_big_endian(const union_with_data &msg) {
-            static_assert(sizeof(data_t) <= 8, "a pack cannot load more than 8 bytes");
+        inline auto get_big_endian(const union_with_data &msg)
+        -> typename std::decay<data_t>::type {
+            using actual_type = typename std::decay<data_t>::type;
+            static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
         
-            msg_union<data_t> buffer{};
-            std::reverse_copy(msg.data.data, msg.data.data + sizeof(data_t), buffer.bytes);
+            msg_union<actual_type> buffer{};
+            std::reverse_copy(msg.data.data, msg.data.data + sizeof(actual_type), buffer.bytes);
             return buffer.data;
         }
     
@@ -167,14 +169,15 @@ namespace autolabor {
         template<class pack_info_t, class data_t>
         inline auto pack_big_endian(data_t value)
         -> decltype(pack<pack_info_t>()) {
-            static_assert(sizeof(data_t) <= 8, "a pack cannot load more than 8 bytes");
+            using actual_type = typename std::decay<data_t>::type;
+            static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
         
-            msg_union<data_t>      buffer1{};
+            msg_union<actual_type> buffer1{};
             std::array<uint8_t, 8> buffer2{};
         
             buffer1.data = value;
-            std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(data_t), buffer2.data());
-        
+            std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(actual_type), buffer2.data());
+            
             return pack<pack_info_t>(buffer2);
         }
         
