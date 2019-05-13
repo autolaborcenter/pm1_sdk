@@ -89,6 +89,9 @@ namespace autolabor {
             
             /** 检查状态 */
             chassis_state_t state() const;
+    
+            /** 目标状态 */
+            node_state_t target_state() const;
             
             /** 读取里程计 */
             odometry_t odometry() const;

@@ -352,7 +352,17 @@ autolabor::motor_t<> chassis::rudder() const {
 }
 
 chassis_state_t chassis::state() const {
-    return chassis_state;
+    return running
+           ? chassis_state
+           : chassis_state_t{};
+}
+
+node_state_t chassis::target_state() const {
+    return running
+           ? enabled_target
+             ? node_state_t::enabled
+             : node_state_t::disabled
+           : node_state_t::unknown;
 }
 
 autolabor::odometry_t chassis::odometry() const {

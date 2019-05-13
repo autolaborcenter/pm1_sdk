@@ -431,14 +431,19 @@ handler_t block(double v,
                 }
             } else {
                 auto finished = chassis_ptr.read<bool>([&](ptr_t ptr) {
-                    constexpr static auto disabled = autolabor::pm1::node_state_t::disabled;
+                    constexpr static auto
+                        unknown  = autolabor::pm1::node_state_t::unknown,
+                        enabled  = autolabor::pm1::node_state_t::enabled,
+                        disabled = autolabor::pm1::node_state_t::disabled;
                     
                     // 检查状态
-                    auto states = ptr->state();
-                    if (!states.check_all())
-                        throw std::exception(states.check_all(disabled)
-                                             ? "chassis is locked"
-                                             : "critical error");
+                    auto states = ptr->state().as_vector();
+                    if (std::find(states.begin(), states.end(), unknown) != states.end())
+                        throw std::exception("critical error");
+                    if (std::find(states.begin(), states.end(), disabled) != states.end()
+                        && ptr->target_state() != enabled)
+                        throw std::exception("chassis is locked");
+                  
                     // 检查任务进度
                     auto current = measure(ptr);
                     auto sub     = process[current];
