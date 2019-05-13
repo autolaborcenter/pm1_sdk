@@ -90,12 +90,12 @@ get_current_port() noexcept {
 }
 
 enum class parameter_id : uint32_t {
-    width,             // 宽度（轮间距）
-    length,             // 长度（轴间距）
+    width,           // 宽度（轮间距）
+    length,          // 长度（轴间距）
     wheel_radius,    // 轮半径
     max_wheel_speed, // 最大动力轮角速度
-    max_v,             // 最大底盘线速度
-    max_w,             // 最大底盘角速度
+    max_v,           // 最大底盘线速度
+    max_w,           // 最大底盘角速度
     optimize_width,  // 优化函数半宽度
     acceleration,    // 最大动力轮角加速度
 };
@@ -443,7 +443,7 @@ handler_t block(double v,
                     if (std::find(states.begin(), states.end(), disabled) != states.end()
                         && ptr->target_state() != enabled)
                         throw std::exception("chassis is locked");
-                  
+    
                     // 检查任务进度
                     auto current = measure(ptr);
                     auto sub     = process[current];
