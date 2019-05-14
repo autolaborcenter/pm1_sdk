@@ -10,3 +10,5 @@ cmake-build-*
 # vs
 vs_project/pm1_sdk/Debug/
 vs_project/pm1_sdk/Release/
+vs_project/pm1_sdk/x86/
+vs_project/pm1_sdk/x64/

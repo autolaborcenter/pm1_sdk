@@ -86,9 +86,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\main\internal\can\pack.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\internal\can\parse_engine.cc">
       <Filter>源文件</Filter>
     </ClCompile>

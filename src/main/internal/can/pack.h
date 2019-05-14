@@ -73,7 +73,7 @@ namespace autolabor {
             static_assert(std::is_same<info_t::type_t, sgn>::value,
                           "cannot build a signal pack with message info");
         
-            info_t::type_t msg{};
+            typename info_t::type_t msg{};
             msg.data         = info_t::stub;
             msg.data.reserve = reserve;
             reformat(msg);
@@ -86,7 +86,7 @@ namespace autolabor {
             static_assert(std::is_same<info_t::type_t, msg>::value,
                           "cannot build a message pack with signal info");
         
-            info_t::type_t msg{};
+            typename info_t::type_t msg{};
             msg.data          = info_t::stub;
             msg.data.frame_id = frame_id;
             std::memcpy(msg.data.data, data.data(), data.size());
