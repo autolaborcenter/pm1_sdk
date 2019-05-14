@@ -30,10 +30,11 @@ using namespace autolabor::pm1;
 
 int main() {
     initialize();
+    unlock();
     turn_around(0.5, 1.57);
 }
 ```
 
 ## 细节
 
-要了解关于使用的更多细节，请浏览 [`wiki`](https://github.com/autolaborcenter/pm1_sdk/wiki/Home)
+要了解关于使用的更多细节，请浏览[手册](https://github.com/autolaborcenter/pm1-doc-sphinx)。
