@@ -13,10 +13,6 @@ int main()
 	{
 		cout << "connected to " << result.value << endl;
         unlock();                // 解锁
-		while (check_state() != chassis_state::unlocked)
-		{
-			delay(0.1);
-		}
         cout << "操作\n[方向键控制前后左右]\n[Esc键退出程序]" << endl;
 		while (GetKeyState(VK_ESCAPE) >= 0)
 		{
