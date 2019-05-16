@@ -17,7 +17,7 @@ extern "C" {
 
 #include <Windows.h>
 
-#define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED)
+#define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
 #else
 #define AVOID_SLEEP
 #endif
