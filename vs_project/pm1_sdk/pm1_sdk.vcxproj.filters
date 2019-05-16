@@ -84,6 +84,9 @@
     <ClInclude Include="..\..\src\main\internal\exception_engine.hh">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\main\internal\serial\macros.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\main\internal\can\parse_engine.cc">
@@ -96,9 +99,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_linux.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_osx.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_win.cc">
@@ -116,9 +116,6 @@
     <ClCompile Include="..\..\src\main\internal\control_model\optimization.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\pm1_sdk.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -126,6 +123,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\internal\exception_engine.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\internal\serial\serial_port_linux.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\internal\serial\serial_port_win.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

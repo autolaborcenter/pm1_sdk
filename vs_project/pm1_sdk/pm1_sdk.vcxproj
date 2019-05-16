@@ -164,6 +164,7 @@
     <ClInclude Include="..\..\src\main\internal\raii\weak_lock_guard.hh" />
     <ClInclude Include="..\..\src\main\internal\raii\weak_shared_lock.hh" />
     <ClInclude Include="..\..\src\main\internal\rudder_controller.hh" />
+    <ClInclude Include="..\..\src\main\internal\serial\macros.h" />
     <ClInclude Include="..\..\src\main\internal\serial\serial.h" />
     <ClInclude Include="..\..\src\main\internal\serial\serial_port.hh" />
     <ClInclude Include="..\..\src\main\internal\serial_extension.h" />
@@ -181,9 +182,9 @@
     <ClCompile Include="..\..\src\main\internal\exception_engine.cc" />
     <ClCompile Include="..\..\src\main\internal\odometry_t.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_linux.cc" />
-    <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_osx.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_win.cc" />
-    <ClCompile Include="..\..\src\main\internal\serial\serial_port.cc" />
+    <ClCompile Include="..\..\src\main\internal\serial\serial_port_linux.cc" />
+    <ClCompile Include="..\..\src\main\internal\serial\serial_port_win.cc" />
     <ClCompile Include="..\..\src\main\pm1_sdk.cpp" />
     <ClCompile Include="..\..\src\main\pm1_sdk_native.cpp" />
   </ItemGroup>
