@@ -29,10 +29,10 @@ set(NATIVE_LIBRARY
 
         internal/serial/list_ports/list_ports_win.cc
         internal/serial/list_ports/list_ports_linux.cc
-        internal/serial/list_ports/list_ports_osx.cc
 
         internal/serial/serial_port.hh
-        internal/serial/serial_port.cc
+        internal/serial/serial_port_win.cc
+        internal/serial/serial_port_linux.cc
         # --------------------------
         # extensions
         internal/raii/safe_shared_ptr.hh

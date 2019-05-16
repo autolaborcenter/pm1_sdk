@@ -1,6 +1,4 @@
-﻿#include <utility>
-
-//
+﻿//
 // Created by User on 2019/3/29.
 //
 
@@ -8,34 +6,10 @@
 
 #ifdef _MSC_VER
 
-#include <sstream>
 #include <vector>
 #include <thread>
 #include <Windows.h>
-
-/** 受控锁 */
-class weak_lock_guard {
-    volatile bool locked;
-    std::mutex    &lock;
-
-public:
-    explicit weak_lock_guard(std::mutex &lock)
-        : lock(lock),
-          locked(lock.try_lock()) {}
-    
-    explicit operator bool() const { return locked; }
-    
-    bool retry() {
-        return locked ? true : locked = lock.try_lock();
-    }
-    
-    ~weak_lock_guard() { if (locked) lock.unlock(); }
-};
-
-inline std::string error_info_string(std::string &&prefix, DWORD code, int line) noexcept;
-
-#define THROW(INFO, CODE) throw std::exception(error_info_string(INFO, CODE, __LINE__).c_str())
-#define TRY(OPERATION) if(!OPERATION) THROW(#OPERATION, GetLastError())
+#include "macros.h"
 
 serial_port::serial_port(const std::string &name,
                          unsigned int baud_rate,
@@ -140,16 +114,6 @@ void serial_port::break_read() const {
         SetCommMask(handle, EV_RXCHAR);
         std::this_thread::yield();
     }
-}
-
-std::string error_info_string(std::string &&prefix,
-                              DWORD code,
-                              int line) noexcept {
-    std::stringstream builder;
-    builder << "error occurred in class serial_port, when "
-            << prefix << " with code " << code << std::endl
-            << __FILE__ << '(' << line << ')';
-    return builder.str();
 }
 
 #endif

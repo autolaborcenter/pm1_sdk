@@ -13,6 +13,15 @@ extern "C" {
 #include "control_model/optimization.h"
 }
 
+#ifdef _MSC_VER
+
+#include <Windows.h>
+
+#define AVOID_SLEEP SetThreadExecutionState(ES_SYSTEM_REQUIRED)
+#else
+#define AVOID_SLEEP
+#endif
+
 using namespace autolabor::pm1;
 
 std::vector<node_state_t> chassis_state_t::as_vector() const {
@@ -42,7 +51,7 @@ inline void atomic_plus_assign(std::atomic<t> &a, const t &b) {
         desired = expected + b;
 }
 
-constexpr unsigned long max(unsigned long a, unsigned long b) {
+constexpr unsigned long max_of(unsigned long a, unsigned long b) {
     return a > b ? a : b;
 }
 
@@ -51,7 +60,7 @@ constexpr unsigned long gcd(unsigned long a, unsigned long b) {
 }
 
 template<class t>
-constexpr long long int count_ms(t time) {
+constexpr unsigned long count_ms(t time) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
 }
 
@@ -157,7 +166,7 @@ chassis::chassis(const std::string &port_name)
                                          gcd(count_ms(odometry_interval),
                                              count_ms(rudder_interval)));
         constexpr static auto delay_interval
-                                   = std::chrono::milliseconds(max(1, gcd_ - 1));
+                                   = std::chrono::milliseconds(max_of(1, gcd_ - 1));
         
         auto           _now        = now();
         decltype(_now) task_time[] = {_now, _now, _now};
@@ -174,6 +183,7 @@ chassis::chassis(const std::string &port_name)
                 task_time[1] = _now;
             }
             if (_now - task_time[2] > state_interval) {
+                AVOID_SLEEP;
                 port << autolabor::can::pack<unit<>::state_tx>();
                 task_time[2] = _now;
             }
