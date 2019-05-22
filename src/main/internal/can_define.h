@@ -154,13 +154,7 @@ namespace autolabor {
             static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
         
             msg_union<actual_type> buffer{};
-            #if   defined(WIN32)
             std::reverse_copy(msg.data.data, msg.data.data + sizeof(actual_type), buffer.bytes);
-            #elif defined(linux)
-            std::copy(msg.data.data, msg.data.data + sizeof(actual_type), buffer.bytes);
-            #else
-            #error unsupported platform
-            #endif
             return buffer.data;
         }
     
@@ -183,13 +177,7 @@ namespace autolabor {
             std::array<uint8_t, 8> buffer2{};
         
             buffer1.data = value;
-            #if   defined(WIN32)
             std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(actual_type), buffer2.data());
-            #elif defined(linux)
-            std::copy(buffer1.bytes, buffer1.bytes + sizeof(actual_type), buffer2.data());
-            #else
-            #error unsupported platform
-            #endif
             return pack<pack_info_t>(buffer2);
         }
         
@@ -214,4 +202,4 @@ namespace autolabor {
     }
 }
 
-#endif //PM1_SDK_CAN_DEFINE_H
+#endif // PM1_SDK_CAN_DEFINE_H

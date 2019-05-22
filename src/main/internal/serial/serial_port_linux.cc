@@ -43,10 +43,17 @@ serial_port::serial_port(
     TRY(!tcgetattr(handle, &options));
     cfsetispeed(&options, trans_baud(baud_rate));
     cfsetospeed(&options, trans_baud(baud_rate));
+    
+    // 8N1, no flow control
+    options.c_cflag &= ~(PARENB | CSTOPB | CSIZE | CRTSCTS);
+    options.c_cflag |= CREAD | CLOCAL; // turn on READ & ignore ctrl lines
     options.c_cflag |= CS8;
     
-    // 原始模式
-    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+    options.c_lflag =
+    options.c_iflag =
+    options.c_oflag = 0;
+    options.c_cc[VMIN]  = 0;
+    options.c_cc[VTIME] = 0;
     
     TRY(!tcsetattr(handle, TCSANOW, &options));
 }

@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
-#include <iostream>
 #include "can/parse_engine.hh"
 #include "raii/weak_shared_lock.hh"
 
@@ -123,27 +122,6 @@ chassis::chassis(const std::string &port_name)
         
         autolabor::can::parse_engine parser(
             [&, this](const autolabor::can::parser::result &result) {
-                switch (result.type) {
-                    case parser::result_type::nothing:
-                        std::cout << "nothing" << std::endl;
-                        break;
-                    case parser::result_type::failed:
-                        std::cout << "failed" << std::endl;
-                        break;
-                    case parser::result_type::signal_failed:
-                        std::cout << "signal_failed" << std::endl;
-                        break;
-                    case parser::result_type::message_failed:
-                        std::cout << "message_failed" << std::endl;
-                        break;
-                    case parser::result_type::signal:
-                        std::cout << result.signal << std::endl;
-                        break;
-                    case parser::result_type::message:
-                        std::cout << result.message << std::endl;
-                        break;
-                }
-                
                 if (result.type != result_t::message) return;
                 
                 auto _now = now();
@@ -161,17 +139,12 @@ chassis::chassis(const std::string &port_name)
                 }
             });
     
-        uint8_t buffer[128];
+        uint8_t buffer[64];
         while (!done()) {
             auto actual = port.read(buffer, sizeof(buffer));
     
-            std::cout << std::dec << actual << std::endl;
-    
-    
-            for (size_t i = 0; i < actual; ++i) {
-                std::cout << std::hex << +buffer[i] << std::endl;
+            for (size_t i = 0; i < actual; ++i)
                 parser(buffer[i]);
-            }
             
             if (timeout()) {
                 std::stringstream builder;
