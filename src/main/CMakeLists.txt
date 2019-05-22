@@ -2,11 +2,19 @@
 
 set(CMAKE_CXX_STANDARD 17)
 
-if (${CMAKE_SIZEOF_VOID_P} MATCHES "8")
-    set(ARCH "x64")
-else ()
-    set(ARCH "x86")
+if (WIN32)
+    set(PLATFORM "Win32")
+elseif (UNIX)
+    set(PLATFORM "Unix")
 endif ()
+
+if (${CMAKE_SIZEOF_VOID_P} MATCHES "8")
+    set(BITS "x64")
+else ()
+    set(BITS "x86")
+endif ()
+
+set(ARCH ${PLATFORM}_${BITS})
 
 set(CMAKE_DEBUG_POSTFIX "_debug")
 message("${ARCH} selected")
@@ -80,10 +88,6 @@ add_library(pm1_sdk_native SHARED
         ${NATIVE_LIBRARY}
         pm1_sdk_native.cpp)
 
-#add_library(pm1_sdk_native_injection SHARED
-#        ${NATIVE_LIBRARY}
-#        pm1_sdk_native_injection.cpp)
-
 add_library(pm1_sdk
         ${NATIVE_LIBRARY}
         pm1_sdk_native.cpp
@@ -102,24 +106,8 @@ add_library(pm1_sdk_shared SHARED
 install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
 install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
 
-#install(TARGETS pm1_sdk_native_injection DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native/injection)
-#install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native/injection)
-
 install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)
 install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)
 
 install(TARGETS pm1_sdk_shared DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/dll)
 install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/dll)
-
-#if (MSVC)
-#    set(CompilerFlags
-#            CMAKE_CXX_FLAGS
-#            CMAKE_CXX_FLAGS_DEBUG
-#            CMAKE_CXX_FLAGS_RELEASE
-#            CMAKE_C_FLAGS
-#            CMAKE_C_FLAGS_DEBUG
-#            CMAKE_C_FLAGS_RELEASE)
-#    foreach (CompilerFlag ${CompilerFlags})
-#        string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-#    endforeach ()
-#endif (MSVC)

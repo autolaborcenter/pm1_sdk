@@ -16,10 +16,23 @@ public:
     /**
      * 构造器
      */
+    #if   defined(_MSC_VER)
+    
     explicit serial_port(const std::string &name,
                          unsigned int baud_rate = 9600,
                          size_t in_buffer_size = 0x100,
                          size_t out_buffer_size = 0x100);
+    
+    #elif defined(__GNUC__)
+    
+    explicit serial_port(const std::string &name,
+                         unsigned int baud_rate = 9600,
+                         uint8_t check_period = 5,
+                         uint8_t wait_period = 1);
+    
+    #else
+    #error unsupported platform
+    #endif
     
     /**
      * 析构器
@@ -47,7 +60,9 @@ private:
     using handler_t = void*;
     #elif defined(__GNUC__)
     using handler_t = int;
-    mutable std::atomic_bool break_flag;
+    mutable std::atomic_bool  break_flag;
+    std::chrono::milliseconds check_period,
+                              wait_period;
     #else
     #error unsupported platform
     #endif

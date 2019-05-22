@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <sstream>
+#include <iostream>
 #include "can/parse_engine.hh"
 #include "raii/weak_shared_lock.hh"
 
@@ -15,9 +17,7 @@ extern "C" {
 }
 
 #ifdef _MSC_VER
-
 #include <Windows.h>
-
 #define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
 #else
 #define AVOID_SLEEP
@@ -75,7 +75,7 @@ const float
     chassis::default_acceleration    = default_max_wheel_speed;
 
 chassis::chassis(const std::string &port_name)
-    : port(port_name, 115200),
+    : port(port_name, 115200, 1, 1),
       running(true),
       config(default_config),
       max_v(default_max_v),
@@ -102,10 +102,8 @@ chassis::chassis(const std::string &port_name)
     
     // region check nodes
     {
-        port << autolabor::can::pack<ecu<>::current_position_tx>()
-             << autolabor::can::pack<tcu<0>::current_position_tx>()
-        
-             << autolabor::can::pack<ecu<>::current_position_tx>()
+        port << autolabor::can::pack<ecu<0>::current_position_tx>()
+             << autolabor::can::pack<ecu<1>::current_position_tx>()
              << autolabor::can::pack<tcu<0>::current_position_tx>();
         
         const auto time = now();
@@ -130,27 +128,36 @@ chassis::chassis(const std::string &port_name)
                 
                 auto _now = now();
                 auto msg  = result.message;
+    
+                std::cout << result.message << std::endl;
+    
                 if (ecu<0>::current_position_rx::match(msg)) {
-                    _left.update(_now, RAD_OF(get_big_endian<int>(msg), default_wheel_k));
+                    _left.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
                     temp[0] = true;
                 } else if (ecu<1>::current_position_rx::match(msg)) {
-                    _right.update(_now, RAD_OF(get_big_endian<int>(msg), default_wheel_k));
+                    _right.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
                     temp[1] = true;
                 } else if (tcu<0>::current_position_rx::match(msg)) {
-                    _rudder.update(_now, RAD_OF(get_big_endian<short>(msg), default_rudder_k));
+                    _rudder.update(_now, RAD_OF(get_data_value<short>(msg), default_rudder_k));
                     temp[2] = true;
                 }
             });
-        
-        uint8_t buffer[64];
+    
+        uint8_t buffer[128];
         while (!done()) {
             auto actual = port.read(buffer, sizeof(buffer));
             
             for (size_t i = 0; i < actual; ++i) parser(buffer[i]);
             
             if (timeout()) {
+                std::stringstream builder;
+                builder << "it's not a pm1 chassis: [ecu0|ecu1|tcu0] = ["
+                        << static_cast<int>(temp[0]) << '|'
+                        << static_cast<int>(temp[1]) << '|'
+                        << static_cast<int>(temp[2]) << ']';
+                
                 task.join();
-                throw std::logic_error("it's not a pm1 chassis");
+                throw std::runtime_error(builder.str());
             }
         }
         task.join();
@@ -229,7 +236,7 @@ chassis::chassis(const std::string &port_name)
                             port << can::pack<unit<ecu<0>>::emergency_stop>();
                     } else {
                         if (enabled_target)
-                            port << pack_big_endian<unit<ecu<0>>::release_stop, uint8_t>(0xff);
+                            port << pack_value<unit<ecu<0>>::release_stop, uint8_t>(0xff);
                     }
                     
                 } else if (unit<ecu<1>>::state_rx::match(msg)) {
@@ -239,7 +246,7 @@ chassis::chassis(const std::string &port_name)
                             port << can::pack<unit<ecu<1>>::emergency_stop>();
                     } else {
                         if (enabled_target)
-                            port << pack_big_endian<unit<ecu<1>>::release_stop, uint8_t>(0xff);
+                            port << pack_value<unit<ecu<1>>::release_stop, uint8_t>(0xff);
                     }
                     
                 } else if (unit<tcu<0>>::state_rx::match(msg)) {
@@ -249,12 +256,12 @@ chassis::chassis(const std::string &port_name)
                             port << can::pack<unit<tcu<0>>::emergency_stop>();
                     } else {
                         if (enabled_target)
-                            port << pack_big_endian<unit<tcu<0>>::release_stop, uint8_t>(0xff);
+                            port << pack_value<unit<tcu<0>>::release_stop, uint8_t>(0xff);
                     }
                     
                 } else if (ecu<0>::current_position_rx::match(msg)) {
-                    
-                    auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
+    
+                    auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                     delta_left = value - _left.position;
                     
                     _left.update(_now, value);
@@ -272,8 +279,8 @@ chassis::chassis(const std::string &port_name)
                         left_ready = true;
                     
                 } else if (ecu<1>::current_position_rx::match(msg)) {
-                    
-                    auto value = RAD_OF(get_big_endian<int>(msg), default_wheel_k);
+    
+                    auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                     delta_right = value - _right.position;
                     
                     _right.update(_now, value);
@@ -290,8 +297,8 @@ chassis::chassis(const std::string &port_name)
                         right_ready = true;
                     
                 } else if (tcu<0>::current_position_rx::match(msg)) {
-                    
-                    auto value = RAD_OF(get_big_endian<short>(msg), default_rudder_k);
+    
+                    auto value = RAD_OF(get_data_value<short>(msg), default_rudder_k);
                     _rudder.update(_now, value);
                     
                     if (std::isnan(target.rudder) || now() - request_time > control_timeout)
@@ -308,10 +315,10 @@ chassis::chassis(const std::string &port_name)
                     auto left   = PULSES_OF(wheels.left, default_wheel_k);
                     auto right  = PULSES_OF(wheels.right, default_wheel_k);
                     auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-                    
-                    port << pack_big_endian<ecu<0>::target_speed, int>(left)
-                         << pack_big_endian<ecu<1>::target_speed, int>(right)
-                         << pack_big_endian<tcu<0>::target_position, short>(rudder);
+    
+                    port << pack_value<ecu<0>::target_speed, int>(left)
+                         << pack_value<ecu<1>::target_speed, int>(right)
+                         << pack_value<tcu<0>::target_position, short>(rudder);
                 }
             });
         
@@ -388,7 +395,7 @@ bool chassis::is_threads_running() const {
 
 void chassis::set_enabled_target(bool state) {
     (enabled_target = state)
-    ? port << pack_big_endian<unit<>::release_stop, uint8_t>(0xff)
+    ? port << pack_value<unit<>::release_stop, uint8_t>(0xff)
     : port << can::pack<unit<>::emergency_stop>();
 }
 

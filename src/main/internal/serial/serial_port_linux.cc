@@ -26,8 +26,11 @@ enum class read_state_t {
 serial_port::serial_port(
     const std::string &name,
     unsigned int baud_rate,
-    size_t, size_t
-) : break_flag(false) {
+    uint8_t check_period,
+    uint8_t wait_period
+) : break_flag(false),
+    check_period(std::chrono::milliseconds(check_period)),
+    wait_period(std::chrono::milliseconds(wait_period)) {
     
     handle = open(name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
     
@@ -59,10 +62,6 @@ void serial_port::send(const uint8_t *buffer, size_t size) {
 }
 
 size_t serial_port::read(uint8_t *buffer, size_t size) {
-    constexpr static auto
-        period_check = std::chrono::milliseconds(20),
-        period_wait  = std::chrono::milliseconds(5);
-    
     weak_lock_guard lock(read_mutex);
     if (!lock) return 0;
     
@@ -79,15 +78,15 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
         } else {
             switch (state) {
                 case read_state_t::check:
-                    std::this_thread::sleep_for(period_check);
+                    std::this_thread::sleep_for(check_period);
                     break;
                 case read_state_t::read:
                     state = read_state_t::wait;
-                    std::this_thread::sleep_for(period_wait);
+                    std::this_thread::sleep_for(wait_period);
                     break;
                 case read_state_t::wait:
                     ++count;
-                    std::this_thread::sleep_for(period_wait);
+                    std::this_thread::sleep_for(wait_period);
                     break;
             }
         }

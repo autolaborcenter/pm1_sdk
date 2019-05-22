@@ -148,13 +148,19 @@ namespace autolabor {
          * @return 数据值
          */
         template<class data_t>
-        inline auto get_big_endian(const union_with_data &msg)
+        inline auto get_data_value(const union_with_data &msg)
         -> typename std::decay<data_t>::type {
             using actual_type = typename std::decay<data_t>::type;
             static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
         
             msg_union<actual_type> buffer{};
+            #if   defined(WIN32)
             std::reverse_copy(msg.data.data, msg.data.data + sizeof(actual_type), buffer.bytes);
+            #elif defined(linux)
+            std::copy(msg.data.data, msg.data.data + sizeof(actual_type), buffer.bytes);
+            #else
+            #error unsupported platform
+            #endif
             return buffer.data;
         }
     
@@ -168,7 +174,7 @@ namespace autolabor {
          * @return 消息数据包
          */
         template<class pack_info_t, class data_t>
-        inline auto pack_big_endian(data_t value)
+        inline auto pack_value(data_t value)
         -> decltype(pack<pack_info_t>()) {
             using actual_type = typename std::decay<data_t>::type;
             static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
@@ -177,8 +183,13 @@ namespace autolabor {
             std::array<uint8_t, 8> buffer2{};
         
             buffer1.data = value;
+            #if   defined(WIN32)
             std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(actual_type), buffer2.data());
-            
+            #elif defined(linux)
+            std::copy(buffer1.bytes, buffer1.bytes + sizeof(actual_type), buffer2.data());
+            #else
+            #error unsupported platform
+            #endif
             return pack<pack_info_t>(buffer2);
         }
         
