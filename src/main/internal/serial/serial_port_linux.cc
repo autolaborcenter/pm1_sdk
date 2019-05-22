@@ -27,7 +27,8 @@ serial_port::serial_port(
     const std::string &name,
     unsigned int baud_rate,
     uint8_t check_period,
-    uint8_t wait_period
+    uint8_t wait_period,
+    size_t, size_t
 ) : break_flag(false),
     check_period(std::chrono::milliseconds(check_period)),
     wait_period(std::chrono::milliseconds(wait_period)) {

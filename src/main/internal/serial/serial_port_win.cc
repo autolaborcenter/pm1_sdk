@@ -16,6 +16,8 @@
 
 serial_port::serial_port(const std::string &name,
                          unsigned int baud_rate,
+                         uint8_t check_period,
+                         uint8_t wait_period,
                          size_t in_buffer_size,
                          size_t out_buffer_size) {
     
@@ -39,7 +41,7 @@ serial_port::serial_port(const std::string &name,
     TRY(SetCommState(handle, &dcb));
     
     // 设置超时时间
-    COMMTIMEOUTS timeouts{3, 1, 0, 10, 0};
+    COMMTIMEOUTS timeouts{check_period, wait_period, 0, 10, 0};
     TRY(SetCommTimeouts(handle, &timeouts));
     
     // 设置缓冲区容量

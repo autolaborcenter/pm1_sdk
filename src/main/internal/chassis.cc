@@ -75,7 +75,7 @@ const float
     chassis::default_acceleration    = default_max_wheel_speed;
 
 chassis::chassis(const std::string &port_name)
-    : port(port_name, 115200, 1, 1),
+    : port(port_name, 115200),
       running(true),
       config(default_config),
       max_v(default_max_v),
@@ -102,8 +102,7 @@ chassis::chassis(const std::string &port_name)
     
     // region check nodes
     {
-        port << autolabor::can::pack<ecu<0>::current_position_tx>()
-             << autolabor::can::pack<ecu<1>::current_position_tx>()
+        port << autolabor::can::pack<ecu<>::current_position_tx>()
              << autolabor::can::pack<tcu<0>::current_position_tx>();
         
         const auto time = now();
@@ -124,12 +123,31 @@ chassis::chassis(const std::string &port_name)
         
         autolabor::can::parse_engine parser(
             [&, this](const autolabor::can::parser::result &result) {
+                switch (result.type) {
+                    case parser::result_type::nothing:
+                        std::cout << "nothing" << std::endl;
+                        break;
+                    case parser::result_type::failed:
+                        std::cout << "failed" << std::endl;
+                        break;
+                    case parser::result_type::signal_failed:
+                        std::cout << "signal_failed" << std::endl;
+                        break;
+                    case parser::result_type::message_failed:
+                        std::cout << "message_failed" << std::endl;
+                        break;
+                    case parser::result_type::signal:
+                        std::cout << result.signal << std::endl;
+                        break;
+                    case parser::result_type::message:
+                        std::cout << result.message << std::endl;
+                        break;
+                }
+                
                 if (result.type != result_t::message) return;
                 
                 auto _now = now();
                 auto msg  = result.message;
-    
-                std::cout << result.message << std::endl;
     
                 if (ecu<0>::current_position_rx::match(msg)) {
                     _left.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
@@ -146,8 +164,14 @@ chassis::chassis(const std::string &port_name)
         uint8_t buffer[128];
         while (!done()) {
             auto actual = port.read(buffer, sizeof(buffer));
-            
-            for (size_t i = 0; i < actual; ++i) parser(buffer[i]);
+    
+            std::cout << std::dec << actual << std::endl;
+    
+    
+            for (size_t i = 0; i < actual; ++i) {
+                std::cout << std::hex << +buffer[i] << std::endl;
+                parser(buffer[i]);
+            }
             
             if (timeout()) {
                 std::stringstream builder;
