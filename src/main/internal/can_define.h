@@ -5,6 +5,7 @@
 #ifndef PM1_SDK_CAN_DEFINE_H
 #define PM1_SDK_CAN_DEFINE_H
 
+#include <algorithm>
 #include "can/pack.h"
 
 using namespace autolabor::can;
@@ -26,8 +27,8 @@ namespace autolabor {
         /** 问答结构 */
         template<class node, uint8_t _msg_type>
         struct dialog {
-            using sgn = pack_define_t<sgn, 0, 0, node::type_id, node::node_index, _msg_type>;
-            using msg = pack_define_t<msg, 0, 0, node::type_id, node::node_index, _msg_type>;
+            using sgn = pack_define_t<sgn_u, 0, 0, node::type_id, node::node_index, _msg_type>;
+            using msg = pack_define_t<msg_u, 0, 0, node::type_id, node::node_index, _msg_type>;
     
             using tx  = sgn;
             using rx  = msg;

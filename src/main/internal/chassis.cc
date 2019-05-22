@@ -5,6 +5,7 @@
 #include "chassis.hh"
 
 #include <algorithm>
+#include <cmath>
 #include "can/parse_engine.hh"
 #include "raii/weak_shared_lock.hh"
 
@@ -149,7 +150,7 @@ chassis::chassis(const std::string &port_name)
             
             if (timeout()) {
                 task.join();
-                throw std::exception("it's not a pm1 chassis");
+                throw std::logic_error("it's not a pm1 chassis");
             }
         }
         task.join();
@@ -393,7 +394,7 @@ void chassis::set_enabled_target(bool state) {
 
 void chassis::set_target(double speed, double rudder) {
     weak_shared_lock l0(action_mutex);
-    if (!l0) throw std::exception("an action is invoking.");
+    if (!l0) throw std::logic_error("an action is invoking.");
     
     std::lock_guard<decltype(target_mutex)> l1(target_mutex);
     

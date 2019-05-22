@@ -2,8 +2,8 @@
 // Created by User on 2019/3/29.
 //
 
-#ifndef UNTITLED2_SERIAL_PORT_HH
-#define UNTITLED2_SERIAL_PORT_HH
+#ifndef SERIAL_PORT_HH
+#define SERIAL_PORT_HH
 
 
 #include <string>
@@ -43,9 +43,19 @@ public:
     void break_read() const;
 
 private:
-    std::atomic<void *> handle;
-    mutable std::mutex  read_mutex;
+    #if   defined(_MSC_VER)
+    using handler_t = void*;
+    #elif defined(__GNUC__)
+    using handler_t = int;
+    mutable std::atomic_bool break_flag;
+    #else
+    #error unsupported platform
+    #endif
+    
+    std::atomic<handler_t> handle;
+    
+    mutable std::mutex read_mutex;
 };
 
 
-#endif //UNTITLED2_SERIAL_PORT_HH
+#endif // SERIAL_PORT_HH

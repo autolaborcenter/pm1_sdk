@@ -28,8 +28,8 @@ public:
     ~weak_lock_guard() { if (locked) lock.unlock(); }
 };
 
-inline std::string error_info_string(std::string &&prefix,
-                                     DWORD code,
+inline std::string error_info_string(const std::string &prefix,
+                                     long long code,
                                      const char *file = nullptr,
                                      int line = 0) noexcept {
     std::stringstream builder;
@@ -40,12 +40,23 @@ inline std::string error_info_string(std::string &&prefix,
     return builder.str();
 }
 
+inline std::string error_info_string(const std::string &prefix,
+                                     const std::string &msg,
+                                     const char *file = nullptr,
+                                     int line = 0) noexcept {
+    std::stringstream builder;
+    builder << "error occurred in class serial_port, when "
+            << prefix << " with msg \"" << msg << "\"";
+    if (file)
+        builder << std::endl << file << '(' << line << ')';
+    return builder.str();
+}
+
 #ifdef _DEBUG
-#define THROW(INFO, CODE) throw std::exception(error_info_string(INFO, CODE, __FILE__, __LINE__).c_str())
+#define THROW(INFO, CODE) throw std::logic_error(error_info_string(INFO, CODE, __FILE__, __LINE__).c_str())
 #else
-#define THROW(INFO, CODE) throw std::exception(error_info_string(INFO, CODE).c_str())
+#define THROW(INFO, MSG)  throw std::logic_error(error_info_string(INFO, MSG).c_str())
 #endif // DEBUG
 
-#define TRY(OPERATION) if(!(OPERATION)) THROW(#OPERATION, GetLastError())
 
 #endif // SERIAL_PORT_ASYNC_MACROS_H

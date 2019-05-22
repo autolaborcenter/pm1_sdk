@@ -8,8 +8,11 @@
 
 #include <vector>
 #include <thread>
-#include <Windows.h>
 #include "macros.h"
+
+#include <Windows.h>
+
+#define TRY(OPERATION) if(!OPERATION) THROW(#OPERATION, GetLastError())
 
 serial_port::serial_port(const std::string &name,
                          unsigned int baud_rate,

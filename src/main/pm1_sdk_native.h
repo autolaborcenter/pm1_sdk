@@ -9,8 +9,8 @@
 #define DLL_EXPORT extern "C" __declspec(dllexport)
 #define STD_CALL __stdcall
 #else
-#define DLL_EXPORT
-#define STD_CALL __artribute__((stdcall))
+#define DLL_EXPORT extern "C"
+#define STD_CALL
 #endif // _MSC_VER
 
 namespace autolabor {

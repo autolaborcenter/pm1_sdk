@@ -25,13 +25,13 @@ public:
         return new_ptr;
     }
     
-    template<class t>
-    inline t read(const std::function<t(ptr_t)> &block) {
+    template<class _t>
+    inline _t read(const std::function<_t(ptr_t)> &block) {
         weak_shared_lock lock(mutex);
         if (!lock)
-            throw std::exception("pointer is busy");
+            throw std::logic_error("pointer is busy");
         if (!ptr)
-            throw std::exception("pointer is null");
+            throw std::logic_error("pointer is null");
         
         return block(ptr);
     }

@@ -18,7 +18,7 @@ namespace autolabor {
             using callback_t = std::function<void(const parser::result &)>;
             
             std::deque<uint8_t> buffer;
-            parser              parser;
+            parser              _parser;
             const callback_t    callback;
             
             unsigned int ptr;

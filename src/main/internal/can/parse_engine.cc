@@ -17,7 +17,7 @@ size_t parse_engine::operator()(uint8_t byte) {
 size_t parse_engine::parse() {
     size_t count = 0;
     while (ptr < buffer.size()) {
-        auto result = parser(buffer[ptr++]);
+        auto result = _parser(buffer[ptr++]);
         switch (result.type) {
             case parser::result_type::nothing:
                 break;
@@ -37,7 +37,7 @@ size_t parse_engine::parse() {
                 ++count;
                 break;
             default:
-                throw std::exception("critical error");
+                throw std::logic_error("critical error");
         }
     }
     return count;

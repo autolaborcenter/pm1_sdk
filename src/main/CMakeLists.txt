@@ -30,6 +30,7 @@ set(NATIVE_LIBRARY
         internal/serial/list_ports/list_ports_win.cc
         internal/serial/list_ports/list_ports_linux.cc
 
+        internal/serial/macros.h
         internal/serial/serial_port.hh
         internal/serial/serial_port_win.cc
         internal/serial/serial_port_linux.cc

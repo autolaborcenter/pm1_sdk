@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
+#include <cmath>
 
 #include "internal/chassis.hh"
 
@@ -165,7 +166,7 @@ get_parameter(handler_t id, double &value) noexcept {
                 value = ptr->acceleration;
                 break;
             default:
-                throw std::exception("undefined id");
+                throw std::logic_error("undefined id");
         }
     });
 }
@@ -201,7 +202,7 @@ set_parameter(handler_t id, double value) noexcept {
                 ptr->acceleration = temp;
                 break;
             default:
-                throw std::exception("undefined id");
+                throw std::logic_error("undefined id");
         }
     });
 }
@@ -420,7 +421,7 @@ handler_t block(double v,
         while (true) {
             if (cancel_flag) {
                 chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
-                throw std::exception("action canceled");
+                throw std::logic_error("action canceled");
             }
             
             if (paused) {
@@ -439,10 +440,10 @@ handler_t block(double v,
                     // 检查状态
                     auto states = ptr->state().as_vector();
                     if (std::find(states.begin(), states.end(), unknown) != states.end())
-                        throw std::exception("critical error");
+                        throw std::logic_error("critical error");
                     if (std::find(states.begin(), states.end(), disabled) != states.end()
                         && ptr->target_state() != enabled)
-                        throw std::exception("chassis is locked");
+                        throw std::logic_error("chassis is locked");
     
                     // 检查任务进度
                     auto current = measure(ptr);
@@ -557,7 +558,7 @@ adjust_rudder(double offset,
             
             if (cancel_flag) {
                 chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
-                throw std::exception("action canceled");
+                throw std::logic_error("action canceled");
             }
             
             if (pause_flag)

@@ -6,12 +6,13 @@
 #define PM1_SDK_PACK_H
 
 #include <array>
+#include <cstring>
 #include "info.h"
 
 namespace autolabor {
     namespace can {
-        using sgn = autolabor::can::union_no_data;   // 信号，无数据
-        using msg = autolabor::can::union_with_data; // 消息，有数据
+        using sgn_u = autolabor::can::union_no_data;   // 信号，无数据
+        using msg_u = autolabor::can::union_with_data; // 消息，有数据
         
         /**
          * CAN 包信息定义
@@ -33,7 +34,7 @@ namespace autolabor {
         public:
             using type_t = _type_t;
     
-            static_assert(std::is_same<_type_t, sgn>::value || std::is_same<_type_t, msg>::value,
+            static_assert(std::is_same<_type_t, sgn_u>::value || std::is_same<_type_t, msg_u>::value,
                           "struct must be a can pack type");
             static_assert(_network <= autolabor::can::mask(2), "network in 2 bits");
             static_assert(_priority <= autolabor::can::mask(3), "property in 3 bits");
@@ -41,7 +42,7 @@ namespace autolabor {
             static_assert(_node_index <= autolabor::can::mask(4), "node index in 4 bits");
     
             constexpr static auto network    = _network;
-            constexpr static auto data_field = std::is_same<_type_t, msg>::value;
+            constexpr static auto data_field = std::is_same<_type_t, msg_u>::value;
             constexpr static auto priority   = _priority;
             constexpr static auto node_type  = _node_type;
             constexpr static auto node_index = _node_index;
@@ -70,7 +71,7 @@ namespace autolabor {
         /** 打包（无数据域） */
         template<class info_t>
         inline typename info_t::type_t pack(uint8_t reserve = 0) {
-            static_assert(std::is_same<info_t::type_t, sgn>::value,
+            static_assert(std::is_same<typename info_t::type_t, sgn_u>::value,
                           "cannot build a signal pack with message info");
         
             typename info_t::type_t msg{};
@@ -83,7 +84,7 @@ namespace autolabor {
         /** 打包（有数据域） */
         template<class info_t>
         inline typename info_t::type_t pack(const std::array<uint8_t, 8> &data, uint8_t frame_id = 0) {
-            static_assert(std::is_same<info_t::type_t, msg>::value,
+            static_assert(std::is_same<typename info_t::type_t, msg_u>::value,
                           "cannot build a message pack with signal info");
         
             typename info_t::type_t msg{};
