@@ -102,6 +102,12 @@ add_library(pm1_sdk_shared SHARED
         pm1_sdk.h
         pm1_sdk.cpp)
 
+if (UNIX)
+    target_link_libraries(pm1_sdk pthread atomic)
+    target_link_libraries(pm1_sdk_shared pthread atomic)
+    target_link_libraries(pm1_sdk_native pthread atomic)
+endif ()
+
 # 指定安装路径
 install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
 install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
