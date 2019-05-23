@@ -73,8 +73,16 @@ const float
     chassis::default_optimize_width  = pi_f / 4,
     chassis::default_acceleration    = default_max_wheel_speed;
 
+#if   defined(WIN32)
+constexpr auto timeout = 3;
+#elif defined(linux)
+constexpr auto timeout = 20;
+#else
+#error unsupported platform
+#endif
+
 chassis::chassis(const std::string &port_name)
-    : port(port_name, 115200),
+    : port(port_name, 115200, timeout),
       running(true),
       config(default_config),
       max_v(default_max_v),

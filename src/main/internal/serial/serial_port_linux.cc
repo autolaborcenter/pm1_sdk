@@ -27,13 +27,10 @@ serial_port::serial_port(
     const std::string &name,
     unsigned int baud_rate,
     uint8_t check_period,
-    uint8_t wait_period,
-    size_t, size_t
-) : break_flag(false),
-    check_period(std::chrono::milliseconds(check_period)),
-    wait_period(std::chrono::milliseconds(wait_period)) {
+    uint8_t, size_t, size_t
+) : break_flag(false) {
     
-    handle = open(name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+    handle = open(name.c_str(), O_RDWR | O_NOCTTY);
     
     if (handle == -1)
         THROW("open(...)", std::strerror(errno));
@@ -53,7 +50,7 @@ serial_port::serial_port(
     options.c_iflag =
     options.c_oflag = 0;
     options.c_cc[VMIN]  = 0;
-    options.c_cc[VTIME] = 0;
+    options.c_cc[VTIME] = check_period;
     
     TRY(!tcsetattr(handle, TCSANOW, &options));
 }
@@ -73,34 +70,10 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
     weak_lock_guard lock(read_mutex);
     if (!lock) return 0;
     
-    read_state_t state = read_state_t::check;
-    const auto   end   = buffer + size;
-    auto         count = 0;
-    
-    while (!break_flag && count < 4 && buffer < end) {
-        auto temp = ::read(handle, buffer, end - buffer);
-        if (temp > 0) {
-            buffer += temp;
-            state = read_state_t::read;
-            count = 0;
-        } else {
-            switch (state) {
-                case read_state_t::check:
-                    std::this_thread::sleep_for(check_period);
-                    break;
-                case read_state_t::read:
-                    state = read_state_t::wait;
-                    std::this_thread::sleep_for(wait_period);
-                    break;
-                case read_state_t::wait:
-                    ++count;
-                    std::this_thread::sleep_for(wait_period);
-                    break;
-            }
-        }
+    while (true) {
+        auto temp = ::read(handle, buffer, size);
+        if (temp > 0 || break_flag) return temp;
     }
-    
-    return buffer - (end - size);
 }
 
 void serial_port::break_read() const {
