@@ -43,8 +43,8 @@ odometry_t odometry_t::operator-(const odometry_t &mark) const {
 }
 
 delta_differential_t::operator odometry_t() {
-    double ds = (rigth + left) / 2,
-           da = (rigth - left) / width,
+    double ds = (right + left) / 2,
+           da = (right - left) / width,
            dx,
            dy,
            dt = 1 / interval.count();

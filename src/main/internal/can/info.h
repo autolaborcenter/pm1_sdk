@@ -5,6 +5,7 @@
 #ifndef PM1_SDK_INFO_H
 #define PM1_SDK_INFO_H
 
+
 #include <sstream>
 
 namespace autolabor {
@@ -159,5 +160,6 @@ std::ostream &autolabor::can::operator<<(std::ostream &ostream, const autolabor:
     ostream << "]" << std::endl;
     return ostream;
 }
+
 
 #endif //PM1_SDK_INFO_H

@@ -5,6 +5,7 @@
 #ifndef PM1_SDK_PARSER_H
 #define PM1_SDK_PARSER_H
 
+
 #include "info.h"
 
 namespace autolabor {
@@ -75,5 +76,6 @@ namespace autolabor {
         };
     }
 }
+
 
 #endif //PM1_SDK_PARSER_H

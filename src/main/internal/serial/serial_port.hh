@@ -16,7 +16,6 @@ public:
     /**
      * 构造器
      */
-    
     explicit serial_port(const std::string &name,
                          unsigned int baud_rate = 9600,
                          uint8_t check_period = 3,

@@ -27,11 +27,11 @@ namespace autolabor {
     
     /** 差动里程计增量 */
     struct delta_differential_t {
-        double width, left, rigth;
+        double width, left, right;
         std::chrono::duration<double, std::ratio<1>>
                interval;
-        
-        operator odometry_t();
+    
+        explicit operator odometry_t();
     };
 }
 
