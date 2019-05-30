@@ -444,7 +444,7 @@ handler_t block(double v,
                     if (std::find(states.begin(), states.end(), disabled) != states.end()
                         && ptr->target_state() != enabled)
                         throw std::logic_error("chassis is locked");
-    
+                    
                     // 检查任务进度
                     auto current = measure(ptr);
                     auto sub     = process[current];

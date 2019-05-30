@@ -47,7 +47,7 @@ public:
 
 private:
     #if   defined(_MSC_VER)
-    using handler_t = void*;
+    using handler_t = void *;
     #elif defined(__GNUC__)
     using handler_t = int;
     mutable std::atomic_bool break_flag;

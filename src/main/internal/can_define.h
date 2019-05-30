@@ -12,16 +12,10 @@ using namespace autolabor::can;
 
 namespace autolabor {
     namespace pm1 {
-        /**
-         * 广播地址常量
-         */
-        constexpr uint8_t any_type  = 0x3f,
-                          any_index = 0x0f;
-        
         /** 任意类型控制器结构 */
         struct any_controller {
-            constexpr static uint8_t type_id    = any_type;
-            constexpr static uint8_t node_index = any_index;
+            constexpr static uint8_t type_id    = 0x3f,
+                                     node_index = 0x0f;
         };
     
         /** 问答结构 */
@@ -73,7 +67,7 @@ namespace autolabor {
         };
     
         /** 整车控制器包信息协议 */
-        template<uint8_t _node_index = any_index>
+        template<uint8_t _node_index = any_controller::node_index>
         class vcu {
         public:
             constexpr static uint8_t type_id    = 0x10;
@@ -96,7 +90,7 @@ namespace autolabor {
         };
         
         /** 动力控制器包信息协议 */
-        template<uint8_t _node_index = any_index>
+        template<uint8_t _node_index = any_controller::node_index>
         class ecu {
         public:
             constexpr static uint8_t type_id    = 0x11;
@@ -116,7 +110,7 @@ namespace autolabor {
         };
     
         /** 转向控制器包信息协议 */
-        template<uint8_t _node_index = any_index>
+        template<uint8_t _node_index = any_controller::node_index>
         class tcu {
         public:
             constexpr static uint8_t type_id    = 0x12;

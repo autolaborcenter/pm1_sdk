@@ -26,19 +26,19 @@ namespace autolabor {
         struct pack_no_data {
             uint8_t
                 head,
-            
+    
                 node_type_h : 2, //
                 priority    : 3, // 第 1 个信息字节
                 payload     : 1, // 从低到高
                 network     : 2, //
-            
+    
                 node_index  : 4, // 第 2 个信息字节
                 node_type_l : 4, // 从低到高
-            
+    
                 msg_type,
                 reserve,
                 crc;
-        
+    
             inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }
@@ -48,7 +48,7 @@ namespace autolabor {
         struct pack_with_data {
             uint8_t
                 head,
-            
+    
                 node_type_h : 2, //
                 priority    : 3, // 第 1 个信息字节
                 payload     : 1, // 从低到高
@@ -56,12 +56,12 @@ namespace autolabor {
             // 第 2 个信息字节
                 node_index  : 4, // 从低到高
                 node_type_l : 4,
-            
+    
                 msg_type,
                 frame_id,
                 data[8],
                 crc;
-        
+    
             inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }

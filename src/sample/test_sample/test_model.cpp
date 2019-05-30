@@ -5,8 +5,8 @@ extern "C" {
 }
 
 int main() {
-	velocity v{2, 0};
-	auto     physical = velocity_to_physical(&v, &default_config);
-	std::cout << physical.speed / pi_f << std::endl;
-	return 0;
+    velocity v{2, 0};
+    auto     physical = velocity_to_physical(&v, &default_config);
+    std::cout << physical.speed / pi_f << std::endl;
+    return 0;
 }

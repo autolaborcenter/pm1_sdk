@@ -16,7 +16,9 @@ extern "C" {
 }
 
 #ifdef _MSC_VER
+
 #include <Windows.h>
+
 #define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
 #else
 #define AVOID_SLEEP
@@ -134,7 +136,7 @@ chassis::chassis(const std::string &port_name)
                 
                 auto _now = now();
                 auto msg  = result.message;
-    
+                
                 if (ecu<0>::current_position_rx::match(msg)) {
                     _left.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
                     temp[0] = true;
@@ -146,11 +148,11 @@ chassis::chassis(const std::string &port_name)
                     temp[2] = true;
                 }
             });
-    
+        
         uint8_t buffer[64];
         while (!done()) {
             auto actual = port.read(buffer, sizeof(buffer));
-    
+            
             for (size_t i = 0; i < actual; ++i)
                 parser(buffer[i]);
             
@@ -265,7 +267,7 @@ chassis::chassis(const std::string &port_name)
                     }
                     
                 } else if (ecu<0>::current_position_rx::match(msg)) {
-    
+                    
                     auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                     delta_left = value - _left.position;
                     
@@ -284,7 +286,7 @@ chassis::chassis(const std::string &port_name)
                         left_ready = true;
                     
                 } else if (ecu<1>::current_position_rx::match(msg)) {
-    
+                    
                     auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                     delta_right = value - _right.position;
                     
@@ -302,7 +304,7 @@ chassis::chassis(const std::string &port_name)
                         right_ready = true;
                     
                 } else if (tcu<0>::current_position_rx::match(msg)) {
-    
+                    
                     auto value = RAD_OF(get_data_value<short>(msg), default_rudder_k);
                     _rudder.update(_now, value);
                     
@@ -320,7 +322,7 @@ chassis::chassis(const std::string &port_name)
                     auto left   = PULSES_OF(wheels.left, default_wheel_k);
                     auto right  = PULSES_OF(wheels.right, default_wheel_k);
                     auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-    
+                    
                     port << pack_value<ecu<0>::target_speed, int>(left)
                          << pack_value<ecu<1>::target_speed, int>(right)
                          << pack_value<tcu<0>::target_position, short>(rudder);
