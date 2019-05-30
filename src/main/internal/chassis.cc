@@ -8,7 +8,7 @@
 #include <cmath>
 #include <sstream>
 #include "can/parse_engine.hh"
-#include "raii/weak_shared_lock.hh"
+#include "raii/weak_shared_lock.hpp"
 
 extern "C" {
 #include "control_model/motor_map.h"
@@ -117,12 +117,12 @@ chassis::chassis(const std::string &port_name)
         const auto time = now();
         bool       temp[]{false, false, false};
         
-        auto timeout = [time] { return now() - time > check_timeout; };
-        auto done    = [&temp] { return temp[0] && temp[1] && temp[2]; };
+        auto is_timeout = [time] { return now() - time > check_timeout; };
+        auto done       = [&temp] { return temp[0] && temp[1] && temp[2]; };
         
         auto task = std::thread([&] {
             while (!done()) {
-                if (timeout()) {
+                if (is_timeout()) {
                     port.break_read();
                     return;
                 }
@@ -156,7 +156,7 @@ chassis::chassis(const std::string &port_name)
             for (size_t i = 0; i < actual; ++i)
                 parser(buffer[i]);
             
-            if (timeout()) {
+            if (is_timeout()) {
                 std::stringstream builder;
                 builder << "it's not a pm1 chassis: [ecu0|ecu1|tcu0] = ["
                         << static_cast<int>(temp[0]) << '|'

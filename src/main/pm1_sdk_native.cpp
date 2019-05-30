@@ -13,12 +13,12 @@
 
 #include "internal/chassis.hh"
 
-#include "internal/raii/safe_shared_ptr.hh"
-#include "internal/raii/weak_lock_guard.hh"
-#include "internal/raii/weak_shared_lock.hh"
+#include "internal/raii/safe_shared_ptr.hpp"
+#include "internal/raii/weak_lock_guard.hpp"
+#include "internal/raii/weak_shared_lock.hpp"
 
 #include "internal/serial/serial.h"
-#include "internal/exception_engine.hh"
+#include "internal/api/exception_engine.hpp"
 #include "internal/process_controller.hh"
 
 constexpr auto action_conflict = "another action is invoking";
@@ -29,7 +29,7 @@ using handler_t = autolabor::pm1::native::handler_t;
 
 std::atomic<handler_t> task_id(0);
 
-autolabor::exception_engine exceptions; // NOLINT(cert-err58-cpp)
+autolabor::exception_engine<handler_t> exceptions; // NOLINT(cert-err58-cpp)
 
 // endregion
 // region chassis resources

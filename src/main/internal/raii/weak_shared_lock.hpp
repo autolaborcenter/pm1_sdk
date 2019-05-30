@@ -2,8 +2,8 @@
 // Created by User on 2019/4/2.
 //
 
-#ifndef PM1_SDK_WEAK_SHARED_LOCK_HH
-#define PM1_SDK_WEAK_SHARED_LOCK_HH
+#ifndef PM1_SDK_WEAK_SHARED_LOCK_HPP
+#define PM1_SDK_WEAK_SHARED_LOCK_HPP
 
 
 #include <shared_mutex>
@@ -32,4 +32,4 @@ private:
 };
 
 
-#endif //PM1_SDK_WEAK_SHARED_LOCK_HH
+#endif //PM1_SDK_WEAK_SHARED_LOCK_HPP

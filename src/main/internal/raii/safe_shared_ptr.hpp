@@ -2,14 +2,14 @@
 // Created by User on 2019/4/10.
 //
 
-#ifndef PM1_SDK_SAFE_SHARED_PTR_HH
-#define PM1_SDK_SAFE_SHARED_PTR_HH
+#ifndef PM1_SDK_SAFE_SHARED_PTR_HPP
+#define PM1_SDK_SAFE_SHARED_PTR_HPP
 
 
 #include <memory>
 #include <functional>
 #include <shared_mutex>
-#include "weak_shared_lock.hh"
+#include "weak_shared_lock.hpp"
 
 template<class t>
 class safe_shared_ptr {
@@ -37,4 +37,5 @@ public:
     }
 };
 
-#endif //PM1_SDK_SAFE_SHARED_PTR_HH
+
+#endif //PM1_SDK_SAFE_SHARED_PTR_HPP

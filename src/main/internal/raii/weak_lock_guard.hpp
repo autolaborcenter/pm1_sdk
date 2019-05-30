@@ -2,8 +2,8 @@
 // Created by User on 2019/4/2.
 //
 
-#ifndef PM1_SDK_WEAK_LOCK_GUARD_HH
-#define PM1_SDK_WEAK_LOCK_GUARD_HH
+#ifndef PM1_SDK_WEAK_LOCK_GUARD_HPP
+#define PM1_SDK_WEAK_LOCK_GUARD_HPP
 
 
 template<class t>
@@ -26,4 +26,4 @@ private:
 };
 
 
-#endif //PM1_SDK_WEAK_LOCK_GUARD_HH
+#endif //PM1_SDK_WEAK_LOCK_GUARD_HPP

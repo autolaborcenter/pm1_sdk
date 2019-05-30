@@ -24,8 +24,9 @@ set(NATIVE_LIBRARY
         # pm1 sdk
         pm1_sdk_native.h
 
-        internal/exception_engine.hh
-        internal/exception_engine.cc
+        internal/api/exception_engine.hpp
+
+        internal/api/chassis_map.hpp
 
         internal/process_controller.hh
         # --------------------------
@@ -41,9 +42,9 @@ set(NATIVE_LIBRARY
         internal/serial/serial_port_linux.cc
         # --------------------------
         # extensions
-        internal/raii/safe_shared_ptr.hh
-        internal/raii/weak_lock_guard.hh
-        internal/raii/weak_shared_lock.hh
+        internal/raii/safe_shared_ptr.hpp
+        internal/raii/weak_lock_guard.hpp
+        internal/raii/weak_shared_lock.hpp
 
         internal/time_extensions.h
         # --------------------------
