@@ -31,7 +31,7 @@ namespace autolabor {
         std::chrono::duration<double, std::ratio<1>>
                interval;
     
-        explicit operator odometry_t();
+        operator odometry_t();
     };
 }
 
