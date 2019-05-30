@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.12)
+﻿cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -18,9 +18,6 @@ set(ARCH ${PLATFORM}_${BITS})
 
 set(CMAKE_DEBUG_POSTFIX "_debug")
 message("${ARCH} selected")
-
-add_subdirectory(internal/can)
-add_subdirectory(internal/control_model)
 
 set(NATIVE_LIBRARY
         # --------------------------
