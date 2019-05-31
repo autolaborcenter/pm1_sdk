@@ -345,9 +345,9 @@ autolabor::pm1::native::
 check_state() noexcept {
     try {
         return chassis_ptr.read<unsigned char>([](ptr_t ptr) {
-            auto states = ptr->state().as_vector();
+            auto states = ptr->state();
             return 1 == std::unordered_set<node_state_t>(states.begin(), states.end()).size()
-                   ? static_cast<unsigned char>(states.front())
+                   ? static_cast<unsigned char>(*states.begin())
                    : 0x7f;
         });
     }
@@ -438,7 +438,7 @@ handler_t block(double v,
                         disabled = autolabor::pm1::node_state_t::disabled;
                     
                     // 检查状态
-                    auto states = ptr->state().as_vector();
+                    auto states = ptr->state();
                     if (std::find(states.begin(), states.end(), unknown) != states.end())
                         throw std::logic_error("critical error");
                     if (std::find(states.begin(), states.end(), disabled) != states.end()

@@ -25,7 +25,6 @@ set(NATIVE_LIBRARY
         pm1_sdk_native.h
 
         internal/api/exception_engine.hpp
-
         internal/api/chassis_map.hpp
 
         internal/process_controller.hh
@@ -75,6 +74,9 @@ set(NATIVE_LIBRARY
         # --------------------------
         # pm1 chassis
         internal/can_define.h
+
+        internal/chassis_state_t.hh
+        internal/chassis_state_t.cc
 
         internal/chassis.hh
         internal/chassis.cc

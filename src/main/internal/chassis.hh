@@ -14,6 +14,7 @@
 #include "can_define.h"
 #include "odometry_t.hh"
 #include "time_extensions.h"
+#include "chassis_state_t.hh"
 
 extern "C" {
 #include "control_model/model.h"
@@ -37,15 +38,6 @@ namespace autolabor {
     };
     
     namespace pm1 {
-        /** 底盘状态 */
-        struct chassis_state_t {
-            node_state_t _ecu0, _ecu1, _tcu, _vcu;
-            
-            std::vector<node_state_t> as_vector() const;
-            
-            bool check_all(node_state_t = node_state_t::enabled) const;
-        };
-        
         /** 底盘 */
         class chassis final {
         public:

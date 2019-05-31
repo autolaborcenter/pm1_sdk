@@ -26,16 +26,6 @@ extern "C" {
 
 using namespace autolabor::pm1;
 
-std::vector<node_state_t> chassis_state_t::as_vector() const {
-    return {_ecu0, _ecu1, _tcu};
-}
-
-bool chassis_state_t::check_all(node_state_t target) const {
-    auto vector = as_vector();
-    return std::all_of(vector.cbegin(), vector.cend(),
-                       [target](node_state_t it) { return it == target; });
-}
-
 // region functions
 
 template<class t>
@@ -97,15 +87,16 @@ chassis::chassis(const std::string &port_name)
     using namespace std::chrono_literals;
     using result_t  = autolabor::can::parser::result_type;
     
-    constexpr static auto odometry_interval   = 50ms;
-    constexpr static auto rudder_interval     = 20ms;
-    constexpr static auto state_interval      = 1s;
-    constexpr static auto state_timeout       = 2 * state_interval;
-    constexpr static auto control_timeout     = 500ms;
-    constexpr static auto check_timeout       = 1000ms;
-    constexpr static auto check_state_timeout = 100ms;
-    
-    constexpr static auto frequency = 1000.0 / count_ms(rudder_interval);
+    constexpr static auto
+        odometry_interval   = 50ms,
+        rudder_interval     = 20ms,
+        state_interval      = 1000ms,
+        state_timeout       = 1100ms,
+        control_timeout     = 500ms,
+        check_timeout       = 1000ms,
+        check_state_timeout = 100ms;
+    constexpr static auto
+        frequency           = 1000.0 / count_ms(rudder_interval);
     
     _left.time = _right.time = _rudder.time = now();
     
@@ -170,11 +161,11 @@ chassis::chassis(const std::string &port_name)
         task.join();
     }
     // endregion
-    
-    port << autolabor::can::pack<ecu<>::timeout>({2, 0}) // 设置超时时间：200 ms
-         << can::pack<unit<>::emergency_stop>()
-         << autolabor::can::pack<unit<>::state_tx>();    // 询问状态
-    
+    // region initialize ask
+    port << can::pack<ecu<>::timeout>({2, 0}) // 设置动力超时时间到 200 ms
+         << can::pack<unit<>::emergency_stop>()           // 从锁定状态启动
+         << can::pack<unit<>::state_tx>();                // 询问状态
+    // endregion
     // region ask
     write_thread = std::thread([this] {
         constexpr static auto gcd_ = gcd(count_ms(state_interval),
@@ -215,23 +206,18 @@ chassis::chassis(const std::string &port_name)
              delta_right = .0;
         auto time        = now();
         auto speed       = .0f;
-        
-        decltype(time) reply_time[] = {time, time, time};
+    
+        std::array<decltype(now()), 4> reply_time{time, time, time, time};
         
         autolabor::can::parse_engine parser(
             [&](const autolabor::can::parser::result &result) {
                 if (result.type != result_t::message) return;
                 
                 auto _now = now();
-                
-                if (_now - reply_time[0] > state_timeout)
-                    chassis_state._ecu0 = node_state_t::unknown;
-                
-                if (_now - reply_time[1] > state_timeout)
-                    chassis_state._ecu1 = node_state_t::unknown;
-                
-                if (_now - reply_time[2] > state_timeout)
-                    chassis_state._tcu = node_state_t::unknown;
+    
+                for (auto i = 0; i < reply_time.size(); ++i)
+                    if (_now - reply_time[i] > state_timeout)
+                        chassis_state.states[i] = node_state_t::unknown;
                 
                 // 处理
                 const auto msg = result.message;
@@ -265,15 +251,19 @@ chassis::chassis(const std::string &port_name)
                         if (enabled_target)
                             port << pack_value<unit<tcu<0>>::release_stop, uint8_t>(0xff);
                     }
-                    
+    
+                } else if (unit<vcu<0>>::state_rx::match(msg)) {
+                    reply_time[3] = _now;
+                    chassis_state._vcu = parse_state(*msg.data.data);
+    
                 } else if (ecu<0>::current_position_rx::match(msg)) {
-                    
+    
                     auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                     delta_left = value - _left.position;
-                    
+    
                     _left.update(_now, value);
-                    
-                    
+    
+    
                     if (right_ready) {
                         odometry_t delta = delta_differential_t{config.width,
                                                                 config.radius * delta_left,
@@ -284,14 +274,14 @@ chassis::chassis(const std::string &port_name)
                         time        = _now;
                     } else
                         left_ready = true;
-                    
+    
                 } else if (ecu<1>::current_position_rx::match(msg)) {
-                    
+    
                     auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                     delta_right = value - _right.position;
-                    
+    
                     _right.update(_now, value);
-                    
+    
                     if (left_ready) {
                         odometry_t delta = delta_differential_t{config.width,
                                                                 config.radius * delta_left,
@@ -302,30 +292,30 @@ chassis::chassis(const std::string &port_name)
                         time       = _now;
                     } else
                         right_ready = true;
-                    
+    
                 } else if (tcu<0>::current_position_rx::match(msg)) {
-                    
+    
                     auto value = RAD_OF(get_data_value<short>(msg), default_rudder_k);
                     _rudder.update(_now, value);
-                    
+    
                     if (std::isnan(target.rudder) || now() - request_time > control_timeout)
                         target         = {0, value};
-                    
+    
                     physical current{speed, value};
                     auto     optimized = optimize(&target,
                                                   &current,
                                                   optimize_width,
                                                   acceleration / frequency);
                     speed = optimized.speed;
-                    
+    
                     auto wheels = physical_to_wheels(&optimized, &config);
                     auto left   = PULSES_OF(wheels.left, default_wheel_k);
                     auto right  = PULSES_OF(wheels.right, default_wheel_k);
                     auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-                    
+    
                     port << pack_value<ecu<0>::target_speed, int>(left)
-                         << pack_value<ecu<1>::target_speed, int>(right)
-                         << pack_value<tcu<0>::target_position, short>(rudder);
+                        << pack_value<ecu<1>::target_speed, int>(right)
+                        << pack_value<tcu<0>::target_position, short>(rudder);
                 }
             });
         
@@ -345,8 +335,7 @@ chassis::chassis(const std::string &port_name)
     // region wait state
     for (const auto time = now();
          now() - time < check_state_timeout;) {
-        auto vector = chassis_state.as_vector();
-        if (std::none_of(vector.cbegin(), vector.cend(),
+        if (std::none_of(chassis_state.begin(), chassis_state.end(),
                          [](node_state_t it) { return it == node_state_t::unknown; }))
             break;
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
