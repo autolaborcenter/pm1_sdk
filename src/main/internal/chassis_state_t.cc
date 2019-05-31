@@ -16,10 +16,21 @@ bool
 autolabor::pm1::chassis_state_t::iterator::operator!=
     (const autolabor::pm1::chassis_state_t::iterator &others) const { return i != others.i; }
 
-autolabor::pm1::chassis_state_t::iterator &
+bool
+autolabor::pm1::chassis_state_t::iterator::operator==
+    (const autolabor::pm1::chassis_state_t::iterator &others) const { return i == others.i; }
+
+autolabor::pm1::chassis_state_t::iterator
 autolabor::pm1::chassis_state_t::iterator::operator++() {
     ++i;
     return *this;
+}
+
+const autolabor::pm1::chassis_state_t::iterator
+autolabor::pm1::chassis_state_t::iterator::operator++
+    (int) {
+    ++i;
+    return iterator(master, i - 1);
 }
 
 autolabor::pm1::node_state_t

@@ -15,15 +15,16 @@ namespace autolabor {
             constexpr static auto size = 4;
             
             union {
-                node_state_t _ecu0, _ecu1, _tcu, _vcu;
+                struct { node_state_t _ecu0, _ecu1, _tcu, _vcu; };
                 node_state_t states[size];
             };
             
             class iterator {
-                int             i;
                 chassis_state_t &master;
             
             public:
+                int i;
+                
                 iterator(chassis_state_t &master, int i);
                 
                 iterator(const iterator &others) = default;
@@ -31,8 +32,12 @@ namespace autolabor {
                 iterator &operator=(const iterator &others);
                 
                 bool operator!=(const iterator &others) const;
-                
-                iterator &operator++();
+    
+                bool operator==(const iterator &others) const;
+    
+                iterator operator++();
+    
+                const iterator operator++(int);
                 
                 node_state_t operator*() const;
             };
