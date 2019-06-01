@@ -14,7 +14,6 @@
 #include "can_define.h"
 #include "odometry_t.hh"
 #include "time_extensions.h"
-#include "chassis_state_t.hh"
 
 extern "C" {
 #include "control_model/model.h"
@@ -81,7 +80,7 @@ namespace autolabor {
             
             /** 检查状态 */
             chassis_state_t state() const;
-    
+            
             /** 目标状态 */
             node_state_t target_state() const;
             

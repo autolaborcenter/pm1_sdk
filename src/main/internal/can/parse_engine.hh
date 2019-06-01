@@ -23,7 +23,7 @@ namespace autolabor {
             const callback_t    callback;
             
             unsigned int ptr;
-    
+            
             /**
              * 进行一次尽力而为的解析
              * 
@@ -43,7 +43,7 @@ namespace autolabor {
             
             /** 禁止移动 */
             parse_engine(parse_engine &&) = delete;
-    
+            
             /**
              * 进行解析
              *

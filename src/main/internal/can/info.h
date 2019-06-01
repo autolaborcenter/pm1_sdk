@@ -19,37 +19,37 @@ namespace autolabor {
             uint8_t bytes[sizeof(t)];
             t       data;
         };
-    
+        
         /** 计算某个长度的位遮盖 */
         constexpr uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
-    
+        
         /** 无数据域 CAN 包 */
         struct pack_no_data {
             uint8_t
                 head,
-    
+                
                 node_type_h : 2, //
                 priority    : 3, // 第 1 个信息字节
                 payload     : 1, // 从低到高
                 network     : 2, //
-    
+                
                 node_index  : 4, // 第 2 个信息字节
                 node_type_l : 4, // 从低到高
-    
+                
                 msg_type,
                 reserve,
                 crc;
-    
+            
             inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }
         };
-    
+        
         /** 有数据域 CAN 包 */
         struct pack_with_data {
             uint8_t
                 head,
-    
+                
                 node_type_h : 2, //
                 priority    : 3, // 第 1 个信息字节
                 payload     : 1, // 从低到高
@@ -57,35 +57,35 @@ namespace autolabor {
             // 第 2 个信息字节
                 node_index  : 4, // 从低到高
                 node_type_l : 4,
-    
+                
                 msg_type,
                 frame_id,
                 data[8],
                 crc;
-    
+            
             inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }
         };
-    
+        
         /** 无数据域 CAN 包转换器 */
         using union_no_data = msg_union<pack_no_data>;
-    
+        
         /** 有数据域 CAN 包转换器 */
         using union_with_data = msg_union<pack_with_data>;
-    
+        
         /** 循环冗余计算 */
         template<class t, int last_index = sizeof(t) - 1>
         uint8_t crc_calculate(const msg_union<t> &msg);
-    
+        
         /** 循环冗余校验 */
         template<class t, int last_index = sizeof(t) - 1>
         inline bool crc_check(const msg_union<t> &msg);
-    
+        
         /** 填充校验和 */
         template<class t, int last_index = sizeof(t) - 1>
         inline void reformat(msg_union<t> &msg);
-    
+        
         /**
          * 显示格式化的消息内容
          * @tparam t  消息类型

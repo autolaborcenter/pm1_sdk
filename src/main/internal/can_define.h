@@ -17,13 +17,13 @@ namespace autolabor {
             constexpr static uint8_t type_id    = 0x3f,
                                      node_index = 0x0f;
         };
-    
+        
         /** 问答结构 */
         template<class node, uint8_t _msg_type>
         struct dialog {
             using sgn = pack_define_t<sgn_u, 0, 0, node::type_id, node::node_index, _msg_type>;
             using msg = pack_define_t<msg_u, 0, 0, node::type_id, node::node_index, _msg_type>;
-    
+            
             using tx  = sgn;
             using rx  = msg;
         };
@@ -65,14 +65,14 @@ namespace autolabor {
             using emergency_stop = typename dialog<unit, 0xff>::tx;
             using release_stop   = typename dialog<unit, 0xff>::rx;
         };
-    
+        
         /** 整车控制器包信息协议 */
         template<uint8_t _node_index = any_controller::node_index>
         class vcu {
         public:
             constexpr static uint8_t type_id    = 0x10;
             constexpr static uint8_t node_index = _node_index;
-    
+            
             // 电池
             using battery_persent_tx  = typename dialog<vcu, 0x1>::tx;
             using battery_persent_rx  = typename dialog<vcu, 0x1>::rx;
@@ -108,7 +108,7 @@ namespace autolabor {
             // 超时时间
             using timeout             = typename dialog<ecu, 0xa>::msg;
         };
-    
+        
         /** 转向控制器包信息协议 */
         template<uint8_t _node_index = any_controller::node_index>
         class tcu {
@@ -132,7 +132,7 @@ namespace autolabor {
             // 超时时间
             using timeout             = typename dialog<tcu, 0x7>::msg;
         };
-    
+        
         /**
          * 从消息数据包提取逐字节序列化的数据
          *
@@ -146,12 +146,12 @@ namespace autolabor {
         -> typename std::decay<data_t>::type {
             using actual_type = typename std::decay<data_t>::type;
             static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
-        
+            
             msg_union<actual_type> buffer{};
             std::reverse_copy(msg.data.data, msg.data.data + sizeof(actual_type), buffer.bytes);
             return buffer.data;
         }
-    
+        
         /**
          * 将数据逐字节序列化并写入消息数据包
          *
@@ -166,10 +166,10 @@ namespace autolabor {
         -> decltype(pack<pack_info_t>()) {
             using actual_type = typename std::decay<data_t>::type;
             static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
-        
+            
             msg_union<actual_type> buffer1{};
             std::array<uint8_t, 8> buffer2{};
-        
+            
             buffer1.data = value;
             std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(actual_type), buffer2.data());
             return pack<pack_info_t>(buffer2);
@@ -193,6 +193,19 @@ namespace autolabor {
                     return node_state_t::unknown;
             }
         }
+        
+        /** 底盘状态 */
+        struct chassis_state_t {
+            std::array<node_state_t, 4> states{};
+            
+            node_state_t &ecu0() { return states[0]; }
+            
+            node_state_t &ecu1() { return states[1]; }
+            
+            node_state_t &tcu() { return states[2]; }
+            
+            node_state_t &vcu() { return states[3]; }
+        };
     }
 }
 
