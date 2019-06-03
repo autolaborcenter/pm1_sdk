@@ -206,16 +206,16 @@ chassis::chassis(const std::string &port_name)
              delta_right = .0;
         auto time        = now();
         auto speed       = .0f;
-        
-        decltype(now()) reply_time[]{time, time, time, time};
+    
+        std::array<decltype(now()), 4> reply_time{time, time, time, time};
         
         autolabor::can::parse_engine parser(
             [&](const autolabor::can::parser::result &result) {
                 if (result.type != result_t::message) return;
                 
                 auto _now = now();
-                
-                for (auto i = 0; i < sizeof(reply_time); ++i)
+    
+                for (auto i = 0; i < reply_time.size(); ++i)
                     if (_now - reply_time[i] > state_timeout)
                         chassis_state.states[i] = node_state_t::unknown;
                 
