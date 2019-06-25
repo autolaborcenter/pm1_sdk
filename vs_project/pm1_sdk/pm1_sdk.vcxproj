@@ -147,6 +147,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\main\internal\api\chassis_map.hpp" />
+    <ClInclude Include="..\..\src\main\internal\api\exception_engine.hpp" />
     <ClInclude Include="..\..\src\main\internal\can\info.h" />
     <ClInclude Include="..\..\src\main\internal\can\pack.h" />
     <ClInclude Include="..\..\src\main\internal\can\parser.hh" />
@@ -158,16 +160,14 @@
     <ClInclude Include="..\..\src\main\internal\control_model\motor_map.h" />
     <ClInclude Include="..\..\src\main\internal\control_model\optimization.h" />
     <ClInclude Include="..\..\src\main\internal\control_model\pi.h" />
-    <ClInclude Include="..\..\src\main\internal\exception_engine.hh" />
     <ClInclude Include="..\..\src\main\internal\odometry_t.hh" />
-    <ClInclude Include="..\..\src\main\internal\raii\safe_shared_ptr.hh" />
-    <ClInclude Include="..\..\src\main\internal\raii\weak_lock_guard.hh" />
-    <ClInclude Include="..\..\src\main\internal\raii\weak_shared_lock.hh" />
-    <ClInclude Include="..\..\src\main\internal\rudder_controller.hh" />
+    <ClInclude Include="..\..\src\main\internal\process_controller.hh" />
+    <ClInclude Include="..\..\src\main\internal\raii\safe_shared_ptr.hpp" />
+    <ClInclude Include="..\..\src\main\internal\raii\weak_lock_guard.hpp" />
+    <ClInclude Include="..\..\src\main\internal\raii\weak_shared_lock.hpp" />
     <ClInclude Include="..\..\src\main\internal\serial\macros.h" />
     <ClInclude Include="..\..\src\main\internal\serial\serial.h" />
     <ClInclude Include="..\..\src\main\internal\serial\serial_port.hh" />
-    <ClInclude Include="..\..\src\main\internal\serial_extension.h" />
     <ClInclude Include="..\..\src\main\internal\time_extensions.h" />
     <ClInclude Include="..\..\src\main\pm1_sdk.h" />
     <ClInclude Include="..\..\src\main\pm1_sdk_native.h" />
@@ -179,7 +179,6 @@
     <ClCompile Include="..\..\src\main\internal\control_model\chassis_config_t.c" />
     <ClCompile Include="..\..\src\main\internal\control_model\model.c" />
     <ClCompile Include="..\..\src\main\internal\control_model\optimization.c" />
-    <ClCompile Include="..\..\src\main\internal\exception_engine.cc" />
     <ClCompile Include="..\..\src\main\internal\odometry_t.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_linux.cc" />
     <ClCompile Include="..\..\src\main\internal\serial\list_ports\list_ports_win.cc" />

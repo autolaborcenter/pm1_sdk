@@ -48,12 +48,6 @@
     <ClInclude Include="..\..\src\main\internal\odometry_t.hh">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\rudder_controller.hh">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\serial_extension.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\main\internal\time_extensions.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -72,20 +66,26 @@
     <ClInclude Include="..\..\src\main\pm1_sdk_native.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\raii\weak_lock_guard.hh">
+    <ClInclude Include="..\..\src\main\internal\api\chassis_map.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\raii\weak_shared_lock.hh">
+    <ClInclude Include="..\..\src\main\internal\api\exception_engine.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\raii\safe_shared_ptr.hh">
+    <ClInclude Include="..\..\src\main\internal\raii\safe_shared_ptr.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\internal\exception_engine.hh">
+    <ClInclude Include="..\..\src\main\internal\raii\weak_lock_guard.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\internal\raii\weak_shared_lock.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\internal\serial\macros.h">
-      <Filter>源文件</Filter>
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\internal\process_controller.hh">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -120,9 +120,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\pm1_sdk_native.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\internal\exception_engine.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\internal\serial\serial_port_linux.cc">

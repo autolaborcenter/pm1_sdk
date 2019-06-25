@@ -2,9 +2,9 @@
 set(CMAKE_CXX_STANDARD 17)
 
 if (WIN32)
-    set(PLATFORM "Win32")
+    set(PLATFORM "win")
 elseif (UNIX)
-    set(PLATFORM "Unix")
+    set(PLATFORM "unix")
 endif ()
 
 if (${CMAKE_SIZEOF_VOID_P} MATCHES "8")
