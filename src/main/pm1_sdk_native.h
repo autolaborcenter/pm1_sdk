@@ -113,18 +113,12 @@ namespace autolabor {
              */
             DLL_EXPORT handler_t STD_CALL
             reset_odometry() noexcept;
-            
+    
             /**
-             * 锁定底盘
+             * 设置使能状态
              */
             DLL_EXPORT handler_t STD_CALL
-            lock() noexcept;
-            
-            /**
-             * 解锁底盘
-             */
-            DLL_EXPORT handler_t STD_CALL
-            unlock() noexcept;
+            set_enabled(bool) noexcept;
             
             /**
              * 检查节点状态

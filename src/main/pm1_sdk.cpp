@@ -99,11 +99,11 @@ autolabor::pm1::reset_odometry() {
 
 autolabor::pm1::result<void>
 autolabor::pm1::lock() {
-    return on_native(native::lock());
+    return on_native(native::set_enabled(false));
 }
 
 autolabor::pm1::result<void> autolabor::pm1::unlock() {
-    return on_native(native::unlock());
+    return on_native(native::set_enabled(true));
 }
 
 autolabor::pm1::chassis_state
