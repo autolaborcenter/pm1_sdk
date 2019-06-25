@@ -400,8 +400,24 @@ STD_CALL
 autolabor::pm1::native::
 drive_wheels(double left, double right) noexcept {
     wheels temp{static_cast<float>(left), static_cast<float>(right)};
-    auto   physical = wheels_to_physical(&temp, &default_config);
-    return drive_physical(physical.speed, physical.rudder);
+    
+    handler_t id = ++task_id;
+    
+    weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
+    if (!lock) {
+        exceptions.set(id, action_conflict);
+        return id;
+    }
+    
+    try {
+        chassis_ptr.read<void>([=](ptr_t ptr) {
+            auto physical = wheels_to_physical(&temp, &ptr->config);
+            ptr->set_target(physical.speed, physical.rudder);
+        });
+    } catch (std::exception &e) {
+        exceptions.set(id, e.what());
+    }
+    return id;
 }
 
 handler_t
@@ -409,8 +425,24 @@ STD_CALL
 autolabor::pm1::native::
 drive_velocity(double v, double w) noexcept {
     velocity temp{static_cast<float>(v), static_cast<float>(w)};
-    auto     physical = velocity_to_physical(&temp, &default_config);
-    return drive_physical(physical.speed, physical.rudder);
+    
+    handler_t id = ++task_id;
+    
+    weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
+    if (!lock) {
+        exceptions.set(id, action_conflict);
+        return id;
+    }
+    
+    try {
+        chassis_ptr.read<void>([=](ptr_t ptr) {
+            auto physical = velocity_to_physical(&temp, &ptr->config);
+            ptr->set_target(physical.speed, physical.rudder);
+        });
+    } catch (std::exception &e) {
+        exceptions.set(id, e.what());
+    }
+    return id;
 }
 
 handler_t block(double v,
@@ -419,12 +451,7 @@ handler_t block(double v,
                 const autolabor::process_controller &controller,
                 std::function<double(ptr_t)> &&measure,
                 double &progress) noexcept {
-    handler_t id    = ++task_id;
-    
-    velocity temp{static_cast<float>(v), static_cast<float>(w)};
-    auto     target = velocity_to_physical(&temp, &default_config);
-    
-    autolabor::process_t process{0, 0, target.speed};
+    handler_t id = ++task_id;
     progress = 0;
     
     weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
@@ -436,6 +463,12 @@ handler_t block(double v,
     auto rest   = 1 - progress;
     auto paused = true;
     try {
+        velocity temp{static_cast<float>(v), static_cast<float>(w)};
+        auto     config = chassis_ptr.read<chassis_config_t>([](ptr_t ptr) { return ptr->config; });
+        auto     target = velocity_to_physical(&temp, &config);
+    
+        autolabor::process_t process{0, 0, target.speed};
+        
         while (true) {
             if (cancel_flag) {
                 chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
