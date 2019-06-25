@@ -138,6 +138,13 @@ get_default_parameter(handler_t id) noexcept {
 handler_t
 STD_CALL
 autolabor::pm1::native::
+get_parameter_c(handler_t id, double *value) noexcept {
+    return get_parameter(id, *value);
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
 get_parameter(handler_t id, double &value) noexcept {
     return use_ptr([id, &value](ptr_t ptr) {
         switch (static_cast<parameter_id>(id)) {
@@ -217,8 +224,8 @@ reset_parameter(handler_t id) noexcept {
 handler_t
 STD_CALL
 autolabor::pm1::native::
-initialize(const char *port,
-           double &progress) noexcept {
+initialize_c(const char *port,
+             double *progress) noexcept {
     const static auto serial_ports = [] {
         auto                     info = serial::list_ports();
         std::vector<std::string> result(info.size());
@@ -228,7 +235,6 @@ initialize(const char *port,
     };
     
     handler_t id = ++task_id;
-    progress = 0;
     
     auto list = port == nullptr || std::strlen(port) == 0
                 ? serial_ports()
@@ -240,7 +246,7 @@ initialize(const char *port,
         std::stringstream builder;
         
         for (auto i = list.begin();;) {
-            progress = static_cast<double>(i - list.begin()) / list.size();
+            *progress = static_cast<double>(i - list.begin()) / list.size();
             try {
                 auto ptr = std::make_shared<chassis>(*i);
                 
@@ -263,8 +269,16 @@ initialize(const char *port,
         exceptions.set(id, builder.str());
     }
     
-    progress = 1;
+    *progress = 1;
     return id;
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
+initialize(const char *port,
+           double &progress) noexcept {
+    return initialize_c(port, &progress);
 }
 
 handler_t
@@ -276,6 +290,17 @@ shutdown() noexcept {
         exceptions.set(id, "null chassis pointer");
     current_port.clear();
     return id;
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
+get_odometry_c(double *s, double *sa,
+               double *x, double *y, double *theta,
+               double *vx, double *vy, double *w) noexcept {
+    return get_odometry(*s, *sa,
+                        *x, *y, *theta,
+                        *vx, *vy, *w);
 }
 
 handler_t

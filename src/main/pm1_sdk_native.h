@@ -41,6 +41,13 @@ namespace autolabor {
              */
             DLL_EXPORT const char *STD_CALL
             get_current_port() noexcept;
+    
+            /**
+             * 初始化（指针版）
+             */
+            DLL_EXPORT handler_t STD_CALL
+            initialize_c(const char *port,
+                         double *progress) noexcept;
             
             /**
              * 初始化
@@ -60,6 +67,12 @@ namespace autolabor {
              */
             DLL_EXPORT double STD_CALL
             get_default_parameter(handler_t id) noexcept;
+    
+            /**
+             * 获取参数（指针版）
+             */
+            DLL_EXPORT handler_t STD_CALL
+            get_parameter_c(handler_t id, double *value) noexcept;
             
             /**
              * 获取参数
@@ -78,6 +91,14 @@ namespace autolabor {
              */
             DLL_EXPORT handler_t STD_CALL
             reset_parameter(handler_t id) noexcept;
+    
+            /**
+             * 获取里程计值（指针版）
+             */
+            DLL_EXPORT handler_t STD_CALL
+            get_odometry_c(double *s, double *sa,
+                           double *x, double *y, double *theta,
+                           double *vx, double *vy, double *w) noexcept;
             
             /**
              * 获取里程计值
