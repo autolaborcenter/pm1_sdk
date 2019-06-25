@@ -21,6 +21,9 @@
 #include "internal/api/exception_engine.hpp"
 #include "internal/process_controller.hh"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "performance-unnecessary-value-param"
+
 constexpr auto action_conflict = "another action is invoking";
 
 // region task resources
@@ -367,8 +370,7 @@ check_state() noexcept {
                    ? static_cast<unsigned char>(*unique.cbegin())
                    : 0x7f;
         });
-    }
-    catch (std::exception &) {
+    } catch (std::exception &) {
         return 0;
     }
 }
@@ -387,8 +389,7 @@ drive_physical(double speed, double rudder) noexcept {
     
     try {
         chassis_ptr.read<void>([=](ptr_t ptr) { ptr->set_target(speed, rudder); });
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
         exceptions.set(id, e.what());
     }
     return id;
@@ -489,8 +490,7 @@ handler_t block(double v,
         }
         
         chassis_ptr.read<void>([](ptr_t ptr) { ptr->set_target(0, NAN); });
-    }
-    catch (const std::exception &e) {
+    } catch (const std::exception &e) {
         exceptions.set(id, e.what());
     }
     
@@ -500,11 +500,9 @@ handler_t block(double v,
 double
 STD_CALL
 autolabor::pm1::native::
-calculate_spatium(double spatium, double angle) noexcept {
-    const static auto w_2 = default_config.width / 2;
-    
-    return std::abs(spatium + w_2 * angle) +
-           std::abs(spatium - w_2 * angle);
+calculate_spatium(double spatium, double angle, double width) noexcept {
+    return std::abs(spatium + width / 2 * angle) +
+           std::abs(spatium - width / 2 * angle);
 }
 
 handler_t
@@ -513,23 +511,25 @@ autolabor::pm1::native::
 drive_spatial(double v,
               double w,
               double spatium,
+              double angle,
               double &progress) noexcept {
     odometry_t origin{};
+    double     width;
     
     try {
         origin = chassis_ptr.read<odometry_t>([](ptr_t ptr) { return ptr->odometry(); });
-    }
-    catch (std::exception &e) {
+        width  = chassis_ptr.read<double>([](ptr_t ptr) { return ptr->config.width; });
+    } catch (std::exception &e) {
         handler_t id = ++task_id;
         exceptions.set(id, e.what());
         return id;
     }
     
-    return block(v, w, spatium,
+    return block(v, w, calculate_spatium(spatium, angle, width),
                  {0.5, 0.1, 12, 4},
-                 [origin](ptr_t ptr) {
+                 [origin, width](ptr_t ptr) {
                      auto odometry = ptr->odometry() - origin;
-                     return calculate_spatium(odometry.s, odometry.sa);
+                     return calculate_spatium(odometry.s, odometry.sa, width);
                  },
                  progress);
 }
@@ -545,8 +545,8 @@ drive_timing(double v,
                  {0.5, 0.1, 5, 2},
                  [](ptr_t) {
                      return std::chrono::duration_cast<seconds_floating>(
-                         now().time_since_epoch())
-                         .count();
+                         now().time_since_epoch()
+                     ).count();
                  },
                  progress);
 }
@@ -601,8 +601,7 @@ adjust_rudder(double offset,
             }
             std::this_thread::sleep_for(50ms);
         }
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
         exceptions.set(id, e.what());
     }
     
@@ -629,3 +628,5 @@ cancel_action() noexcept {
     }
     cancel_flag = false;
 }
+
+#pragma clang diagnostic pop

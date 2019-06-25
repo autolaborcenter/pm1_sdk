@@ -377,7 +377,7 @@ namespace autolabor {
          * @param spatium 路程（弧长）
          * @param angle 角度（圆心角）
          */
-        DLL_EXPORT double
+        DLL_EXPORT result<double>
         calculate_spatium(double spatium, double angle);
         
         /**
@@ -392,6 +392,7 @@ namespace autolabor {
         drive_spatial(double v,
                       double w,
                       double s,
+                      double a,
                       double *progress = nullptr);
         
         /**

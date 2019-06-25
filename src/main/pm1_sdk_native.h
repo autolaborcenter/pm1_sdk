@@ -153,7 +153,9 @@ namespace autolabor {
              * 计算里程度量
              */
             DLL_EXPORT double STD_CALL
-            calculate_spatium(double spatium, double angle) noexcept;
+            calculate_spatium(double spatium,
+                              double angle,
+                              double width) noexcept;
             
             /**
              * 按里程度量约束行驶
@@ -162,6 +164,7 @@ namespace autolabor {
             drive_spatial(double v,
                           double w,
                           double spatium,
+                          double angle,
                           double &progress) noexcept;
             
             /**

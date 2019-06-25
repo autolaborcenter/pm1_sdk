@@ -150,9 +150,7 @@ autolabor::pm1::go_straight(double speed,
     if (meters < 0)
         return {negative_target};
     
-    return drive_spatial(speed, 0,
-                         calculate_spatium(meters, 0),
-                         progress);
+    return drive_spatial(speed, 0, meters, 0, progress);
 }
 
 autolabor::pm1::result<void>
@@ -180,9 +178,7 @@ autolabor::pm1::turn_around(double speed,
     if (rad < 0)
         return {negative_target};
     
-    return drive_spatial(0, speed,
-                         calculate_spatium(0, rad),
-                         progress);
+    return drive_spatial(0, speed, 0, rad, progress);
 }
 
 autolabor::pm1::result<void>
@@ -213,9 +209,7 @@ autolabor::pm1::go_arc_vs(double v,
     if (s < 0)
         return {negative_target};
     
-    return drive_spatial(v, v / r,
-                         calculate_spatium(s, s / r),
-                         progress);
+    return drive_spatial(v, v / r, s, s / r, progress);
 }
 
 autolabor::pm1::result<void>
@@ -232,9 +226,7 @@ autolabor::pm1::go_arc_va(double v,
     if (a < 0)
         return {negative_target};
     
-    return drive_spatial(v, v / r,
-                         calculate_spatium(a * r, a),
-                         progress);
+    return drive_spatial(v, v / r, a * r, a, progress);
 }
 
 autolabor::pm1::result<void>
@@ -251,9 +243,7 @@ autolabor::pm1::go_arc_ws(double w,
     if (s < 0)
         return {negative_target};
     
-    return drive_spatial(w * r, w,
-                         calculate_spatium(s, s / r),
-                         progress);
+    return drive_spatial(w * r, w, s, s / r, progress);
 }
 
 autolabor::pm1::result<void>
@@ -270,9 +260,7 @@ autolabor::pm1::go_arc_wa(double w,
     if (a < 0)
         return {negative_target};
     
-    return drive_spatial(w * r, w,
-                         calculate_spatium(a * r, a),
-                         progress);
+    return drive_spatial(w * r, w, a * r, a, progress);
 }
 
 autolabor::pm1::result<void>
@@ -321,21 +309,28 @@ void autolabor::pm1::cancel_action() {
     native::cancel_action();
 }
 
-double
+autolabor::pm1::result<double>
 autolabor::pm1::calculate_spatium(double spatium, double angle) {
-    return native::calculate_spatium(spatium, angle);
+    double width;
+    auto   handler = native::get_parameter(static_cast<native::handler_t>(parameter_id::width),
+                                           width);
+    auto   error   = std::string(native::get_error_info(handler));
+    if (error.empty())
+        return {"", native::calculate_spatium(spatium, angle, width)};
+    native::remove_error_info(handler);
+    return {error};
 }
 
 autolabor::pm1::result<void>
 autolabor::pm1::drive_spatial(double v,
                               double w,
-                              double spatium,
+                              double s,
+                              double a,
                               double *progress) {
     double _progress;
     return on_native(
-        native::drive_spatial(
-            v, w, spatium,
-            progress ? *progress : _progress));
+        native::drive_spatial(v, w, s, a,
+                              progress ? *progress : _progress));
 }
 
 autolabor::pm1::result<void>
