@@ -120,7 +120,7 @@ namespace autolabor {
          * @return 参数默认值
          */
         DLL_EXPORT double
-        get_defualt_parameter(parameter_id id);
+        get_default_parameter(parameter_id id);
         
         /**
          * 获取底盘参数当前值

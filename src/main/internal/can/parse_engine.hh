@@ -14,6 +14,8 @@ namespace autolabor {
     namespace can {
         /**
          * 解析引擎
+         *
+         * 用于支持重叠扫描（解析失败时重新解析可能正确的字节）
          */
         class parse_engine {
             using callback_t = std::function<void(const parser::result &)>;

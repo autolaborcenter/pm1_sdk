@@ -52,7 +52,7 @@ autolabor::pm1::shutdown() {
 }
 
 double
-autolabor::pm1::get_defualt_parameter(autolabor::pm1::parameter_id id) {
+autolabor::pm1::get_default_parameter(autolabor::pm1::parameter_id id) {
     return native::get_default_parameter(static_cast<native::handler_t>(id));
 }
 

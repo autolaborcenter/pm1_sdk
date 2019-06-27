@@ -53,6 +53,7 @@ namespace autolabor {
             result operator()(uint8_t byte);
         
         private:
+            // 解析器状态含义
             enum class state_type : uint8_t {
                 origin,
                 determine,
@@ -60,16 +61,18 @@ namespace autolabor {
                 message,
                 ending
             };
-            
+    
+            // 解析器状态
             struct state_t {
                 uint8_t value;
-                
+        
                 state_type state();
             } state{0};
-            
+    
+            // 数据缓冲
             union {
                 uint8_t bytes[sizeof(pack_with_data)]{0xfe};
-                
+        
                 union_no_data   sgn_buffer;
                 union_with_data msg_buffer;
             };

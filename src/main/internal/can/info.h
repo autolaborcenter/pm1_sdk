@@ -39,8 +39,8 @@ namespace autolabor {
                 msg_type,
                 reserve,
                 crc;
-            
-            inline uint8_t node_type() const {
+    
+            [[nodiscard]] inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }
         };
@@ -54,16 +54,16 @@ namespace autolabor {
                 priority    : 3, // 第 1 个信息字节
                 payload     : 1, // 从低到高
                 network     : 2, //
-            // 第 2 个信息字节
-                node_index  : 4, // 从低到高
-                node_type_l : 4,
+    
+                node_index  : 4, // 第 2 个信息字节
+                node_type_l : 4, // 从低到高
                 
                 msg_type,
                 frame_id,
                 data[8],
                 crc;
-            
-            inline uint8_t node_type() const {
+    
+            [[nodiscard]] inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }
         };

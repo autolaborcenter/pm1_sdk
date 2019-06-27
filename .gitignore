@@ -1,11 +1,13 @@
 # environment
-.idea/
+.idea/*
 .vs/
 .vscode/
 
+!.idea/dictionaries/
+
 # cmake
 out/
-cmake-build-*
+cmake-build-*/
 
 # vs
 vs_project/pm1_sdk/Debug/
