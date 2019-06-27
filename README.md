@@ -37,4 +37,4 @@ int main() {
 
 ## 细节
 
-要了解关于使用的更多细节，请浏览[手册](https://github.com/autolaborcenter/pm1-doc-sphinx)。
+要了解关于使用的更多细节，请浏览[开发指南](https://autolaborcenter.github.io/pm1-docs-sphinx/development/native/readme.html)。
