@@ -93,6 +93,18 @@ namespace autolabor {
             reset_parameter(handler_t id) noexcept;
     
             /**
+             * 获取后轮转角（指针版）
+             */
+            DLL_EXPORT handler_t STD_CALL
+            get_rudder_c(double *rudder) noexcept;
+    
+            /**
+             * 获取后轮转角
+             */
+            DLL_EXPORT handler_t STD_CALL
+            get_rudder(double &rudder) noexcept;
+            
+            /**
              * 获取里程计值（指针版）
              */
             DLL_EXPORT handler_t STD_CALL

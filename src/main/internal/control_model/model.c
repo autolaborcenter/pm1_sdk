@@ -6,37 +6,37 @@
 #include "model.h"
 
 struct wheels physical_to_wheels(
-    const struct physical *physical,
+    const struct physical physical,
     const struct chassis_config_t *config) {
     struct wheels result;
     
-    if (physical->speed == 0) {
+    if (physical.speed == 0) {
         // 对于舵轮来说是奇点，无法恢复
         result.left  = 0;
         result.right = 0;
         
-    } else if (physical->rudder == 0) {
+    } else if (physical.rudder == 0) {
         // 直走
-        result.left  = physical->speed;
-        result.right = physical->speed;
+        result.left  = physical.speed;
+        result.right = physical.speed;
         
     } else {
         // 圆弧
-        float r = -config->length / tanf(physical->rudder);
+        float r = -config->length / tanf(physical.rudder);
         
-        if (physical->rudder > 0) {
+        if (physical.rudder > 0) {
             // 右转，左轮速度快
             float k = (r + config->width / 2) / (r - config->width / 2);
             
-            result.left  = physical->speed;
-            result.right = physical->speed * k;
+            result.left  = physical.speed;
+            result.right = physical.speed * k;
             
         } else {
             // 左转，右轮速度快
             float k = (r - config->width / 2) / (r + config->width / 2);
             
-            result.left  = physical->speed * k;
-            result.right = physical->speed;
+            result.left  = physical.speed * k;
+            result.right = physical.speed;
         }
     }
     
@@ -44,12 +44,12 @@ struct wheels physical_to_wheels(
 }
 
 struct physical wheels_to_physical(
-    const struct wheels *wheels,
+    const struct wheels wheels,
     const struct chassis_config_t *config) {
     struct physical result;
     
-    float left  = fabsf(wheels->left),
-          right = fabsf(wheels->right);
+    float left  = fabsf(wheels.left),
+          right = fabsf(wheels.right);
     
     if (left == right) {
         // 绝对值相等（两条对角线）
@@ -57,38 +57,38 @@ struct physical wheels_to_physical(
             // 奇点
             result.speed  = 0;
             result.rudder = NAN;
-            
-        } else if (wheels->left > wheels->right) {
+    
+        } else if (wheels.left > wheels.right) {
             // 副对角线
             result.speed  = left;
             result.rudder = +pi_f / 2;
-            
-        } else if (wheels->left < wheels->right) {
+    
+        } else if (wheels.left < wheels.right) {
             // 副对角线
             result.speed  = right;
             result.rudder = -pi_f / 2;
             
         } else {
             // 主对角线
-            result.speed  = wheels->left;
+            result.speed  = wheels.left;
             result.rudder = 0;
         }
         
     } else {
         if (left > right) {
             // 右转，左轮速度快
-            float k = wheels->right / wheels->left;
+            float k = wheels.right / wheels.left;
             float r = config->width / 2 * (k + 1) / (k - 1);
-            
-            result.speed  = wheels->left;
+    
+            result.speed  = wheels.left;
             result.rudder = -atanf(config->length / r);
             
         } else {
             // 左转，右轮速度快
-            float k = wheels->left / wheels->right;
+            float k = wheels.left / wheels.right;
             float r = config->width / 2 * (1 + k) / (1 - k);
-            
-            result.speed  = wheels->right;
+    
+            result.speed  = wheels.right;
             result.rudder = -atanf(config->length / r);
         }
     }
@@ -97,48 +97,46 @@ struct physical wheels_to_physical(
 }
 
 struct velocity physical_to_velocity(
-    const struct physical *physical,
+    const struct physical physical,
     const struct chassis_config_t *config) {
-    struct wheels temp = physical_to_wheels(physical, config);
-    return wheels_to_velocity(&temp, config);
+    return wheels_to_velocity(physical_to_wheels(physical, config), config);
 }
 
 struct physical velocity_to_physical(
-    const struct velocity *velocity,
+    const struct velocity velocity,
     const struct chassis_config_t *config) {
-    struct wheels temp = velocity_to_wheels(velocity, config);
-    return wheels_to_physical(&temp, config);
+    return wheels_to_physical(velocity_to_wheels(velocity, config), config);
 }
 
 struct wheels velocity_to_wheels(
-    const struct velocity *velocity,
+    const struct velocity velocity,
     const struct chassis_config_t *config) {
     struct wheels result = {
-        (velocity->v - config->width / 2 * velocity->w) / config->radius,
-        (velocity->v + config->width / 2 * velocity->w) / config->radius
+        (velocity.v - config->width / 2 * velocity.w) / config->radius,
+        (velocity.v + config->width / 2 * velocity.w) / config->radius
     };
     return result;
 }
 
 struct velocity wheels_to_velocity(
-    const struct wheels *wheels,
+    const struct wheels wheels,
     const struct chassis_config_t *config) {
     struct velocity result = {
-        config->radius * (wheels->right + wheels->left) / 2,
-        config->radius * (wheels->right - wheels->left) / config->width
+        config->radius * (wheels.right + wheels.left) / 2,
+        config->radius * (wheels.right - wheels.left) / config->width
     };
     return result;
 }
 
-void limit_in_velocity(struct physical *data,
+void limit_in_velocity(struct physical data,
                        float max_v,
                        float max_w,
                        const struct chassis_config_t *chassis) {
     struct velocity temp = physical_to_velocity(data, chassis);
-    data->speed /= fmaxf(1, fmaxf(fabsf(temp.v / max_v),
-                                  fabsf(temp.w / max_w)));
+    data.speed /= fmaxf(1, fmaxf(fabsf(temp.v / max_v),
+                                 fabsf(temp.w / max_w)));
 }
 
-void limit_in_physical(struct physical *data, float max_wheel_speed) {
-    data->speed /= fmaxf(1, fabsf(data->speed / max_wheel_speed));
+void limit_in_physical(struct physical data, float max_wheel_speed) {
+    data.speed /= fmaxf(1, fabsf(data.speed / max_wheel_speed));
 }

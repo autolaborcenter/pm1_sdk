@@ -298,6 +298,29 @@ shutdown() noexcept {
 handler_t
 STD_CALL
 autolabor::pm1::native::
+get_rudder_c(double *rudder) noexcept {
+    return get_rudder(*rudder);
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
+get_rudder(double &rudder) noexcept {
+    handler_t id = ++task_id;
+    try {
+        rudder = chassis_ptr.read<double>([&](ptr_t ptr) {
+            return ptr->rudder().position;
+        });
+    } catch (std::exception &e) {
+        rudder = NAN;
+        exceptions.set(id, e.what());
+    }
+    return id;
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
 get_odometry_c(double *s, double *sa,
                double *x, double *y, double *theta,
                double *vx, double *vy, double *w) noexcept {
@@ -399,8 +422,6 @@ handler_t
 STD_CALL
 autolabor::pm1::native::
 drive_wheels(double left, double right) noexcept {
-    wheels temp{static_cast<float>(left), static_cast<float>(right)};
-    
     handler_t id = ++task_id;
     
     weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
@@ -411,7 +432,9 @@ drive_wheels(double left, double right) noexcept {
     
     try {
         chassis_ptr.read<void>([=](ptr_t ptr) {
-            auto physical = wheels_to_physical(&temp, &ptr->config);
+            auto physical = wheels_to_physical(wheels{static_cast<float>(left),
+                                                      static_cast<float>(right)},
+                                               &ptr->config);
             ptr->set_target(physical.speed, physical.rudder);
         });
     } catch (std::exception &e) {
@@ -424,8 +447,6 @@ handler_t
 STD_CALL
 autolabor::pm1::native::
 drive_velocity(double v, double w) noexcept {
-    velocity temp{static_cast<float>(v), static_cast<float>(w)};
-    
     handler_t id = ++task_id;
     
     weak_lock_guard<decltype(action_mutex)> lock(action_mutex);
@@ -436,7 +457,9 @@ drive_velocity(double v, double w) noexcept {
     
     try {
         chassis_ptr.read<void>([=](ptr_t ptr) {
-            auto physical = velocity_to_physical(&temp, &ptr->config);
+            auto physical = velocity_to_physical(velocity{static_cast<float>(v),
+                                                          static_cast<float>(w)},
+                                                 &ptr->config);
             ptr->set_target(physical.speed, physical.rudder);
         });
     } catch (std::exception &e) {
@@ -463,10 +486,11 @@ handler_t block(double v,
     auto rest   = 1 - progress;
     auto paused = true;
     try {
-        velocity temp{static_cast<float>(v), static_cast<float>(w)};
-        auto     config = chassis_ptr.read<chassis_config_t>([](ptr_t ptr) { return ptr->config; });
-        auto     target = velocity_to_physical(&temp, &config);
-    
+        auto config = chassis_ptr.read<chassis_config_t>([](ptr_t ptr) { return ptr->config; });
+        auto target = velocity_to_physical(velocity{static_cast<float>(v),
+                                                    static_cast<float>(w)},
+                                           &config);
+        
         autolabor::process_t process{0, 0, target.speed};
         
         while (true) {

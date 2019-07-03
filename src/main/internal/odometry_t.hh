@@ -30,8 +30,8 @@ namespace autolabor {
         double width, left, right;
         std::chrono::duration<double, std::ratio<1>>
                interval;
-        
-        operator odometry_t();
+    
+        operator odometry_t(); // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
     };
 }
 

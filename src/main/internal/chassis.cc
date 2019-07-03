@@ -307,8 +307,8 @@ chassis::chassis(const std::string &port_name)
                                                   optimize_width,
                                                   acceleration / frequency);
                     speed = optimized.speed;
-                    
-                    auto wheels = physical_to_wheels(&optimized, &config);
+    
+                    auto wheels = physical_to_wheels(optimized, &config);
                     auto left   = PULSES_OF(wheels.left, default_wheel_k);
                     auto right  = PULSES_OF(wheels.right, default_wheel_k);
                     auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
@@ -403,8 +403,8 @@ void chassis::set_target(double speed, double rudder) {
     
     request_time = now();
     target       = {static_cast<float>(speed), static_cast<float>(rudder)};
-    limit_in_velocity(&target, max_v, max_w, &config);
-    limit_in_physical(&target, max_wheel_speed);
+    limit_in_velocity(target, max_v, max_w, &config);
+    limit_in_physical(target, max_wheel_speed);
 }
 
 void chassis::reset_rudder() {
