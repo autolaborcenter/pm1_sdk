@@ -346,6 +346,9 @@ chassis::chassis(const std::string &port_name)
 }
 
 chassis::~chassis() {
+    if (destruct_once.test_and_set())
+        return;
+    
     running = false;
     port.break_read();
     

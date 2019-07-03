@@ -54,27 +54,41 @@ serial_port::serial_port(const std::string &name,
 serial_port::~serial_port() {
     auto temp = handle.exchange(nullptr);
     if (!temp) return;
-    break_read();
+    PurgeComm(handle, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
     CloseHandle(temp);
 }
+
+struct tool_t {
+    std::vector<uint8_t> buffer_ptr;
+    void                 *handle;
+};
 
 void WINAPI callback(DWORD error_code,
                      DWORD actual,
                      LPOVERLAPPED overlapped) {
-    delete static_cast<std::vector<uint8_t> *>(overlapped->hEvent);
-    delete overlapped;
+    auto tool = static_cast<tool_t *>(overlapped->hEvent);
     
-    if (error_code != ERROR_SUCCESS)
-        THROW("WriteFileEx", error_code);
+    if (error_code != ERROR_SUCCESS) {
+        PurgeComm(tool->handle, PURGE_TXABORT | PURGE_TXCLEAR);
+        ClearCommError(tool->handle,
+                       (LPDWORD) (CE_BREAK | CE_FRAME | CE_OVERRUN | CE_RXOVER | CE_RXPARITY),
+                       nullptr);
+    }
+    
+    delete tool;
+    delete overlapped;
 }
 
 void serial_port::send(const uint8_t *buffer, size_t size) {
     if (size <= 0) return;
     
     auto overlapped = new OVERLAPPED{};
-    auto ptr        = new std::vector<uint8_t>(buffer, buffer + size);
+    auto ptr        = new tool_t{
+        std::vector<uint8_t>(buffer, buffer + size),
+        handle.load()
+    };
     overlapped->hEvent = ptr;
-    WriteFileEx(handle, ptr->data(), size, overlapped, &callback);
+    WriteFileEx(handle, ptr->buffer_ptr.data(), size, overlapped, &callback);
     SleepEx(INFINITE, true);
 }
 
@@ -108,6 +122,7 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
             return actual;
         }
         default:
+            PurgeComm(handle, PURGE_RXABORT | PURGE_RXCLEAR);
             THROW("ReadFile", condition);
     }
 }

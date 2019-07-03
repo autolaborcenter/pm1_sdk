@@ -126,11 +126,14 @@ namespace autolabor {
             std::thread read_thread,
                         write_thread;
     
-            /** 托管动{}作锁 */
+            /** 托管动作锁 */
             std::shared_mutex action_mutex;
             
             /** 目标设定锁 */
             std::mutex target_mutex;
+    
+            /** 避免多次析构 */
+            std::atomic_flag destruct_once = ATOMIC_FLAG_INIT;
             
             /** 目标运动 */
             physical target{};
@@ -139,7 +142,7 @@ namespace autolabor {
             bool enabled_target;
             
             /** 最后一次请求的时间 */
-            decltype(autolabor::now()) request_time;
+            decltype(now()) request_time;
         };
     }
 }

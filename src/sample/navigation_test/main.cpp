@@ -4,7 +4,7 @@
 
 #include "../../main/pm1_sdk_native.h"
 #include "pm1_sdk.h"
-#include "pm1_trajectory_t.hh"
+#include "trajectory/pm1_trajectory_t.hh"
 
 extern "C" {
 #include "../../main/internal/control_model/model.h"
@@ -14,8 +14,6 @@ extern "C" {
 #include <iostream>
 #include <chrono>
 #include <thread>
-
-const static float rudder_omega = pi_f / 2.5f;
 
 int main() {
     using namespace autolabor::pm1;
@@ -29,54 +27,58 @@ int main() {
         return 1;
     }
     
-    native::set_enabled(true);
-    
-    double width, length, radius;
-    using id_enum = autolabor::pm1::parameter_id;
-    
-    native::get_parameter(static_cast<uint8_t>(id_enum::width), width);
-    native::get_parameter(static_cast<uint8_t>(id_enum::length), length);
-    native::get_parameter(static_cast<uint8_t>(id_enum::wheel_radius), radius);
-    
-    const chassis_config_t config{
-        static_cast<float>(width),
-        static_cast<float>(length),
-        static_cast<float>(radius)};
-    
-    const auto speed  = 2 * pi_f,
-               rudder = 1.0f;
-    
-    auto velocity = physical_to_velocity({speed, rudder}, &config);
-    auto temp     = pm1_trajectory_t(velocity.v, velocity.w);
-    
-    native::set_command_enabled(false);
-    std::this_thread::sleep_for(std::chrono::hours(1));
-    
-    const auto begin = std::chrono::steady_clock::now();
-    double     x, y, theta, _rudder;
-    while (true) {
-        native::drive_physical(speed, rudder);
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        auto   now     = std::chrono::steady_clock::now();
-        auto   seconds = std::chrono::duration_cast<
-            std::chrono::duration<double, std::ratio<1>>
-        >(now - begin).count();
-        auto   pre     = temp[now - begin];
-        double ignore;
-        native::get_odometry(ignore, ignore,
-                             x, y, theta,
-                             ignore, ignore, ignore);
-        native::get_rudder(_rudder);
-        std::cout << seconds << ' '
-                  << pre.x << ' '
-                  << pre.y << ' '
-                  << x << ' '
-                  << y << ' '
-                  << _rudder << std::endl;
-        
-        if (seconds > 5) {
-            native::shutdown();
-            return 0;
-        }
-    }
+    while (check_state() != chassis_state::offline);
+    shutdown();
+    return 1;
+    //
+    //    native::set_enabled(true);
+    //
+    //    double width, length, radius;
+    //    using id_enum = autolabor::pm1::parameter_id;
+    //
+    //    native::get_parameter(static_cast<uint8_t>(id_enum::width), width);
+    //    native::get_parameter(static_cast<uint8_t>(id_enum::length), length);
+    //    native::get_parameter(static_cast<uint8_t>(id_enum::wheel_radius), radius);
+    //
+    //    const chassis_config_t config{
+    //        static_cast<float>(width),
+    //        static_cast<float>(length),
+    //        static_cast<float>(radius)};
+    //
+    //    const auto speed  = 2 * pi_f,
+    //               rudder = 1.0f;
+    //
+    //    auto velocity = physical_to_velocity({speed, rudder}, &config);
+    //    auto temp     = pm1_trajectory_t(velocity.v, velocity.w);
+    //
+    //    native::set_command_enabled(false);
+    //    std::this_thread::sleep_for(std::chrono::hours(1));
+    //
+    //    const auto begin = std::chrono::steady_clock::now();
+    //    double     x, y, theta, _rudder;
+    //    while (true) {
+    //        native::drive_physical(speed, rudder);
+    //        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    //        auto   now     = std::chrono::steady_clock::now();
+    //        auto   seconds = std::chrono::duration_cast<
+    //            std::chrono::duration<double, std::ratio<1>>
+    //        >(now - begin).count();
+    //        auto   pre     = temp[now - begin];
+    //        double ignore;
+    //        native::get_odometry(ignore, ignore,
+    //                             x, y, theta,
+    //                             ignore, ignore, ignore);
+    //        native::get_rudder(_rudder);
+    //        std::cout << seconds << ' '
+    //                  << pre.x << ' '
+    //                  << pre.y << ' '
+    //                  << x << ' '
+    //                  << y << ' '
+    //                  << _rudder << std::endl;
+    //
+    //        if (seconds > 5) {
+    //            native::shutdown();
+    //            return 0;
+    //        }
+    //    }
 }
