@@ -76,6 +76,7 @@ constexpr auto timeout = 20;
 chassis::chassis(const std::string &port_name)
     : port(port_name, 115200, timeout),
       running(true),
+      command_enabled(true),
       config(default_config),
       max_v(default_max_v),
       max_w(default_max_w),
@@ -96,7 +97,7 @@ chassis::chassis(const std::string &port_name)
         check_timeout       = 1000ms,
         check_state_timeout = 100ms;
     constexpr static auto
-        frequency           = 1000.0 / count_ms(rudder_interval);
+        frequency           = 1000.0f / count_ms(rudder_interval);
     
     _left.time = _right.time = _rudder.time = now();
     
@@ -215,7 +216,7 @@ chassis::chassis(const std::string &port_name)
                 
                 auto _now = now();
     
-                for (auto i = 0; i < reply_time.size(); ++i)
+                for (size_t i = 0; i < reply_time.size(); ++i)
                     if (_now - reply_time[i] > state_timeout)
                         chassis_state.states[i] = node_state_t::unknown;
                 
@@ -312,10 +313,11 @@ chassis::chassis(const std::string &port_name)
                     auto left   = PULSES_OF(wheels.left, default_wheel_k);
                     auto right  = PULSES_OF(wheels.right, default_wheel_k);
                     auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-                    
-                    port << pack_value<ecu<0>::target_speed, int>(left)
-                         << pack_value<ecu<1>::target_speed, int>(right)
-                         << pack_value<tcu<0>::target_position, short>(rudder);
+    
+                    if (command_enabled)
+                        port << pack_value<ecu<0>::target_speed, int>(left)
+                             << pack_value<ecu<1>::target_speed, int>(right)
+                             << pack_value<tcu<0>::target_position, short>(rudder);
                 }
             });
         

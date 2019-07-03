@@ -375,6 +375,15 @@ reset_odometry() noexcept {
 handler_t
 STD_CALL
 autolabor::pm1::native::
+set_command_enabled(bool value) noexcept {
+    return use_ptr([value](ptr_t ptr) {
+        ptr->command_enabled = value;
+    });
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
 set_enabled(bool value) noexcept {
     return use_ptr([value](ptr_t ptr) {
         ptr->set_enabled_target(value);

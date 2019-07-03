@@ -130,6 +130,12 @@ namespace autolabor {
              * 设置使能状态
              */
             DLL_EXPORT handler_t STD_CALL
+            set_command_enabled(bool) noexcept;
+            
+            /**
+             * 设置使能状态
+             */
+            DLL_EXPORT handler_t STD_CALL
             set_enabled(bool) noexcept;
             
             /**

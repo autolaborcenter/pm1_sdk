@@ -44,10 +44,13 @@ int main() {
         static_cast<float>(radius)};
     
     const auto speed  = 2 * pi_f,
-               rudder = -pi_f / 2;
+               rudder = 1.0f;
     
     auto velocity = physical_to_velocity({speed, rudder}, &config);
     auto temp     = pm1_trajectory_t(velocity.v, velocity.w);
+    
+    native::set_command_enabled(false);
+    std::this_thread::sleep_for(std::chrono::hours(1));
     
     const auto begin = std::chrono::steady_clock::now();
     double     x, y, theta, _rudder;

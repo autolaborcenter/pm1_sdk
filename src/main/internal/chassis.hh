@@ -49,14 +49,20 @@ namespace autolabor {
                 default_max_wheel_speed;
             
             /** 机械参数 */
-            chassis_config_t config;
+            chassis_config_t
+                config;
             
             /** 控制参数 */
-            float optimize_width,
-                  acceleration,
-                  max_v,
-                  max_w,
-                  max_wheel_speed;
+            volatile float
+                optimize_width,
+                acceleration,
+                max_v,
+                max_w,
+                max_wheel_speed;
+    
+            /** 是否向底盘发送控制指令 */
+            volatile bool
+                command_enabled;
             
             explicit chassis(const std::string &port_name);
             
@@ -119,8 +125,8 @@ namespace autolabor {
             
             std::thread read_thread,
                         write_thread;
-            
-            /** 托管动作锁 */
+    
+            /** 托管动{}作锁 */
             std::shared_mutex action_mutex;
             
             /** 目标设定锁 */
