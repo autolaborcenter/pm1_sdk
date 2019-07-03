@@ -4,6 +4,7 @@
 
 #include "../../main/pm1_sdk_native.h"
 #include "pm1_sdk.h"
+#include "pm1_trajectory_t.hh"
 
 extern "C" {
 #include "../../main/internal/control_model/model.h"
@@ -11,42 +12,10 @@ extern "C" {
 
 #include <string>
 #include <iostream>
-#include <functional>
 #include <chrono>
 #include <thread>
 
-struct pose_t {
-    double x, y, theta;
-};
-
-/**
- * 计算轨迹
- *
- * @param config
- * @param _physical
- * @return
- */
-std::function<pose_t(double)> trajectory(
-    const chassis_config_t &config,
-    physical _physical) {
-    
-    wheels _wheels = physical_to_wheels(_physical, &config);
-    double v_left  = config.radius * _wheels.left,
-           v_right = config.radius * _wheels.right,
-           ds      = (v_right + v_left) / 2,
-           da      = (v_right - v_left) / config.width,
-           r       = ds / da;
-    
-    return [=](double seconds) {
-        auto s = ds * seconds,
-             a = da * seconds;
-        return !std::isfinite(r)
-               ? pose_t{s, 0, 0}
-               : pose_t{r * std::sin(a),
-                        r * (1 - std::cos(a)),
-                        a};
-    };
-}
+const static float rudder_omega = pi_f / 2.5f;
 
 int main() {
     using namespace autolabor::pm1;
@@ -74,13 +43,14 @@ int main() {
         static_cast<float>(length),
         static_cast<float>(radius)};
     
-    auto speed  = 2 * pi_f,
-         rudder = -1.2f;
+    const auto speed  = 2 * pi_f,
+               rudder = -pi_f / 2;
     
-    auto temp = trajectory(config, {speed, rudder});
+    auto velocity = physical_to_velocity({speed, rudder}, &config);
+    auto temp     = pm1_trajectory_t(velocity.v, velocity.w);
     
     const auto begin = std::chrono::steady_clock::now();
-    double     x, y, theta;
+    double     x, y, theta, _rudder;
     while (true) {
         native::drive_physical(speed, rudder);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -88,15 +58,18 @@ int main() {
         auto   seconds = std::chrono::duration_cast<
             std::chrono::duration<double, std::ratio<1>>
         >(now - begin).count();
-        auto   pre     = temp(seconds);
+        auto   pre     = temp[now - begin];
         double ignore;
         native::get_odometry(ignore, ignore,
                              x, y, theta,
                              ignore, ignore, ignore);
-        std::cout << pre.x << ' '
+        native::get_rudder(_rudder);
+        std::cout << seconds << ' '
+                  << pre.x << ' '
                   << pre.y << ' '
                   << x << ' '
-                  << y << ' ' << std::endl;
+                  << y << ' '
+                  << _rudder << std::endl;
         
         if (seconds > 5) {
             native::shutdown();
