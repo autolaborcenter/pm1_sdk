@@ -73,7 +73,7 @@ private:
  */
 struct circle_t : public shape_t {
     point_t center;
-    double  radius;
+    double  direction;
     
     circle_t(size_t point_count,
              double radius,
@@ -101,7 +101,7 @@ struct circle_t : public shape_t {
     }
 
 private:
-    double direction, step;
+    double radius, step;
 };
 
 /**

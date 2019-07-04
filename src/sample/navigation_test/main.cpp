@@ -11,6 +11,7 @@ extern "C" {
 #include "pid/shape_t.hpp"
 #include "pid/functions.hpp"
 #include "pid/path_manage.hpp"
+#include "pid/virtual_light_sensor_t.hh"
 
 #include <iostream>
 #include <filesystem>
@@ -37,6 +38,7 @@ int main() {
     }
     
     native::set_enabled(true);
+    native::set_command_enabled(false);
     
     std::string command;
     std::cout << "input operation: ";
@@ -48,8 +50,6 @@ int main() {
     
     switch (this_time) {
         case operation::record: {
-            native::set_command_enabled(false);
-            
             constexpr static auto filename = "path.txt";
             std::filesystem::remove(filename);
             std::fstream plot(filename, std::ios::out);
@@ -84,15 +84,18 @@ int main() {
             constexpr static auto filename = "navigation.txt";
             std::filesystem::remove(filename);
             std::fstream plot(filename, std::ios::out);
-            
-            auto path = load_path("path.txt");
+    
+            auto path        = load_path("path.txt");
+            auto local_begin = path.begin(),
+                 local_end   = path.end();
+    
+            virtual_light_sensor_t sensor;
             
             double x, y, theta, ignore;
             native::get_odometry(
                 ignore, ignore,
                 x, y, ignore,
                 ignore, ignore, ignore);
-            plot << x << ' ' << y << std::endl;
             while (true) {
                 using namespace std::chrono_literals;
                 std::this_thread::sleep_for(100ms);
@@ -104,62 +107,24 @@ int main() {
                     ignore, ignore, ignore);
                 
                 constexpr static auto width = 0.41f;
-                
-                point_t center{tx + width / 2 * std::cos(theta),
-                               ty + width / 2 * std::sin(theta)};
     
-                circle_t range(16, 0.2, center);
-                
-                auto local = take_once(path, [&](point_t point) {
-                    return range.check_inside(point);
-                });
-                if (local.size() < 2) break;
-                
-                size_t begin, end;
-                {
-                    auto            vertex = range.to_vector();
-                    begin = max_by(vertex,
-                                   [target = local.back()](point_t point) {
-                                       auto dx = target.x - point.x,
-                                            dy = target.y - point.y;
-                                       return -dx * dx - dy * dy;
-                                   });
-                    end   = max_by(vertex,
-                                   [target = local.front()](point_t point) {
-                                       auto dx = target.x - point.x,
-                                            dy = target.y - point.y;
-                                       return -dx * dx - dy * dy;
-                                   });
-                    if (end < begin) end += range.point_count();
-                }
-                
-                std::cout << "local = " << local.size() << ", "
-                          << "begin = " << begin << ", "
-                          << "end = " << end << ", ";
-                
-                std::vector<point_t> vertex(local.size() + end - begin);
-                std::copy(local.begin(), local.end(), vertex.begin());
-                for (auto i = local.size(); i < vertex.size(); ++i)
-                    vertex[i]   = range[(begin++) % range.point_count()];
-                any_shape shape(vertex);
-                auto      error = 2 * (0.5 - shape.size() / range.size());
+                sensor.set_pose(
+                    point_t{tx + width / 2 * std::cos(theta),
+                            ty + width / 2 * std::sin(theta)
+                    }, theta);
+    
+                local_end = path.end();
+                auto error = sensor(local_begin, local_end);
                 std::cout << "error = " << error << ", ";
+                if (!std::isfinite(error)) break;
     
-                // auto v = 0.2 * (error + 1) / 2,
-                //      w = 2 * error;
-                // std::cout << "v = " << v << ", w = " << w << std::endl;
-                // native::drive_velocity(v, w);
-                auto speed  = 1.0,
+                auto speed  = 2.0,
                      rudder = -pi_f / 2 * error;
                 std::cout << "speed = " << speed << ", rudder = " << rudder << std::endl;
                 native::drive_physical(speed, rudder);
-                
-                if (std::abs(tx - x) + std::abs(ty - y) < 0.05)
-                    continue;
-                
-                x = tx;
-                y = ty;
-                plot << x << ' ' << y << std::endl;
+    
+                if (std::abs(tx - x) + std::abs(ty - y) > 0.05)
+                    plot << (x = tx) << ' ' << (y = ty) << std::endl;
             }
             plot.flush();
             plot.close();

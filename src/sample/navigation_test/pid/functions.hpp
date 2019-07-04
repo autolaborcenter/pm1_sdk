@@ -8,10 +8,8 @@
 #include <vector>
 
 template<class t, class f>
-std::vector<t> take_once(const std::vector<t> &source,
-                         const f &function) {
-    auto begin = source.begin(),
-         end   = source.end();
+void take_once(t &begin, t &end, const f &function) {
+    const auto _end = end;
     while (begin < end) {
         if (function(*begin)) {
             end = begin + 1;
@@ -19,10 +17,7 @@ std::vector<t> take_once(const std::vector<t> &source,
         }
         ++begin;
     }
-    for (; end < source.end() && function(*end); ++end);
-    std::vector<t> result(end - begin);
-    std::copy(begin, end, result.begin());
-    return result;
+    for (; end < _end && function(*end); ++end);
 }
 
 template<class t, class f>
