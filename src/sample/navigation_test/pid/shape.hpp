@@ -9,6 +9,8 @@
 #include <vector>
 #include <stdexcept>
 #include <cmath>
+#include <thread>
+#include <mutex>
 
 constexpr auto PI = 3.141592654;
 
@@ -16,9 +18,16 @@ struct point_t {
     double x, y;
 };
 
+/**
+ * 形状
+ */
 struct shape {
     explicit shape(size_t point_count)
-        : _point_count(point_count) {}
+        : _point_count(point_count),
+          size_buffer(0) {
+        if (point_count < 3)
+            throw std::logic_error("vertex count must be more than 3");
+    }
     
     [[nodiscard]] size_t
     point_count() const {
@@ -27,29 +36,78 @@ struct shape {
     
     [[nodiscard]] virtual point_t
     operator[](size_t index) const = 0;
+    
+    [[nodiscard]] double size() const {
+        std::call_once(flag, [this] { set_size(); });
+        return size_buffer;
+    }
+
+protected:
+    mutable double size_buffer;
+    
+    virtual void set_size() const {
+        for (size_t i = 0; i < _point_count; ++i) {
+            auto a = operator[](i),
+                 b = operator[]((i + 1) % _point_count);
+            size_buffer += a.x * b.y - a.y * b.x;
+        }
+        size_buffer /= 2;
+    };
 
 private:
-    size_t _point_count;
+    size_t                 _point_count;
+    mutable std::once_flag flag;
 };
 
+/**
+ * 圆
+ */
 struct circle : public shape {
     point_t center;
     double  radius;
     
-    [[nodiscard]] std::vector<point_t>
-    sample(size_t n) const {
-        if (n == 0) throw std::logic_error("");
-        
-        auto step              = 2 * PI / n;
-        
-        std::vector<point_t> points(n);
-        for (size_t          i = 0; i < n; ++i)
-            points[i] = {
-                radius * std::cos(i * step) + center.x,
-                radius * std::sin(i * step) + center.y
-            };
-        return points;
+    circle(size_t point_count,
+           double radius,
+           point_t center = {0, 0},
+           double direction = 0)
+        : shape(point_count),
+          center(center),
+          radius(radius),
+          step(2 * PI / point_count),
+          direction(direction) {}
+    
+    [[nodiscard]] point_t
+    operator[](size_t index) const override {
+        return {
+            radius * std::cos(index * step) + center.x,
+            radius * std::sin(index * step) + center.y
+        };
     }
+    
+    [[nodiscard]] bool
+    check_inside(point_t point) const {
+        auto dx = point.x - center.x,
+             dy = point.y - center.y;
+        return dx * dx + dy * dy < radius * radius;
+    }
+
+private:
+    double direction, step;
+};
+
+/**
+ * 任意多边形
+ */
+struct any_shape : public shape {
+    explicit any_shape(std::vector<point_t> vertex)
+        : shape(vertex.size()), vertex(std::move(vertex)) {}
+    
+    [[nodiscard]] virtual point_t operator[](size_t index) const override {
+        return vertex[index];
+    }
+
+private:
+    std::vector<point_t> vertex;
 };
 
 

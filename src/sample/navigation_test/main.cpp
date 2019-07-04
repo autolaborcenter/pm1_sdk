@@ -10,26 +10,50 @@ extern "C" {
 #include "../../main/internal/control_model/model.h"
 }
 
-#include <string>
+#include "pid/shape.hpp"
 #include <iostream>
-#include <chrono>
-#include <thread>
+
+template<class t, class f>
+std::vector<t> take_once(const std::vector<t> &source,
+                         f function) {
+    auto begin = source.begin(),
+         end   = source.end();
+    while (true) {
+        if (begin < end)
+            break;
+        if (f(*begin)) {
+            end = begin + 1;
+            break;
+        }
+        ++begin;
+    }
+    for (; end < source.end() && f(*end); ++end);
+    std::vector<t> result(end - begin);
+    std::copy(begin, end, result.begin());
+    return result;
+}
 
 int main() {
     using namespace autolabor::pm1;
-    
-    double progress;
-    auto   handler = native::initialize("", progress);
-    auto   error   = std::string(native::get_error_info(handler));
-    if (!error.empty()) {
-        native::remove_error_info(handler);
-        std::cout << error << std::endl;
-        return 1;
+    size_t times = 0;
+    while (true) {
+        double progress;
+        auto   handler = native::initialize("", progress);
+        auto   error   = std::string(native::get_error_info(handler));
+        if (!error.empty()) {
+            native::remove_error_info(handler);
+            std::cout << error << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            continue;
+        }
+        std::cout << "connected" << std::endl;
+        
+        while (check_state() != chassis_state::offline);
+        shutdown();
+        
+        std::cout << times++ << std::endl;
     }
-    
-    while (check_state() != chassis_state::offline);
-    shutdown();
-    return 1;
+    return 0;
     //
     //    native::set_enabled(true);
     //

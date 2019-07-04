@@ -15,6 +15,8 @@ extern "C" {
 #include "control_model/optimization.h"
 }
 
+#include <iostream>
+
 #ifdef _MSC_VER
 
 #include <Windows.h>
@@ -29,30 +31,31 @@ using namespace autolabor::pm1;
 // region functions
 
 template<class t>
-inline serial_port &operator<<(serial_port &port,
-                               const autolabor::can::msg_union<t> &msg) {
+inline serial_port &operator<<(
+    serial_port &port,
+    const autolabor::can::msg_union<t> &msg) noexcept {
     port.send(msg.bytes, sizeof(t));
     return port;
 }
 
 template<class t>
-inline void atomic_plus_assign(std::atomic<t> &a, const t &b) {
+inline void atomic_plus_assign(std::atomic<t> &a, const t &b) noexcept {
     auto expected = a.load();
     auto desired  = expected + b;
     while (!a.compare_exchange_strong(expected, desired))
         desired = expected + b;
 }
 
-constexpr unsigned long max_of(unsigned long a, unsigned long b) {
+constexpr unsigned long max_of(unsigned long a, unsigned long b) noexcept {
     return a > b ? a : b;
 }
 
-constexpr unsigned long gcd(unsigned long a, unsigned long b) {
+constexpr unsigned long gcd(unsigned long a, unsigned long b) noexcept {
     return a <= 1 || b <= 1 ? 1 : a > b ? gcd(b, a % b) : gcd(a, b % a);
 }
 
 template<class t>
-constexpr unsigned long count_ms(t time) {
+constexpr unsigned long count_ms(t time) noexcept {
     return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
 }
 
@@ -73,6 +76,25 @@ constexpr auto timeout = 20;
 #error unsupported platform
 #endif
 
+using namespace std::chrono_literals;
+
+constexpr auto
+    odometry_interval   = 50ms,
+    rudder_interval     = 20ms,
+    state_interval      = 1000ms,
+    state_timeout       = 1100ms,
+    control_timeout     = 500ms,
+    check_timeout       = 1000ms,
+    check_state_timeout = 100ms;
+constexpr auto
+    timeout_gcd         = gcd(count_ms(state_interval),
+                              gcd(count_ms(odometry_interval),
+                                  count_ms(rudder_interval)));
+constexpr auto
+    delay_interval      = std::chrono::milliseconds(max_of(1, timeout_gcd - 1));
+constexpr auto
+    frequency           = 1000.0f / count_ms(rudder_interval);
+
 chassis::chassis(const std::string &port_name)
     : port(port_name, 115200, timeout),
       running(true),
@@ -85,19 +107,7 @@ chassis::chassis(const std::string &port_name)
       acceleration(default_acceleration),
       enabled_target(false) {
     
-    using namespace std::chrono_literals;
     using result_t  = autolabor::can::parser::result_type;
-    
-    constexpr static auto
-        odometry_interval   = 50ms,
-        rudder_interval     = 20ms,
-        state_interval      = 1000ms,
-        state_timeout       = 1100ms,
-        control_timeout     = 500ms,
-        check_timeout       = 1000ms,
-        check_state_timeout = 100ms;
-    constexpr static auto
-        frequency           = 1000.0f / count_ms(rudder_interval);
     
     _left.time = _right.time = _rudder.time = now();
     
@@ -169,12 +179,6 @@ chassis::chassis(const std::string &port_name)
     // endregion
     // region ask
     write_thread = std::thread([this] {
-        constexpr static auto gcd_ = gcd(count_ms(state_interval),
-                                         gcd(count_ms(odometry_interval),
-                                             count_ms(rudder_interval)));
-        constexpr static auto delay_interval
-                                   = std::chrono::milliseconds(max_of(1, gcd_ - 1));
-        
         auto           _now        = now();
         decltype(_now) task_time[] = {_now, _now, _now};
         
@@ -197,6 +201,7 @@ chassis::chassis(const std::string &port_name)
             
             std::this_thread::sleep_for(delay_interval);
         }
+        std::cout << "write break" << std::endl;
     });
     // endregion
     // region receive
@@ -324,11 +329,11 @@ chassis::chassis(const std::string &port_name)
         uint8_t buffer[64];
         while (running) {
             try {
-                auto actual = port.read(buffer, sizeof(buffer));
-                
-                for (size_t i = 0; i < actual; ++i) parser(buffer[i]);
-                
-            } catch (std::exception &) { running = false; }
+                for (size_t actual = port.read(buffer, sizeof(buffer)), i = 0; i < actual; ++i)
+                    parser(buffer[i]);
+            } catch (std::exception &) {
+                running = false;
+            }
         }
         
         chassis_state = {};
@@ -340,7 +345,7 @@ chassis::chassis(const std::string &port_name)
         if (std::none_of(chassis_state.states.begin(), chassis_state.states.end(),
                          [](node_state_t it) { return it == node_state_t::unknown; }))
             break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        std::this_thread::sleep_for(5ms);
     }
     // endregion
 }
@@ -353,7 +358,8 @@ chassis::~chassis() {
     port.break_read();
     
     read_thread.join();
-    write_thread.join();
+    std::this_thread::sleep_for(3 * delay_interval);
+    write_thread.detach();
 }
 
 //==============================================================

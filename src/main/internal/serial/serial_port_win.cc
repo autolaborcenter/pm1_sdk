@@ -51,7 +51,7 @@ serial_port::serial_port(const std::string &name,
     TRY(SetCommMask(handle, EV_RXCHAR));
 }
 
-serial_port::~serial_port() {
+serial_port::~serial_port() noexcept {
     auto temp = handle.exchange(nullptr);
     if (!temp) return;
     PurgeComm(handle, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
@@ -79,7 +79,7 @@ void WINAPI callback(DWORD error_code,
     delete overlapped;
 }
 
-void serial_port::send(const uint8_t *buffer, size_t size) {
+void serial_port::send(const uint8_t *buffer, size_t size) noexcept {
     if (size <= 0) return;
     
     auto overlapped = new OVERLAPPED{};
@@ -127,7 +127,7 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
     }
 }
 
-void serial_port::break_read() const {
+void serial_port::break_read() const noexcept {
     weak_lock_guard lock(read_mutex);
     
     while (!lock.retry()) {

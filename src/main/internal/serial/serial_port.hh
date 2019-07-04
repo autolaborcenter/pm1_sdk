@@ -26,12 +26,12 @@ public:
     /**
      * 析构器
      */
-    ~serial_port();
+    ~serial_port() noexcept;
     
     /**
      * 发送
      */
-    void send(const uint8_t *, size_t);
+    void send(const uint8_t *, size_t) noexcept;
     
     /**
      * 读取
@@ -42,7 +42,7 @@ public:
     /**
      * 中断正在阻塞的读操作
      */
-    void break_read() const;
+    void break_read() const noexcept;
 
 private:
     #if   defined(_MSC_VER)
