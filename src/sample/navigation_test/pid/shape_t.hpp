@@ -1,10 +1,12 @@
-//
+﻿//
 // Created by User on 2019/7/3.
 //
 
-#ifndef PM1_SDK_SHAPE_HPP
-#define PM1_SDK_SHAPE_HPP
+#ifndef PM1_SDK_SHAPE_T_HPP
+#define PM1_SDK_SHAPE_T_HPP
 
+
+#include "point_t.h"
 
 #include <vector>
 #include <stdexcept>
@@ -14,15 +16,11 @@
 
 constexpr auto PI = 3.141592654;
 
-struct point_t {
-    double x, y;
-};
-
 /**
  * 形状
  */
-struct shape {
-    explicit shape(size_t point_count)
+struct shape_t {
+    explicit shape_t(size_t point_count)
         : _point_count(point_count),
           size_buffer(0) {
         if (point_count < 3)
@@ -37,9 +35,20 @@ struct shape {
     [[nodiscard]] virtual point_t
     operator[](size_t index) const = 0;
     
-    [[nodiscard]] double size() const {
+    [[nodiscard]] double
+    size() const {
         std::call_once(flag, [this] { set_size(); });
         return size_buffer;
+    }
+    
+    [[nodiscard]] virtual std::vector<point_t>
+    to_vector() const {
+        std::vector<point_t> result(_point_count);
+        
+        for (size_t i = 0; i < _point_count; ++i)
+            result[i] = operator[](i);
+        
+        return result;
     }
 
 protected:
@@ -62,15 +71,15 @@ private:
 /**
  * 圆
  */
-struct circle : public shape {
+struct circle_t : public shape_t {
     point_t center;
     double  radius;
     
-    circle(size_t point_count,
-           double radius,
-           point_t center = {0, 0},
-           double direction = 0)
-        : shape(point_count),
+    circle_t(size_t point_count,
+             double radius,
+             point_t center = {0, 0},
+             double direction = 0)
+        : shape_t(point_count),
           center(center),
           radius(radius),
           step(2 * PI / point_count),
@@ -98,12 +107,18 @@ private:
 /**
  * 任意多边形
  */
-struct any_shape : public shape {
+struct any_shape : public shape_t {
     explicit any_shape(std::vector<point_t> vertex)
-        : shape(vertex.size()), vertex(std::move(vertex)) {}
+        : shape_t(vertex.size()), vertex(std::move(vertex)) {}
     
-    [[nodiscard]] virtual point_t operator[](size_t index) const override {
+    [[nodiscard]] point_t
+    operator[](size_t index) const override {
         return vertex[index];
+    }
+    
+    [[nodiscard]] std::vector<point_t>
+    to_vector() const override {
+        return vertex;
     }
 
 private:
@@ -111,4 +126,4 @@ private:
 };
 
 
-#endif //PM1_SDK_SHAPE_HPP
+#endif //PM1_SDK_SHAPE_T_HPP
