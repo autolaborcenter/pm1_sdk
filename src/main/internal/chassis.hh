@@ -63,7 +63,8 @@ namespace autolabor {
             /** 是否向底盘发送控制指令 */
             volatile bool
                 command_enabled;
-            
+    
+            /** 构造器 */
             explicit chassis(const std::string &port_name);
             
             /** 析构 */

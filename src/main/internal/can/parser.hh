@@ -65,20 +65,20 @@ namespace autolabor {
             // 解析器状态
             struct state_t {
                 uint8_t value;
-        
+    
                 state_type state();
             } state{0};
     
             // 数据缓冲
             union {
                 uint8_t bytes[sizeof(pack_with_data)]{0xfe};
-        
+    
                 union_no_data   sgn_buffer;
                 union_with_data msg_buffer;
             };
         };
-    }
-}
+    } // namespace can
+} // namespace autolabor
 
 
 #endif //PM1_SDK_PARSER_H

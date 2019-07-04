@@ -6,6 +6,11 @@
 #define PM1_SDK_WEAK_LOCK_GUARD_HPP
 
 
+/**
+ * 非阻塞区域锁
+ * 
+ * @tparam t 锁对象类型
+ */
 template<class t>
 class weak_lock_guard {
 public:

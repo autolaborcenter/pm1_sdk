@@ -53,8 +53,8 @@ namespace autolabor {
              */
             size_t operator()(uint8_t);
         };
-    }
-}
+    } // namespace can
+} // namespace autolabor
 
 
 #endif //PM1_SDK_PARSE_ENGINE_HH
