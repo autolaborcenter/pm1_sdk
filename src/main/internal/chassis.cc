@@ -353,8 +353,8 @@ chassis::~chassis() {
     port.break_read();
     
     std::this_thread::sleep_for(3 * delay_interval);
-    read_thread.join();
-    write_thread.join();
+    read_thread.detach();
+    write_thread.detach();
 }
 
 //==============================================================
