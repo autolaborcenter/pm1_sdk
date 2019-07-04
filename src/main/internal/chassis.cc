@@ -15,8 +15,6 @@ extern "C" {
 #include "control_model/optimization.h"
 }
 
-#include <iostream>
-
 #ifdef _MSC_VER
 
 #include <Windows.h>
@@ -201,7 +199,6 @@ chassis::chassis(const std::string &port_name)
             
             std::this_thread::sleep_for(delay_interval);
         }
-        std::cout << "write break" << std::endl;
     });
     // endregion
     // region receive
@@ -335,8 +332,6 @@ chassis::chassis(const std::string &port_name)
                 running = false;
             }
         }
-        
-        chassis_state = {};
     });
     // endregion
     // region wait state
@@ -357,9 +352,9 @@ chassis::~chassis() {
     running = false;
     port.break_read();
     
-    read_thread.join();
     std::this_thread::sleep_for(3 * delay_interval);
-    write_thread.detach();
+    read_thread.join();
+    write_thread.join();
 }
 
 //==============================================================
