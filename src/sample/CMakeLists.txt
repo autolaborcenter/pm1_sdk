@@ -2,6 +2,8 @@
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(pm1_sdk_sample
+        navigation_test/pid/virtual_light_sensor_t.hh
+        navigation_test/pid/virtual_light_sensor_t.cc
         navigation_test/pid/point_t.h
         navigation_test/pid/path_manage.hpp
         navigation_test/pid/shape_t.hpp

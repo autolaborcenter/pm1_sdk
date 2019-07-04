@@ -107,8 +107,8 @@ int main() {
                 
                 point_t center{tx + width / 2 * std::cos(theta),
                                ty + width / 2 * std::sin(theta)};
-                
-                circle_t range(16, width, center);
+    
+                circle_t range(16, 0.2, center);
                 
                 auto local = take_once(path, [&](point_t point) {
                     return range.check_inside(point);
@@ -142,13 +142,17 @@ int main() {
                 for (auto i = local.size(); i < vertex.size(); ++i)
                     vertex[i]   = range[(begin++) % range.point_count()];
                 any_shape shape(vertex);
-                auto      error = shape.size() / range.size();
-                std::cout << "error = " << error << std::endl;
-                
-                auto v = 0.2 - 0.4 * std::abs(0.5 - error),
-                     w = 2 * (0.5 - error);
-                std::cout << "v = " << v << ", w = " << w << std::endl;
-                native::drive_velocity(v, w);
+                auto      error = 2 * (0.5 - shape.size() / range.size());
+                std::cout << "error = " << error << ", ";
+    
+                // auto v = 0.2 * (error + 1) / 2,
+                //      w = 2 * error;
+                // std::cout << "v = " << v << ", w = " << w << std::endl;
+                // native::drive_velocity(v, w);
+                auto speed  = 1.0,
+                     rudder = -pi_f / 2 * error;
+                std::cout << "speed = " << speed << ", rudder = " << rudder << std::endl;
+                native::drive_physical(speed, rudder);
                 
                 if (std::abs(tx - x) + std::abs(ty - y) < 0.05)
                     continue;
@@ -164,54 +168,4 @@ int main() {
     }
     
     return 0;
-    //
-    //
-    //    double width, length, radius;
-    //    using id_enum = autolabor::pm1::parameter_id;
-    //
-    //    native::get_parameter(static_cast<uint8_t>(id_enum::width), width);
-    //    native::get_parameter(static_cast<uint8_t>(id_enum::length), length);
-    //    native::get_parameter(static_cast<uint8_t>(id_enum::wheel_radius), radius);
-    //
-    //    const chassis_config_t config{
-    //        static_cast<float>(width),
-    //        static_cast<float>(length),
-    //        static_cast<float>(radius)};
-    //
-    //    const auto speed  = 2 * pi_f,
-    //               rudder = 1.0f;
-    //
-    //    auto velocity = physical_to_velocity({speed, rudder}, &config);
-    //    auto temp     = pm1_trajectory_t(velocity.v, velocity.w);
-    //
-    //    native::set_command_enabled(false);
-    //    std::this_thread::sleep_for(std::chrono::hours(1));
-    //
-    //    const auto begin = std::chrono::steady_clock::now();
-    //    double     x, y, theta, _rudder;
-    //    while (true) {
-    //        native::drive_physical(speed, rudder);
-    //        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    //        auto   now     = std::chrono::steady_clock::now();
-    //        auto   seconds = std::chrono::duration_cast<
-    //            std::chrono::duration<double, std::ratio<1>>
-    //        >(now - begin).count();
-    //        auto   pre     = temp[now - begin];
-    //        double ignore;
-    //        native::get_odometry(ignore, ignore,
-    //                             x, y, theta,
-    //                             ignore, ignore, ignore);
-    //        native::get_rudder(_rudder);
-    //        std::cout << seconds << ' '
-    //                  << pre.x << ' '
-    //                  << pre.y << ' '
-    //                  << x << ' '
-    //                  << y << ' '
-    //                  << _rudder << std::endl;
-    //
-    //        if (seconds > 5) {
-    //            native::shutdown();
-    //            return 0;
-    //        }
-    //    }
 }
