@@ -39,6 +39,10 @@ int main() {
         std::cout << "connected" << std::endl;
     }
     
+    native::set_parameter(0, 0.470);
+    native::set_parameter(1, 0.345);
+    native::set_parameter(2, 0.105);
+    
     native::set_enabled(true);
     native::set_command_enabled(false);
     
