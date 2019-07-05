@@ -7,8 +7,7 @@ add_executable(pm1_sdk_sample
         navigation_test/pid/shape_t.hpp
         navigation_test/pid/functions.hpp
 
-        navigation_test/pid/virtual_light_sensor_t.hh
-        navigation_test/pid/virtual_light_sensor_t.cc
+        navigation_test/pid/virtual_light_sensor_t.hpp
 
         navigation_test/pid/path_manage.hpp
 

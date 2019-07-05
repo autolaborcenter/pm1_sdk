@@ -20,6 +20,11 @@ void take_once(t &begin, t &end, const f &function) {
     for (; end < _end && function(*end); ++end);
 }
 
+template<class t>
+t limit(t value, t min, t max) {
+    return value < min ? min : value > max ? max : value;
+}
+
 template<class t, class f>
 size_t max_by(const std::vector<t> &source,
               const f &function) {
