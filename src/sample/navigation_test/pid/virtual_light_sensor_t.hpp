@@ -21,8 +21,7 @@ struct virtual_light_sensor_t {
     
     struct result_t {
         size_t local_count;
-        double local_size,
-               local_struct;
+        bool   tip_begin;
         double error;
     };
     
@@ -30,7 +29,6 @@ struct virtual_light_sensor_t {
     [[nodiscard]] result_t
     operator()(point_t position,
                double direction,
-               point_t &ppppppp,
                t &local_begin,
                t &local_end);
 
@@ -44,38 +42,65 @@ virtual_light_sensor_t::result_t
 virtual_light_sensor_t::operator()(
     point_t position,
     double direction,
-    point_t &ppppppp,
     t &local_begin,
     t &local_end
 ) {
-    auto   cos = std::cos(direction),
-           sin = std::sin(direction);
-    
-    range.center       = ppppppp = {
+    // 重新定位传感器
+    auto cos = std::cos(direction),
+         sin = std::sin(direction);
+    range.center    = {
         position.x + cos * _position.x - sin * _position.y,
         position.y + sin * _position.x + cos * _position.y,
     };
-    range.direction    = direction;
+    range.direction = direction;
     
-    take_once(local_begin,
-              local_end,
-              [&](point_t point) { return range.check_inside(point); });
+    // 确定局部路径起点
+    const auto check = [&](point_t point) { return range.check_inside(point); };
+    const auto end   = local_end;
+    while (local_begin < local_end) {
+        if (check(*local_begin)) {
+            local_end = local_begin + 1;
+            break;
+        }
+        ++local_begin;
+    }
+    
+    if (local_begin->type == point_type_t::tip) {
+        std::cout << "tip!" << std::endl;
+        return {1, true, NAN};
+    }
+    
+    // 确定局部路径终点
+    while (local_end < end && check(*local_end)) {
+        if (local_end->type == point_type_t::tip) {
+            break;
+        }
+        ++local_end;
+    }
+    
     size_t local_count = local_end - local_begin;
+    if (local_count == 0)
+        return {local_count, false, NAN};
     
-    if (local_count < 3) return {local_count, NAN, NAN, NAN};
+    // 连接面积范围
+    auto shape  = range.to_vector();
+    auto index1 = max_by(shape, [=](point_t point) {
+        return -std::hypot(local_begin->x - point.x,
+                           local_begin->y - point.y);
+    });
     
-    auto shape = range.to_vector();
-    
-    auto index0 = max_by(shape,
-                         [target = *(local_end - 1)](point_t point) {
-                             return -std::hypot(target.x - point.x,
-                                                target.y - point.y);
-                         }),
-         index1 = max_by(shape,
-                         [target = *local_begin](point_t point) {
-                             return -std::hypot(target.x - point.x,
-                                                target.y - point.y);
-                         });
+    auto index0 = local_end->type == point_type_t::tip
+                  ? max_by(shape, [=](point_t point) {
+            auto x0 = point.x - local_end->x,
+                 x1 = local_end->x - (local_end - 1)->x,
+                 y0 = point.y - local_end->y,
+                 y1 = local_end->y - (local_end - 1)->y;
+            return x0 * x1 + y0 * y1;
+        })
+                  : max_by(shape, [=](point_t point) {
+            return -std::hypot((local_end - 1)->x - point.x,
+                               (local_end - 1)->y - point.y);
+        });
     
     if (index1 < index0) index1 += range.point_count();
     
@@ -84,13 +109,9 @@ virtual_light_sensor_t::operator()(
     for (auto i = local_count; i < shape.size(); ++i)
         shape[i] = range[(index0++) % range.point_count()];
     
-    std::cout << any_shape(shape).size() << std::endl;
-    
     return {
         local_count,
-        any_shape(std::vector<point_t>(local_begin, local_end)).size(),
-        std::hypot(local_begin->x - local_end->x,
-                   local_begin->y - local_end->y),
+        false,
         2 * (0.5 - any_shape(shape).size() / range.size())
     };
 }
