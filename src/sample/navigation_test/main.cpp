@@ -5,6 +5,7 @@
 #include "../../main/pm1_sdk_native.h"
 #include "pid/path_manage.hpp"
 #include "pid/virtual_light_sensor_t.hpp"
+#include "pid/path_follower_t.hpp"
 
 #include <iostream>
 #include <filesystem>
@@ -81,14 +82,14 @@ int main() {
             constexpr static auto filename = "navigation.txt";
             std::filesystem::remove(filename);
             std::fstream plot(filename, std::ios::out);
-            
-            virtual_light_sensor_t sensor({0.2, 0}, 0.2);
+    
+            path_follower_t controller(.2, .0, .2);
             
             // 资源
-            auto   path        = load_path("path.txt");
-            auto   local_begin = path.begin();
-            double speed       = 0.4;
-            while (true) {
+            auto path = load_path("path.txt");
+            controller.set_path(path.begin(), path.end());
+            auto finish = false;
+            while (!finish) {
                 using namespace std::chrono_literals;
                 
                 double x, y, theta, ignore;
@@ -96,42 +97,28 @@ int main() {
                     ignore, ignore,
                     x, y, theta,
                     ignore, ignore, ignore);
-                
-                // 模拟单光感
-                auto last_begin = local_begin;
-                auto local_end  = path.end();
-                auto result     = sensor({x, y}, theta, local_begin, local_end);
-                std::cout << "index = " << local_begin - path.begin()
-                          << ", local count  = " << result.local_count
-                          << ", error = " << result.error << std::endl;
-                
-                if (result.tip_begin) {
-                    if (local_begin == path.end() - 1)
+        
+                auto result = controller(x, y, theta);
+        
+                switch (result.type()) {
+                    case path_follower_t::result_type_t::following:
+                        native::drive_physical(result.speed, result.rudder);
+                    case path_follower_t::result_type_t::finish:
+                        finish = true;
                         break;
-                    
-                    native::drive_physical(0, NAN);
-                    std::this_thread::sleep_for(100ms);
-                    
-                    native::get_odometry(
-                        ignore, ignore,
-                        x, y, theta,
-                        ignore, ignore, ignore);
-                    auto error = std::atan2((local_begin + 1)->y - local_begin->y,
-                                            (local_begin + 1)->x - local_begin->x) - theta;
-                    while (error > +PI) error -= 2 * PI;
-                    while (error < -PI) error += 2 * PI;
-                    
-                    native::drive_spatial(0, error > 0 ? 1 : -1, 0, error, ignore);
-                    native::adjust_rudder(0, ignore);
-                    ++local_begin;
-                    continue;
+                    case path_follower_t::result_type_t::turning:
+                        native::drive_physical(0, NAN);
+                        std::this_thread::sleep_for(100ms);
+                
+                        native::drive_spatial(0, result.rudder > 0 ? 1 : -1,
+                                              0, result.rudder,
+                                              ignore);
+                        native::adjust_rudder(0, ignore);
+                        break;
+                    case path_follower_t::result_type_t::failed:
+                        finish = true;
+                        break;
                 }
-                
-                if (std::isnan(result.error)) break;
-                
-                native::drive_physical(
-                    speed = std::min(speed + 0.1, 2.0),
-                    -PI / 2 * result.error);
                 
                 std::this_thread::sleep_for(100ms);
                 
