@@ -3,13 +3,6 @@
 //
 
 #include "../../main/pm1_sdk_native.h"
-
-extern "C" {
-#include "../../main/internal/control_model/model.h"
-}
-
-#include "pid/shape_t.hpp"
-#include "pid/functions.hpp"
 #include "pid/path_manage.hpp"
 #include "pid/virtual_light_sensor_t.hpp"
 
@@ -88,61 +81,61 @@ int main() {
             constexpr static auto filename = "navigation.txt";
             std::filesystem::remove(filename);
             std::fstream plot(filename, std::ios::out);
-    
-            auto path                   = load_path("path.txt");
-            auto local_begin            = path.begin();
-    
+            
             virtual_light_sensor_t sensor({0.2, 0}, 0.2);
-    
-            double theta, ignore, speed = 0.4;
+            
+            // 资源
+            auto   path        = load_path("path.txt");
+            auto   local_begin = path.begin();
+            double speed       = 0.4;
             while (true) {
                 using namespace std::chrono_literals;
                 
-                double tx, ty;
+                double x, y, theta, ignore;
                 native::get_odometry(
                     ignore, ignore,
-                    tx, ty, theta,
+                    x, y, theta,
                     ignore, ignore, ignore);
-    
+                
                 // 模拟单光感
                 auto last_begin = local_begin;
                 auto local_end  = path.end();
-                auto result     = sensor({tx, ty}, theta, local_begin, local_end);
+                auto result     = sensor({x, y}, theta, local_begin, local_end);
                 std::cout << "index = " << local_begin - path.begin()
                           << ", local count  = " << result.local_count
                           << ", error = " << result.error << std::endl;
-    
+                
                 if (result.tip_begin) {
                     if (local_begin == path.end() - 1)
                         break;
                     
                     native::drive_physical(0, NAN);
                     std::this_thread::sleep_for(100ms);
-        
+                    
                     native::get_odometry(
                         ignore, ignore,
-                        tx, ty, theta,
+                        x, y, theta,
                         ignore, ignore, ignore);
                     auto error = std::atan2((local_begin + 1)->y - local_begin->y,
                                             (local_begin + 1)->x - local_begin->x) - theta;
-                    while (error > +pi_f) error -= 2 * pi_f;
-                    while (error < -pi_f) error += 2 * pi_f;
-        
+                    while (error > +PI) error -= 2 * PI;
+                    while (error < -PI) error += 2 * PI;
+                    
                     native::drive_spatial(0, error > 0 ? 1 : -1, 0, error, ignore);
                     native::adjust_rudder(0, ignore);
                     ++local_begin;
                     continue;
                 }
-    
+                
                 if (std::isnan(result.error)) break;
-    
+                
                 native::drive_physical(
                     speed = std::min(speed + 0.1, 2.0),
-                    -pi_f / 2 * result.error);
+                    -PI / 2 * result.error);
                 
                 std::this_thread::sleep_for(100ms);
-    
-                plot << tx << ' ' << ty << std::endl;
+                
+                plot << x << ' ' << y << std::endl;
                 plot.flush();
             }
             plot.close();

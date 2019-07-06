@@ -37,6 +37,42 @@ private:
     circle_t range;
 };
 
+template<class t, class f>
+t max_by(t begin,
+         t end,
+         const f &function) {
+    t    max_item  = begin;
+    auto max_value = function(*begin);
+    
+    while (++begin < end) {
+        auto value = function(*begin);
+        if (value > max_value) {
+            max_item  = begin;
+            max_value = value;
+        }
+    }
+    
+    return max_item;
+}
+
+template<class t, class f>
+t min_by(t begin,
+         t end,
+         const f &function) {
+    t    max_item  = begin;
+    auto max_value = function(*begin);
+    
+    while (++begin < end) {
+        auto value = function(*begin);
+        if (value < max_value) {
+            max_item  = begin;
+            max_value = value;
+        }
+    }
+    
+    return max_item;
+}
+
 template<class t>
 virtual_light_sensor_t::result_t
 virtual_light_sensor_t::operator()(
@@ -84,23 +120,26 @@ virtual_light_sensor_t::operator()(
     
     // 连接面积范围
     auto shape  = range.to_vector();
-    auto index1 = max_by(shape, [=](point_t point) {
-        return -std::hypot(local_begin->x - point.x,
-                           local_begin->y - point.y);
-    });
+    auto index1 = min_by(shape.begin(), shape.end(),
+                         [=](point_t point) {
+                             return std::hypot(local_begin->x - point.x,
+                                               local_begin->y - point.y);
+                         }) - shape.begin();
     
     auto index0 = local_end->type == point_type_t::tip
-                  ? max_by(shape, [=](point_t point) {
-            auto x0 = point.x - local_end->x,
-                 x1 = local_end->x - (local_end - 1)->x,
-                 y0 = point.y - local_end->y,
-                 y1 = local_end->y - (local_end - 1)->y;
-            return x0 * x1 + y0 * y1;
-        })
-                  : max_by(shape, [=](point_t point) {
-            return -std::hypot((local_end - 1)->x - point.x,
-                               (local_end - 1)->y - point.y);
-        });
+                  ? max_by(shape.begin(), shape.end(),
+                           [=](point_t point) {
+                               auto x0 = point.x - local_end->x,
+                                    x1 = local_end->x - (local_end - 1)->x,
+                                    y0 = point.y - local_end->y,
+                                    y1 = local_end->y - (local_end - 1)->y;
+                               return x0 * x1 + y0 * y1;
+                           }) - shape.begin()
+                  : min_by(shape.begin(), shape.end(),
+                           [=](point_t point) {
+                               return std::hypot((local_end - 1)->x - point.x,
+                                                 (local_end - 1)->y - point.y);
+                           }) - shape.begin();
     
     if (index1 < index0) index1 += range.point_count();
     
