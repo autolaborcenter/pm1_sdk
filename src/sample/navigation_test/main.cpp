@@ -97,25 +97,25 @@ int main() {
                     ignore, ignore,
                     x, y, theta,
                     ignore, ignore, ignore);
-        
+    
                 auto result = controller(x, y, theta);
-        
+    
                 switch (result.type()) {
                     case path_follower_t::result_type_t::following:
                         native::drive_physical(result.speed, result.rudder);
-                    case path_follower_t::result_type_t::finish:
-                        finish = true;
                         break;
                     case path_follower_t::result_type_t::turning:
                         native::drive_physical(0, NAN);
                         std::this_thread::sleep_for(100ms);
-                
+            
                         native::drive_spatial(0, result.rudder > 0 ? 1 : -1,
                                               0, result.rudder,
                                               ignore);
                         native::adjust_rudder(0, ignore);
                         break;
                     case path_follower_t::result_type_t::failed:
+                        std::cerr << "following failed" << std::endl;
+                    case path_follower_t::result_type_t::finish:
                         finish = true;
                         break;
                 }

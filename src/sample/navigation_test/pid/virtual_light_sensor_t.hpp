@@ -59,18 +59,18 @@ template<class t, class f>
 t min_by(t begin,
          t end,
          const f &function) {
-    t    max_item  = begin;
-    auto max_value = function(*begin);
+    t    min_item  = begin;
+    auto min_value = function(*begin);
     
     while (++begin < end) {
         auto value = function(*begin);
-        if (value < max_value) {
-            max_item  = begin;
-            max_value = value;
+        if (value < min_value) {
+            min_item  = begin;
+            min_value = value;
         }
     }
     
-    return max_item;
+    return min_item;
 }
 
 template<class t>
