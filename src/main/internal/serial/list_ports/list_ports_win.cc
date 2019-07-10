@@ -1,4 +1,4 @@
-﻿#if defined(_WIN32)
+﻿#if defined(_MSC_VER)
 
 /*
  * Copyright (c) 2014 Craig Lilley <cralilley@gmail.com>
@@ -15,15 +15,10 @@
 #include <SetupAPI.h>
 #include <initguid.h>
 #include <devguid.h>
-#include <cstring>
 
-using serial::PortInfo;
-using std::vector;
-using std::string;
-
-static const DWORD port_name_max_length     = 256;
-static const DWORD friendly_name_max_length = 256;
-static const DWORD hardware_id_max_length   = 256;
+constexpr DWORD port_name_max_length     = 256;
+constexpr DWORD friendly_name_max_length = 256;
+constexpr DWORD hardware_id_max_length   = 256;
 
 // Convert a wide Unicode string to an UTF8 string
 std::string utf8_encode(const std::wstring &wstr) {
@@ -33,9 +28,9 @@ std::string utf8_encode(const std::wstring &wstr) {
     return strTo;
 }
 
-vector<PortInfo>
+std::vector<serial::PortInfo>
 serial::list_ports() {
-    vector<PortInfo> devices_found;
+    std::vector<PortInfo> devices_found;
     
     HDEVINFO device_info_set = SetupDiGetClassDevs(
         (const GUID *) &GUID_DEVCLASS_PORTS,
@@ -110,8 +105,8 @@ serial::list_ports() {
         
         TCHAR hardware_id[hardware_id_max_length];
         DWORD hardware_id_actual_length = 0;
-        
-        BOOL got_hardware_id = SetupDiGetDeviceRegistryProperty(
+    
+        auto got_hardware_id = SetupDiGetDeviceRegistryProperty(
             device_info_set,
             &device_info_data,
             SPDRP_HARDWAREID,
@@ -119,28 +114,27 @@ serial::list_ports() {
             (PBYTE) hardware_id,
             hardware_id_max_length,
             &hardware_id_actual_length);
-        
-        if (got_hardware_id == TRUE && hardware_id_actual_length > 0)
+    
+        if (got_hardware_id && hardware_id_actual_length > 0)
             hardware_id[hardware_id_actual_length - 1] = '\0';
         else
             hardware_id[0] = '\0';
         
         #ifdef UNICODE
-        std::string portName = utf8_encode(port_name);
-        std::string friendlyName = utf8_encode(friendly_name);
-        std::string hardwareId = utf8_encode(hardware_id);
+        devices_found.push_back(
+            PortInfo{utf8_encode(portName),
+                     utf8_encode(friendlyName),
+                     utf8_encode(hardwareId)
+            }
+        );
         #else
-        std::string portName     = port_name;
-        std::string friendlyName = friendly_name;
-        std::string hardwareId   = hardware_id;
+        devices_found.push_back(
+            PortInfo{port_name,
+                     friendly_name,
+                     hardware_id
+            }
+        );
         #endif
-        
-        PortInfo port_entry;
-        port_entry.port        = portName;
-        port_entry.description = friendlyName;
-        port_entry.hardware_id = hardwareId;
-        
-        devices_found.push_back(port_entry);
     }
     
     SetupDiDestroyDeviceInfoList(device_info_set);

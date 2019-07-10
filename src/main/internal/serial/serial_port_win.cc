@@ -22,11 +22,11 @@ serial_port::serial_port(const std::string &name,
                          size_t out_buffer_size) {
     
     auto temp = std::string(R"(\\.\)") + name;
-    handle = CreateFileA(temp.c_str(),  // 串口名，`COM9` 之后需要前缀
+    handle = CreateFileA(temp.c_str(),                                // 串口名，`COM9` 之后需要前缀
                          GENERIC_READ | GENERIC_WRITE, // 读和写
-                         0,                            // 独占模式
-                         nullptr,                      // 子进程无权限
-                         OPEN_EXISTING,                // 打开设备
+                         0,                              // 独占模式
+                         nullptr,                    // 子进程无权限
+                         OPEN_EXISTING,                               // 打开设备
                          FILE_FLAG_OVERLAPPED,
                          nullptr);
     
