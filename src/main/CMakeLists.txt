@@ -37,6 +37,7 @@ set(NATIVE_LIBRARY
         internal/serial/serial_port.hh
         internal/serial/serial_port_win.cc
         internal/serial/serial_port_linux.cc
+        internal/serial/serial_port_operators.h
         # --------------------------
         # extensions
         internal/raii/safe_shared_ptr.hpp
