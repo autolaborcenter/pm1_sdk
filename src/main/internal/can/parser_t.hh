@@ -11,7 +11,7 @@
 namespace autolabor {
     namespace can {
         /** 解析器 */
-        class parser {
+        class parser_t {
         public:
             /** 结果类型 */
             enum class result_type : uint8_t {
@@ -30,7 +30,7 @@ namespace autolabor {
             };
             
             /** 结果结构体 */
-            struct result {
+            struct result_t {
                 /** 结果类型 */
                 result_type type;
                 /** 二选一 */
@@ -41,16 +41,16 @@ namespace autolabor {
             };
             
             /** 默认构造 */
-            parser() = default;
+            parser_t() = default;
             
             /** 实现复制 */
-            parser(const parser &others);
+            parser_t(const parser_t &others);
             
             /** 禁止移动 */
-            parser(parser &&others) = delete;
+            parser_t(parser_t &&others) = delete;
             
             /** 逐字节解析 */
-            result operator()(uint8_t byte);
+            result_t operator()(uint8_t byte);
         
         private:
             // 解析器状态含义

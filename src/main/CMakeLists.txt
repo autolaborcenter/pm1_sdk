@@ -51,11 +51,11 @@ set(NATIVE_LIBRARY
 
         internal/can/pack.h
 
-        internal/can/parser.hh
-        internal/can/parser.cc
+        internal/can/parser_t.hh
+        internal/can/parser_t.cc
 
-        internal/can/parse_engine.hh
-        internal/can/parse_engine.cc
+        internal/can/parse_engine_t.hh
+        internal/can/parse_engine_t.cc
         # --------------------------
         # pm1 control model
         internal/control_model/pi.h

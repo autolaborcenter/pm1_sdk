@@ -110,7 +110,7 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
         DWORD progress = 0;
         GetOverlappedResult(handle, &overlapped, &progress, true);
         if (event == 0) return 0;
-    } while (event != EV_RXCHAR);
+    } while (!(event & EV_RXCHAR));
     
     ReadFile(handle, buffer, size, nullptr, &overlapped);
     auto condition = GetLastError();

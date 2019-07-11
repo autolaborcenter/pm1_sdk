@@ -2,13 +2,13 @@
 // Created by ydrml on 2019/3/7.
 //
 
-#ifndef PM1_SDK_PARSE_ENGINE_HH
-#define PM1_SDK_PARSE_ENGINE_HH
+#ifndef PM1_SDK_PARSE_ENGINE_T_HH
+#define PM1_SDK_PARSE_ENGINE_T_HH
 
 
 #include <deque>
 #include <functional>
-#include "parser.hh"
+#include "parser_t.hh"
 
 namespace autolabor {
     namespace can {
@@ -17,11 +17,11 @@ namespace autolabor {
          *
          * 用于支持重叠扫描（解析失败时重新解析可能正确的字节）
          */
-        class parse_engine {
-            using callback_t = std::function<void(const parser::result &)>;
+        class parse_engine_t {
+            using callback_t = std::function<void(const parser_t::result_t &)>;
             
             std::deque<uint8_t> buffer;
-            parser              _parser;
+            parser_t            _parser;
             const callback_t    callback;
             
             unsigned int ptr;
@@ -38,13 +38,13 @@ namespace autolabor {
         
         public:
             /** 置入回调 */
-            explicit parse_engine(callback_t &&);
+            explicit parse_engine_t(callback_t &&);
             
             /** 平凡复制 */
-            parse_engine(const parse_engine &) = default;
+            parse_engine_t(const parse_engine_t &) = default;
             
             /** 禁止移动 */
-            parse_engine(parse_engine &&) = delete;
+            parse_engine_t(parse_engine_t &&) = delete;
             
             /**
              * 进行解析
@@ -57,4 +57,4 @@ namespace autolabor {
 } // namespace autolabor
 
 
-#endif //PM1_SDK_PARSE_ENGINE_HH
+#endif //PM1_SDK_PARSE_ENGINE_T_HH

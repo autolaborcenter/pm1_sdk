@@ -12,7 +12,11 @@ set(CMAKE_CXX_STANDARD 17)
 #         navigation_test/main.cpp)
 
 # faselase
+# add_executable(pm1_sdk_sample
+#         faselase_test/main.cpp)
+
+# marvelmind
 add_executable(pm1_sdk_sample
-        faselase_test/main.cpp)
+        navigation_test/marvelmind/main.cpp)
 
 target_link_libraries(pm1_sdk_sample pm1_sdk)

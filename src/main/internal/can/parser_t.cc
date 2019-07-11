@@ -3,15 +3,15 @@
 //
 
 #include <cstring>
-#include "parser.hh"
+#include "parser_t.hh"
 
 using namespace autolabor::can;
 
-parser::parser(const parser &others) : state(others.state) {
+parser_t::parser_t(const parser_t &others) : state(others.state) {
     std::memcpy(bytes, others.bytes, sizeof(bytes));
 }
 
-parser::result parser::operator()(uint8_t byte) {
+parser_t::result_t parser_t::operator()(uint8_t byte) {
     // 保存当前状态
     auto last = state.state();
     switch (last) {
@@ -29,12 +29,12 @@ parser::result parser::operator()(uint8_t byte) {
             // 保存数据字节
             bytes[state.value++] = byte;
             if (state.state() == last)
-                return result{parser::result_type::nothing};
+                return {parser_t::result_type::nothing};
             
             state.value = 0;
-            result result{crc_check(sgn_buffer)
-                          ? parser::result_type::signal
-                          : parser::result_type::signal_failed};
+            result_t result{crc_check(sgn_buffer)
+                            ? parser_t::result_type::signal
+                            : parser_t::result_type::signal_failed};
             result.signal = sgn_buffer;
             return result;
         }
@@ -42,22 +42,22 @@ parser::result parser::operator()(uint8_t byte) {
             // 保存数据字节
             bytes[state.value++ - 4] = byte;
             if (state.state() == last)
-                return result{parser::result_type::nothing};
+                return {parser_t::result_type::nothing};
             
             state.value = 0;
-            result result{crc_check(msg_buffer)
-                          ? parser::result_type::message
-                          : parser::result_type::message_failed};
+            result_t result{crc_check(msg_buffer)
+                            ? parser_t::result_type::message
+                            : parser_t::result_type::message_failed};
             result.message = msg_buffer;
             return result;
         }
         case state_type::ending:
             throw std::out_of_range("switch out of range");
     }
-    return result{parser::result_type::nothing};
+    return {parser_t::result_type::nothing};
 }
 
-parser::state_type parser::state_t::state() {
+parser_t::state_type parser_t::state_t::state() {
     return value == 0
            ? state_type::origin
            : value == 1
