@@ -80,7 +80,7 @@ namespace autolabor {
         
         /** 循环冗余计算 */
         template<class t>
-        bool crc_calculate(t begin, t end);
+        uint8_t crc_calculate(t begin, t end);
         
         /** 循环冗余校验 */
         template<class t>
@@ -102,7 +102,7 @@ namespace autolabor {
 } // namespace autolabor
 
 template<class t>
-inline bool autolabor::can::crc_calculate(t begin, t end) {
+inline uint8_t autolabor::can::crc_calculate(t begin, t end) {
     static uint8_t CRC8Table[]{
         0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
         157, 195, 33, 127, 252, 162, 64, 30, 95, 1, 227, 189, 62, 96, 130, 220,

@@ -24,7 +24,7 @@ public:
           _end(_head + size) {}
     
     ~circular_buffer() {
-        delete _head;
+        delete[] _head;
     }
     
     // =====================================================
