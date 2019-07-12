@@ -27,10 +27,12 @@ namespace autolabor {
         struct pack_no_data {
             uint8_t
                 head,
-                
+    
                 node_type_h : 2, //
-                priority    : 3, // 第 1 个信息字节
-                payload     : 1, // 从低到高
+                priority    : 3; // 第 1 个信息字节
+            bool
+                payload     : 1; // 从低到高
+            uint8_t
                 network     : 2, //
                 
                 node_index  : 4, // 第 2 个信息字节
@@ -49,12 +51,14 @@ namespace autolabor {
         struct pack_with_data {
             uint8_t
                 head,
-                
-                node_type_h : 2, //
-                priority    : 3, // 第 1 个信息字节
-                payload     : 1, // 从低到高
-                network     : 2, //
     
+                node_type_h : 2, //
+                priority    : 3; // 第 1 个信息字节
+            bool
+                payload     : 1; // 从低到高
+            uint8_t
+                network     : 2, //
+        
                 node_index  : 4, // 第 2 个信息字节
                 node_type_l : 4, // 从低到高
                 
@@ -75,16 +79,16 @@ namespace autolabor {
         using union_with_data = msg_union<pack_with_data>;
         
         /** 循环冗余计算 */
-        template<class t, int last_index = sizeof(t) - 1>
-        uint8_t crc_calculate(const msg_union<t> &msg);
+        template<class t>
+        bool crc_calculate(t begin, t end);
         
         /** 循环冗余校验 */
-        template<class t, int last_index = sizeof(t) - 1>
-        inline bool crc_check(const msg_union<t> &msg);
+        template<class t>
+        inline bool crc_check(t begin, t end);
         
         /** 填充校验和 */
-        template<class t, int last_index = sizeof(t) - 1>
-        inline void reformat(msg_union<t> &msg);
+        template<class t>
+        inline void fill_crc(msg_union<t> &msg);
         
         /**
          * 显示格式化的消息内容
@@ -97,9 +101,9 @@ namespace autolabor {
     } // namespace can
 } // namespace autolabor
 
-template<class t, int last_index>
-inline uint8_t autolabor::can::crc_calculate(const autolabor::can::msg_union<t> &msg) {
-    static uint8_t CRC8Table[256] = {
+template<class t>
+inline bool autolabor::can::crc_calculate(t begin, t end) {
+    static uint8_t CRC8Table[]{
         0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
         157, 195, 33, 127, 252, 162, 64, 30, 95, 1, 227, 189, 62, 96, 130, 220,
         35, 125, 159, 193, 66, 28, 254, 160, 225, 191, 93, 3, 128, 222, 60, 98,
@@ -118,21 +122,19 @@ inline uint8_t autolabor::can::crc_calculate(const autolabor::can::msg_union<t> 
         116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53};
     
     uint8_t checksum = 0;
-    
-    for (auto i = 1; i < last_index; ++i)
-        checksum = CRC8Table[checksum ^ msg.bytes[i]];
-    
+    while (begin < end) checksum = CRC8Table[checksum ^ *begin++];
     return checksum;
 }
 
-template<class t, int last_index>
-inline bool autolabor::can::crc_check(const msg_union<t> &msg) {
-    return msg.bytes[last_index] == crc_calculate(msg);
+template<class t>
+inline bool autolabor::can::crc_check(t begin, t end) {
+    return *(end - 1) == crc_calculate(begin, end - 1);
 }
 
-template<class t, int last_index>
-inline void autolabor::can::reformat(autolabor::can::msg_union<t> &msg) {
-    msg.bytes[last_index] = crc_calculate(msg);
+template<class t>
+inline void autolabor::can::fill_crc(autolabor::can::msg_union<t> &msg) {
+    constexpr static auto last_index = sizeof(t) - 1;
+    msg.bytes[last_index] = crc_calculate(msg.bytes + 1, msg.bytes + last_index);
 }
 
 template<class t>

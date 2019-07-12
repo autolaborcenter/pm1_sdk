@@ -48,14 +48,12 @@ set(NATIVE_LIBRARY
         # --------------------------
         # can hub
         internal/can/info.h
-
         internal/can/pack.h
 
-        internal/can/parser_t.hh
-        internal/can/parser_t.cc
+        internal/can/circular_buffer.hpp
 
-        internal/can/parse_engine_t.hh
-        internal/can/parse_engine_t.cc
+        internal/can/parser_t.hpp
+        internal/can/parse_engine.hpp
         # --------------------------
         # pm1 control model
         internal/control_model/pi.h
