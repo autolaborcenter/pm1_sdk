@@ -20,9 +20,23 @@ namespace autolabor {
             uint8_t bytes[sizeof(t)];
             t       data;
         };
+    
+        /**
+         * 内存解释器
+         * @return 视作字节数组的内存起点
+         */
+        template<class t>
+        constexpr inline uint8_t *bytes_begin(t &data) { return (uint8_t *) (&data); }
+    
+        /**
+         * 内存解释器
+         * @return 视作字节数组的内存终点
+         */
+        template<class t>
+        constexpr inline uint8_t *bytes_end(t &data) { return bytes_begin(data) + sizeof(t); }
         
         /** 计算某个长度的位遮盖 */
-        constexpr uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
+        constexpr inline uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
         
         /** 无数据域 CAN 包 */
         struct pack_no_data {
@@ -46,6 +60,8 @@ namespace autolabor {
             [[nodiscard]] inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }
+    
+            [[nodiscard]] inline std::string to_string() const;
         };
         
         /** 有数据域 CAN 包 */
@@ -71,6 +87,8 @@ namespace autolabor {
             [[nodiscard]] inline uint8_t node_type() const {
                 return static_cast<uint8_t>(node_type_h << 4u) | node_type_l;
             }
+    
+            [[nodiscard]] inline std::string to_string() const;
         };
         
         /** 无数据域 CAN 包转换器 */
@@ -78,8 +96,14 @@ namespace autolabor {
         
         /** 有数据域 CAN 包转换器 */
         using union_with_data = msg_union<pack_with_data>;
-        
-        /** 循环冗余计算 */
+    
+        /**
+         * 循环冗余计算
+         *
+         * @param begin 参与循环冗余计算的起点迭代器
+         * @param end   参与循环冗余计算的终点迭代器
+         * @return 校验码
+         */
         template<class t>
         uint8_t crc_calculate(t begin, t end) {
             constexpr static uint8_t crc8[]{
@@ -99,55 +123,83 @@ namespace autolabor {
                 87, 9, 235, 181, 54, 104, 138, 212, 149, 203, 41, 119, 244, 170, 72, 22,
                 233, 183, 85, 11, 136, 214, 52, 106, 43, 117, 151, 201, 74, 20, 246, 168,
                 116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53};
-    
+        
             return std::accumulate(begin, end, static_cast<uint8_t>(0),
                                    [&](uint8_t sum, uint8_t it) { return crc8[sum ^ it]; });
+        
+        }
     
-        }
-        
-        /** 循环冗余校验 */
-        template<class t>
-        inline bool crc_check(t begin, t end) {
-            return end[-1] == crc_calculate(begin, end - 1);
-        }
-        
-        /** 填充校验和 */
-        template<class t>
-        inline void fill_crc(msg_union<t> &msg) {
-            constexpr static auto last_index = sizeof(t) - 1;
-            msg.bytes[last_index] = crc_calculate(msg.bytes + 1, msg.bytes + last_index);
-        }
-        
         /**
-         * 显示格式化的消息内容
-         * @tparam t  消息类型
-         * @param msg 消息体
-         * @return 字符串
+         * 循环冗余校验
+         *
+         * @param begin 参与循环冗余计算的起点迭代器
+         * @param end   参与循环冗余计算的终点迭代器（包括校验字节）
+         * @return 是否通过检验
          */
         template<class t>
-        std::ostream &operator<<(std::ostream &, const msg_union<t> &) {
-            ostream << std::hex
-                    << "head:\t\t0x" << (int) msg.data.head << std::endl
-                    << "network:\t0x" << (int) msg.data.network << std::endl
+        inline bool crc_check(t begin, t end) {
+            auto last = end - 1;
+            return *last == crc_calculate(begin, last);
+        }
+    
+        /**
+         * 填充校验和
+         *
+         * @param begin 参与循环冗余计算的起点迭代器
+         * @param end   参与循环冗余计算的终点迭代器（包括校验字节）
+         */
+        template<class t>
+        inline void fill_crc(t begin, t end) {
+            auto last = end - 1;
+            *last = crc_calculate(begin, last);
+        }
+    
+        std::string pack_no_data::to_string() const {
+            std::stringstream builder;
+            builder << std::hex
+                    << "head:       0x" << +head << std::endl
+                    << "network:    0x" << +network << std::endl
                     << std::boolalpha
-                    << "data_field:\t" << (bool) msg.data.payload << std::endl
+                    << "data_field: " << payload << std::endl
                     << std::dec
-                    << "property:\t" << (int) msg.data.priority << std::endl
+                    << "property:   " << +priority << std::endl
                     << std::hex
-                    << "node_type:\t0x" << (int) msg.data.node_type() << std::endl
+                    << "node_type:  0x" << +node_type() << std::endl
                     << std::dec
-                    << "node_index:\t" << (int) msg.data.node_index << std::endl
+                    << "node_index: " << +node_index << std::endl
                     << std::hex
-                    << "msg_type:\t0x" << (int) msg.data.msg_type << std::endl
-                    << "crc_check:\t" << crc_check(msg) << std::endl
-                    << "can pack:\t[ ";
-            for (int b : msg.bytes) {
+                    << "msg_type:   0x" << +msg_type << std::endl
+                    << "reserve:    0x" << +reserve << std::endl
+                    << "crc:        0x" << +crc << std::endl
+                    << "crc_check:  " << crc_check(bytes_begin(*this) + 1, bytes_end(*this)) << std::endl;
+            return builder.str();
+        }
+    
+        std::string pack_with_data::to_string() const {
+            std::stringstream builder;
+            builder << std::hex
+                    << "head:       0x" << +head << std::endl
+                    << "network:    0x" << +network << std::endl
+                    << std::boolalpha
+                    << "data_field: " << payload << std::endl
+                    << std::dec
+                    << "property:   " << +priority << std::endl
+                    << std::hex
+                    << "node_type:  0x" << +node_type() << std::endl
+                    << std::dec
+                    << "node_index: " << +node_index << std::endl
+                    << std::hex
+                    << "msg_type:   0x" << +msg_type << std::endl
+                    << "payload:    ";
+            for (int b : data) {
                 if (b < 0x10)
-                    ostream << '0';
-                ostream << b << " ";
+                    builder << '0';
+                builder << b << " ";
             }
-            ostream << "]" << std::endl;
-            return ostream;
+            builder << "]" << std::endl
+                    << "crc:        0x" << +crc << std::endl
+                    << "crc_check:  " << crc_check(bytes_begin(*this) + 1, bytes_end(*this)) << std::endl;
+            return builder.str();
         }
     } // namespace can
 } // namespace autolabor

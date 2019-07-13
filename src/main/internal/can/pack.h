@@ -78,7 +78,7 @@ namespace autolabor {
             typename info_t::type_t msg{};
             msg.data         = info_t::stub;
             msg.data.reserve = reserve;
-            fill_crc(msg);
+            fill_crc(bytes_begin(msg) + 1, bytes_end(msg));
             return msg;
         }
         
@@ -92,7 +92,7 @@ namespace autolabor {
             msg.data          = info_t::stub;
             msg.data.frame_id = frame_id;
             std::memcpy(msg.data.data, data.data(), data.size());
-            fill_crc(msg);
+            fill_crc(bytes_begin(msg) + 1, bytes_end(msg));
             return msg;
         }
     } // namespace can

@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by User on 2019/7/11.
 //
 
@@ -25,27 +25,24 @@ namespace autolabor {
         void operator()(iterator_t begin,
                         iterator_t end,
                         const callback_t &callback) {
-            
-            buffer.resize(buffer.size() + end - begin);
-            std::copy(begin, end, buffer.begin());
-            
-            parse(callback);
+            // 连接到解析缓冲区
+            buffer.insert(buffer.end(), begin, end);
+            // 初始化迭代器
+            decltype(buffer.begin())
+                parse_begin = buffer.begin(),
+                parse_end;
+            // 解析到全部已检查
+            do {
+                parse_end = buffer.end();
+                callback(parser(parse_begin, parse_end));
+            } while (parse_end < buffer.end());
+            // 清除已解析部分
+            buffer.erase(buffer.begin(), parse_begin);
         }
     
     private:
         std::deque<word_t> buffer{};
         parser_t           parser;
-        
-        void parse(const callback_t &callback) {
-            while (true) {
-                auto begin = buffer.begin(),
-                     end   = buffer.end();
-                
-                callback(parser(begin, end));
-                buffer.erase(buffer.begin(), begin);
-                if (buffer.empty() || end == buffer.end()) return;
-            }
-        }
     };
 } // namespace autolabor
 
