@@ -6,7 +6,7 @@
 #define PM1_SDK_CAN_DEFINE_H
 
 #include <algorithm>
-#include "can/pack.h"
+#include "can/pack.hpp"
 
 using namespace autolabor::can;
 

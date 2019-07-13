@@ -2,13 +2,13 @@
 // Created by ydrml on 2019/3/9.
 //
 
-#ifndef PM1_SDK_PACK_H
-#define PM1_SDK_PACK_H
+#ifndef PM1_SDK_PACK_HPP
+#define PM1_SDK_PACK_HPP
 
 
 #include <array>
 #include <cstring>
-#include "info.h"
+#include "protocol.hpp"
 
 namespace autolabor {
     namespace can {
@@ -99,4 +99,4 @@ namespace autolabor {
 } // namespace autolabor
 
 
-#endif //PM1_SDK_PACK_H
+#endif //PM1_SDK_PACK_HPP

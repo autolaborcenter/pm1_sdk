@@ -2,6 +2,7 @@
 set(CMAKE_CXX_STANDARD 17)
 
 include_directories(../main)
+include_directories(../main/utilities)
 
 # navigation
 add_executable(navigation_test
@@ -21,6 +22,8 @@ target_link_libraries(faselase_test pm1_sdk)
 
 # marvelmind
 add_executable(marvelmind_serial_test
+        navigation_test/marvelmind/protocol.hpp
+        navigation_test/marvelmind/parser_t.hpp
         navigation_test/marvelmind/main.cpp)
 target_link_libraries(marvelmind_serial_test pm1_sdk)
 

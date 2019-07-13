@@ -4,11 +4,11 @@
 
 #include <iostream>
 
-#include "../../main/internal/can/pack.h"
-#include "../../main/internal/can/parser_t.hpp"
+#include "internal/can/pack.hpp"
+#include "internal/can/parser_t.hpp"
 #include "utilities/serial_parser/parse_engine.hpp"
 
-#include "../../main/internal/can_define.h"
+#include "internal/can_define.h"
 
 int main() {
     auto packet = autolabor::can::pack<autolabor::pm1::unit<>::emergency_stop>();

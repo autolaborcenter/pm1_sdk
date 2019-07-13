@@ -6,7 +6,7 @@
 #define PM1_SDK_PARSER_H
 
 
-#include "info.h"
+#include "protocol.hpp"
 
 namespace autolabor {
     namespace can {

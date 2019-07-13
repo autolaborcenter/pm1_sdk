@@ -33,12 +33,10 @@ set(UTILITIES
         utilities/serial_port/serial_port_win.cc
         utilities/serial_port/serial_port_linux.cc
         utilities/serial_port/serial_port_operators.h
-
         # --------------------------
         # serial parser
         utilities/serial_parser/memory.hpp
         utilities/serial_parser/parse_engine.hpp
-        
         # --------------------------
         # api
         utilities/time_extensions.h
@@ -53,13 +51,12 @@ set(NATIVE_LIBRARY
         # --------------------------
         # pm1 sdk
         pm1_sdk_native.h
+        pm1_sdk_native.cpp
         internal/process_controller.hh
-
         # --------------------------
         # can hub
-        internal/can/info.h
-        internal/can/pack.h
-
+        internal/can/protocol.hpp
+        internal/can/pack.hpp
         internal/can/parser_t.hpp
         # --------------------------
         # pm1 control model
@@ -87,13 +84,11 @@ set(NATIVE_LIBRARY
 
 add_library(pm1_sdk_native SHARED
         ${UTILITIES}
-        ${NATIVE_LIBRARY}
-        pm1_sdk_native.cpp)
+        ${NATIVE_LIBRARY})
 
 add_library(pm1_sdk
         ${UTILITIES}
         ${NATIVE_LIBRARY}
-        pm1_sdk_native.cpp
 
         pm1_sdk.h
         pm1_sdk.cpp)
@@ -101,7 +96,6 @@ add_library(pm1_sdk
 add_library(pm1_sdk_shared SHARED
         ${UTILITIES}
         ${NATIVE_LIBRARY}
-        pm1_sdk_native.cpp
 
         pm1_sdk.h
         pm1_sdk.cpp)

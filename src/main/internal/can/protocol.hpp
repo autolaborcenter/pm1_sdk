@@ -2,14 +2,14 @@
 // Created by ydrml on 2019/2/25.
 //
 
-#ifndef PM1_SDK_INFO_H
-#define PM1_SDK_INFO_H
+#ifndef PM1_SDK_PROTOCOL_HPP
+#define PM1_SDK_PROTOCOL_HPP
 
 
 #include <sstream>
 #include <numeric>
 
-#include "../../utilities/serial_parser/memory.hpp"
+#include "serial_parser/memory.hpp"
 
 namespace autolabor {
     namespace can {
@@ -192,4 +192,4 @@ namespace autolabor {
     } // namespace can
 } // namespace autolabor
 
-#endif //PM1_SDK_INFO_H
+#endif //PM1_SDK_PROTOCOL_HPP
