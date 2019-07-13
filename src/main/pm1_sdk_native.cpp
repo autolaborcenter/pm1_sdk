@@ -11,14 +11,14 @@
 #include <unordered_set>
 #include <cmath>
 
+#include "raii/safe_shared_ptr.hpp"
+#include "raii/weak_lock_guard.hpp"
+#include "raii/weak_shared_lock.hpp"
+#include "raii/exception_engine.hpp"
+
+#include "serial/serial.h"
+
 #include "internal/chassis.hh"
-
-#include "internal/raii/safe_shared_ptr.hpp"
-#include "internal/raii/weak_lock_guard.hpp"
-#include "internal/raii/weak_shared_lock.hpp"
-
-#include "internal/serial/serial.h"
-#include "internal/api/exception_engine.hpp"
 #include "internal/process_controller.hh"
 
 #pragma clang diagnostic push
@@ -41,14 +41,14 @@ safe_shared_ptr<autolabor::pm1::chassis> chassis_ptr;
 using ptr_t = decltype(chassis_ptr)::ptr_t;
 
 std::atomic<autolabor::odometry_t>
-    odometry_mark         = ATOMIC_VAR_INIT({});
+    odometry_mark{};
 
 // endregion
 // region action resource
 
 std::mutex    action_mutex;
-volatile bool pause_flag  = false,
-              cancel_flag = false;
+volatile bool pause_flag       = false,
+              cancel_flag      = false;
 
 // endregion
 

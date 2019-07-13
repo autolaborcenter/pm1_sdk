@@ -8,7 +8,7 @@
 #include <cmath>
 #include <sstream>
 #include "can/parser_t.hpp"
-#include "can/parse_engine.hpp"
+#include "parse_engine.hpp"
 #include "raii/weak_shared_lock.hpp"
 
 extern "C" {

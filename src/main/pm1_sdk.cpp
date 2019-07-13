@@ -6,11 +6,10 @@
 #include "pm1_sdk_native.h"
 
 #include <algorithm>
-#include <functional>
 #include <thread>
 
-#include "internal/serial/serial.h"
-#include "internal/time_extensions.h"
+#include "utilities/serial/serial.h"
+#include "utilities/time_extensions.h"
 
 extern "C"
 {

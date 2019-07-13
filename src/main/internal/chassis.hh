@@ -10,9 +10,10 @@
 #include <vector>
 #include <shared_mutex>
 
-#include "serial/serial_port.hh"
 #include "can_define.h"
 #include "odometry_t.hh"
+
+#include "serial/serial_port.hh"
 #include "time_extensions.h"
 
 extern "C" {

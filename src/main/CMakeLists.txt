@@ -18,42 +18,45 @@ set(ARCH ${PLATFORM}_${BITS})
 set(CMAKE_DEBUG_POSTFIX "_debug")
 message("${ARCH} selected")
 
+include_directories(utilities)
+
+set(UTILITIES
+        # --------------------------
+        # serial port
+        utilities/serial/serial.h
+
+        utilities/serial/list_ports/list_ports_win.cc
+        utilities/serial/list_ports/list_ports_linux.cc
+
+        utilities/serial/macros.h
+        utilities/serial/serial_port.hh
+        utilities/serial/serial_port_win.cc
+        utilities/serial/serial_port_linux.cc
+        utilities/serial/serial_port_operators.h
+
+        utilities/parse_engine.hpp
+        # --------------------------
+        # api
+        utilities/raii/safe_shared_ptr.hpp
+        utilities/raii/weak_lock_guard.hpp
+        utilities/raii/weak_shared_lock.hpp
+
+        utilities/time_extensions.h
+
+        utilities/raii/exception_engine.hpp)
+
 set(NATIVE_LIBRARY
         # --------------------------
         # pm1 sdk
         pm1_sdk_native.h
-
-        internal/api/exception_engine.hpp
-
         internal/process_controller.hh
-        # --------------------------
-        # serial port
-        internal/serial/serial.h
 
-        internal/serial/list_ports/list_ports_win.cc
-        internal/serial/list_ports/list_ports_linux.cc
-
-        internal/serial/macros.h
-        internal/serial/serial_port.hh
-        internal/serial/serial_port_win.cc
-        internal/serial/serial_port_linux.cc
-        internal/serial/serial_port_operators.h
-        # --------------------------
-        # extensions
-        internal/raii/safe_shared_ptr.hpp
-        internal/raii/weak_lock_guard.hpp
-        internal/raii/weak_shared_lock.hpp
-
-        internal/time_extensions.h
         # --------------------------
         # can hub
         internal/can/info.h
         internal/can/pack.h
 
-        internal/can/circular_buffer.hpp
-
         internal/can/parser_t.hpp
-        internal/can/parse_engine.hpp
         # --------------------------
         # pm1 control model
         internal/control_model/pi.h
@@ -80,10 +83,12 @@ set(NATIVE_LIBRARY
 
 add_library(pm1_sdk_native SHARED
         ${NATIVE_LIBRARY}
+        ${UTILITIES}
         pm1_sdk_native.cpp)
 
 add_library(pm1_sdk
         ${NATIVE_LIBRARY}
+        ${UTILITIES}
         pm1_sdk_native.cpp
 
         pm1_sdk.h
@@ -91,6 +96,7 @@ add_library(pm1_sdk
 
 add_library(pm1_sdk_shared SHARED
         ${NATIVE_LIBRARY}
+        ${UTILITIES}
         pm1_sdk_native.cpp
 
         pm1_sdk.h
