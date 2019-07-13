@@ -4,25 +4,27 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(../main)
 
 # navigation
-# add_executable(pm1_sdk_sample
-#         navigation_test/pid/point_t.h
-#         navigation_test/pid/path_manage.hpp
-#         navigation_test/pid/shape_t.hpp
-#         navigation_test/pid/virtual_light_sensor_t.hpp
-#         navigation_test/pid/path_follower_t.hpp
-#
-#         navigation_test/main.cpp)
+add_executable(navigation_test
+        navigation_test/pid/point_t.h
+        navigation_test/pid/path_manage.hpp
+        navigation_test/pid/shape_t.hpp
+        navigation_test/pid/virtual_light_sensor_t.hpp
+        navigation_test/pid/path_follower_t.hpp
+
+        navigation_test/main.cpp)
+target_link_libraries(navigation_test pm1_sdk)
 
 # faselase
-# add_executable(pm1_sdk_sample
-#         faselase_test/main.cpp)
+add_executable(faselase_test
+        faselase_test/main.cpp)
+target_link_libraries(faselase_test pm1_sdk)
 
 # marvelmind
-# add_executable(pm1_sdk_sample
-#         navigation_test/marvelmind/main.cpp)
+add_executable(marvelmind_serial_test
+        navigation_test/marvelmind/main.cpp)
+target_link_libraries(marvelmind_serial_test pm1_sdk)
 
 # test
 add_executable(pm1_sdk_sample
         test_sample/test_can_parser.cpp)
-
 target_link_libraries(pm1_sdk_sample pm1_sdk)

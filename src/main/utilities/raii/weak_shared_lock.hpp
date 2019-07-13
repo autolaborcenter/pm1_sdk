@@ -14,21 +14,16 @@
  * 只在构造时尝试获取锁一次，失败也立即退出
  */
 class weak_shared_lock {
-public:
-    explicit weak_shared_lock(std::shared_mutex &core)
-        : core(core), own(core.try_lock_shared()) {}
-    
-    ~weak_shared_lock() {
-        if (own) core.unlock_shared();
-    }
-    
-    explicit operator bool() const {
-        return own;
-    }
+    volatile bool     own;
+    std::shared_mutex &lock;
 
-private:
-    bool              own;
-    std::shared_mutex &core;
+public:
+    explicit weak_shared_lock(std::shared_mutex &lock)
+        : lock(lock), own(lock.try_lock_shared()) {}
+    
+    ~weak_shared_lock() { if (own) lock.unlock_shared(); }
+    
+    explicit operator bool() const { return own; }
 };
 
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include "../../../main/internal/serial/serial_port.hh"
+#include "utilities/serial_port/serial_port.hh"
 
 class parser_t {
 public:

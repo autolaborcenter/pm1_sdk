@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <thread>
 
-#include "utilities/serial/serial.h"
+#include "utilities/serial_port/serial.h"
 #include "utilities/time_extensions.h"
 
 extern "C"

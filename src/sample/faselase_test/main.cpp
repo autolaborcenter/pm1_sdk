@@ -3,7 +3,7 @@
 //
 
 #include <iostream>
-#include "../../main/internal/serial/serial_port.hh"
+#include "utilities/serial_port/serial_port.hh"
 
 template<size_t _size>
 struct byte_array {

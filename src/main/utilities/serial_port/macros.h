@@ -7,26 +7,6 @@
 
 
 #include <sstream>
-#include <mutex>
-
-/** 受控锁 */
-class weak_lock_guard {
-    volatile bool locked;
-    std::mutex    &lock;
-
-public:
-    explicit weak_lock_guard(std::mutex &lock)
-        : lock(lock),
-          locked(lock.try_lock()) {}
-    
-    explicit operator bool() const { return locked; }
-    
-    bool retry() {
-        return locked ? true : locked = lock.try_lock();
-    }
-    
-    ~weak_lock_guard() { if (locked) lock.unlock(); }
-};
 
 inline std::string error_info_string(const std::string &prefix,
                                      long long code,

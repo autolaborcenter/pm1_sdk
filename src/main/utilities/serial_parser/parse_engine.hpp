@@ -2,8 +2,8 @@
 // Created by User on 2019/7/11.
 //
 
-#ifndef SERIAL_PIPELINE_PARSE_ENGINE_HPP
-#define SERIAL_PIPELINE_PARSE_ENGINE_HPP
+#ifndef PM1_SDK_PARSE_ENGINE_HPP
+#define PM1_SDK_PARSE_ENGINE_HPP
 
 
 #include <functional>
@@ -47,4 +47,4 @@ namespace autolabor {
 } // namespace autolabor
 
 
-#endif //SERIAL_PIPELINE_PARSE_ENGINE_HPP
+#endif // PM1_SDK_PARSE_ENGINE_HPP

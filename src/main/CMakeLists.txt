@@ -23,25 +23,29 @@ include_directories(utilities)
 set(UTILITIES
         # --------------------------
         # serial port
-        utilities/serial/serial.h
+        utilities/serial_port/serial.h
 
-        utilities/serial/list_ports/list_ports_win.cc
-        utilities/serial/list_ports/list_ports_linux.cc
+        utilities/serial_port/list_ports/list_ports_win.cc
+        utilities/serial_port/list_ports/list_ports_linux.cc
 
-        utilities/serial/macros.h
-        utilities/serial/serial_port.hh
-        utilities/serial/serial_port_win.cc
-        utilities/serial/serial_port_linux.cc
-        utilities/serial/serial_port_operators.h
+        utilities/serial_port/macros.h
+        utilities/serial_port/serial_port.hh
+        utilities/serial_port/serial_port_win.cc
+        utilities/serial_port/serial_port_linux.cc
+        utilities/serial_port/serial_port_operators.h
 
-        utilities/parse_engine.hpp
+        # --------------------------
+        # serial parser
+        utilities/serial_parser/memory.hpp
+        utilities/serial_parser/parse_engine.hpp
+        
         # --------------------------
         # api
+        utilities/time_extensions.h
+
         utilities/raii/safe_shared_ptr.hpp
         utilities/raii/weak_lock_guard.hpp
         utilities/raii/weak_shared_lock.hpp
-
-        utilities/time_extensions.h
 
         utilities/raii/exception_engine.hpp)
 
@@ -82,21 +86,21 @@ set(NATIVE_LIBRARY
         internal/odometry_t.cc)
 
 add_library(pm1_sdk_native SHARED
-        ${NATIVE_LIBRARY}
         ${UTILITIES}
+        ${NATIVE_LIBRARY}
         pm1_sdk_native.cpp)
 
 add_library(pm1_sdk
-        ${NATIVE_LIBRARY}
         ${UTILITIES}
+        ${NATIVE_LIBRARY}
         pm1_sdk_native.cpp
 
         pm1_sdk.h
         pm1_sdk.cpp)
 
 add_library(pm1_sdk_shared SHARED
-        ${NATIVE_LIBRARY}
         ${UTILITIES}
+        ${NATIVE_LIBRARY}
         pm1_sdk_native.cpp
 
         pm1_sdk.h

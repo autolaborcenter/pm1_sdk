@@ -13,21 +13,18 @@
  */
 template<class t>
 class weak_lock_guard {
-public:
-    explicit weak_lock_guard(t &core)
-        : core(core), own(core.try_lock()) {}
-    
-    ~weak_lock_guard() {
-        if (own) core.unlock();
-    }
-    
-    explicit operator bool() const {
-        return own;
-    }
+    volatile bool own;
+    t             &lock;
 
-private:
-    bool own;
-    t    &core;
+public:
+    explicit weak_lock_guard(t &lock)
+        : lock(lock), own(lock.try_lock()) {}
+    
+    ~weak_lock_guard() { if (own) lock.unlock(); }
+    
+    explicit operator bool() const { return own; }
+    
+    bool retry() { return own ? true : own = lock.try_lock(); }
 };
 
 

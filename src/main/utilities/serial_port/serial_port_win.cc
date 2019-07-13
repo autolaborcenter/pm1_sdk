@@ -11,6 +11,7 @@
 #include "macros.h"
 
 #include <Windows.h>
+#include "../raii/weak_lock_guard.hpp"
 
 #define TRY(OPERATION) if(!OPERATION) THROW(#OPERATION, GetLastError())
 
@@ -93,7 +94,7 @@ void serial_port::send(const uint8_t *buffer, size_t size) noexcept {
 }
 
 size_t serial_port::read(uint8_t *buffer, size_t size) {
-    weak_lock_guard lock(read_mutex);
+    weak_lock_guard<std::mutex> lock(read_mutex);
     if (!lock) return 0;
     
     DWORD      event = 0;

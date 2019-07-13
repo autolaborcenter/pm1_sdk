@@ -9,6 +9,8 @@
 #include <sstream>
 #include <numeric>
 
+#include "../../utilities/serial_parser/memory.hpp"
+
 namespace autolabor {
     namespace can {
         /**
@@ -21,20 +23,6 @@ namespace autolabor {
             t       data;
         };
     
-        /**
-         * 内存解释器
-         * @return 视作字节数组的内存起点
-         */
-        template<class t>
-        constexpr inline uint8_t *bytes_begin(t &data) { return (uint8_t *) (&data); }
-    
-        /**
-         * 内存解释器
-         * @return 视作字节数组的内存终点
-         */
-        template<class t>
-        constexpr inline uint8_t *bytes_end(t &data) { return bytes_begin(data) + sizeof(t); }
-        
         /** 计算某个长度的位遮盖 */
         constexpr inline uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
         

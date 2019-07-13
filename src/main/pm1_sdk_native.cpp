@@ -16,7 +16,7 @@
 #include "raii/weak_shared_lock.hpp"
 #include "raii/exception_engine.hpp"
 
-#include "serial/serial.h"
+#include "serial_port/serial.h"
 
 #include "internal/chassis.hh"
 #include "internal/process_controller.hh"

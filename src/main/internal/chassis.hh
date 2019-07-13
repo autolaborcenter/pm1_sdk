@@ -13,7 +13,7 @@
 #include "can_define.h"
 #include "odometry_t.hh"
 
-#include "serial/serial_port.hh"
+#include "serial_port/serial_port.hh"
 #include "time_extensions.h"
 
 extern "C" {
