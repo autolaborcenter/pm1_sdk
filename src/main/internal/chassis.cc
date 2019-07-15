@@ -410,8 +410,8 @@ void chassis::set_target(double speed, double rudder) {
     
     request_time = now();
     target       = {static_cast<float>(speed), static_cast<float>(rudder)};
-    limit_in_velocity(target, max_v, max_w, &config);
-    limit_in_physical(target, max_wheel_speed);
+    limit_in_velocity(&target, max_v, max_w, &config);
+    limit_in_physical(&target, max_wheel_speed);
 }
 
 void chassis::reset_rudder() {

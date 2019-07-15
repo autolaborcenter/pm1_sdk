@@ -128,15 +128,15 @@ struct velocity wheels_to_velocity(
     return result;
 }
 
-void limit_in_velocity(struct physical data,
+void limit_in_velocity(struct physical *data,
                        float max_v,
                        float max_w,
                        const struct chassis_config_t *chassis) {
-    struct velocity temp = physical_to_velocity(data, chassis);
-    data.speed /= fmaxf(1, fmaxf(fabsf(temp.v / max_v),
-                                 fabsf(temp.w / max_w)));
+    struct velocity temp = physical_to_velocity(*data, chassis);
+    data->speed /= fmaxf(1, fmaxf(fabsf(temp.v / max_v),
+                                  fabsf(temp.w / max_w)));
 }
 
-void limit_in_physical(struct physical data, float max_wheel_speed) {
-    data.speed /= fmaxf(1, fabsf(data.speed / max_wheel_speed));
+void limit_in_physical(struct physical *data, float max_wheel_speed) {
+    data->speed /= fmaxf(1, fabsf(data->speed / max_wheel_speed));
 }

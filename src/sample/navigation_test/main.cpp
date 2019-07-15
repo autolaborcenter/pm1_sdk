@@ -3,8 +3,8 @@
 //
 
 #include "pm1_sdk_native.h"
-#include "pid/path_manage.hpp"
-#include "pid/path_follower_t.hpp"
+#include "path_follower/path_manage.hpp"
+#include "path_follower/path_follower_t.hpp"
 #include "marvelmind/protocol.hpp"
 
 #include "utilities/serial_parser/parse_engine.hpp"
@@ -131,14 +131,12 @@ int main() {
         case operation_t::navigate: { // 进行导航
             std::filesystem::remove(navigation_file);
             std::fstream plot(navigation_file, std::ios::out);
-        
             // 加载路径
-            auto path = load_path(path_file);
-        
+            auto         path = path_follower::load_path(path_file);
             // 加载控制器
-            path_follower_t<decltype(path)> controller(.2, .0, .2);
+            path_follower::path_follower_t<decltype(path)>
+                         controller(.2, .0, .2);
             using state_t = typename decltype(controller)::following_state_t;
-        
             // 初始化
             controller.set_path(path.begin(), path.end());
             native::set_command_enabled(true);

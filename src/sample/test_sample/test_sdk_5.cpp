@@ -22,7 +22,7 @@ int main() {
     while (true) {
         auto result = autolabor::pm1::go_straight(+0.2, 0.2);
         if (!result)std::cout << result.error_info << std::endl;
-       
+    
         autolabor::pm1::go_straight(-0.2, 0.2);
         autolabor::pm1::delay(1);
     }

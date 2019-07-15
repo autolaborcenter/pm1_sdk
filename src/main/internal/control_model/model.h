@@ -44,13 +44,13 @@ struct velocity wheels_to_velocity(
     const struct chassis_config_t *);
 
 /** 在速度空间中限速 */
-void limit_in_velocity(struct physical,
+void limit_in_velocity(struct physical *,
                        float max_v,
                        float max_w,
                        const struct chassis_config_t *);
 
 /** 在物理模型空间中限速 */
-void limit_in_physical(struct physical,
+void limit_in_physical(struct physical *,
                        float);
 
 
