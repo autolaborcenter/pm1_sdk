@@ -2,24 +2,48 @@
 // Created by User on 2019/7/3.
 //
 
-#include "../../main/pm1_sdk_native.h"
+#include "pm1_sdk_native.h"
 #include "pid/path_manage.hpp"
-#include "pid/virtual_light_sensor_t.hpp"
 #include "pid/path_follower_t.hpp"
+#include "marvelmind/protocol.hpp"
+
+#include "utilities/serial_parser/parse_engine.hpp"
+
+#ifdef MARVELMIND
+#include "utilities/serial_port/serial_port.hh"
+#include "marvelmind/parser_t.hpp"
+#endif
 
 #include <iostream>
+#include <thread>
 #include <filesystem>
 #include <conio.h>
 
-enum operation : uint8_t {
+enum operation_t : uint8_t {
     record,
     navigate
 } this_time;
 
+void odometry_simple(double &x, double &y, double &theta) {
+    double ignore;
+    autolabor::pm1::native::get_odometry(
+        ignore, ignore,
+        x, y, theta,
+        ignore, ignore, ignore);
+}
+
+constexpr auto
+    path_file       = "path.txt",
+    navigation_file = "navigation.txt",
+    marvelmind_file = "marvelmind.txt";
+
+constexpr auto
+    step = 0.05;
+
 int main() {
     using namespace autolabor::pm1;
     
-    {
+    { // native sdk 连接串口
         double progress;
         auto   handler = native::initialize("", progress);
         auto   error   = std::string(native::get_error_info(handler));
@@ -31,76 +55,100 @@ int main() {
         std::cout << "connected" << std::endl;
     }
     
-    native::set_parameter(0, 0.470);
-    native::set_parameter(1, 0.345);
+    native::set_parameter(0, 0.465);
+    native::set_parameter(1, 0.355);
     native::set_parameter(2, 0.105);
     
     native::set_enabled(true);
     native::set_command_enabled(false);
     
-    std::string command;
-    std::cout << "input operation: ";
-    std::cin >> command;
-    this_time =
-        command == "record"
-        ? operation::record
-        : operation::navigate;
+    { // 读取指令
+        std::string command;
+        std::cout << "input operation: ";
+        std::cin >> command;
+        this_time =
+            command == "record"
+            ? operation_t::record
+            : operation_t::navigate;
+    }
+    
+    std::thread([] {
+        #ifdef MARVELMIND
+        using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
+        
+        std::filesystem::remove(marvelmind_file);
+        std::fstream plot(marvelmind_file, std::ios::out);
+        
+        serial_port port("COM11", 115200);
+        engine_t    engine;
+        uint8_t     buffer[256];
+        while (true)
+            engine(buffer, buffer + port.read(buffer, sizeof(buffer)),
+                   [&](const typename engine_t::result_t &result) {
+                       switch (result.type) {
+                           case marvelmind::parser_t::result_type_t::nothing:
+                               break;
+                           case marvelmind::parser_t::result_type_t::failed:
+                               std::cout << "crc check failed" << std::endl;
+                               break;
+                           case marvelmind::parser_t::result_type_t::success:
+                               using namespace marvelmind::resolution_coordinate;
+                               auto begin = result.bytes.data() + 5;
+                               plot << x(begin) / 1000.0 << ", "
+                                    << y(begin) / 1000.0 << ", "
+                                    << z(begin) / 1000.0 << std::endl;
+                               plot.flush();
+                               break;
+                       }
+                   });
+        #endif
+    }).detach();
     
     switch (this_time) {
-        case operation::record: {
-            constexpr static auto filename = "path.txt";
-            std::filesystem::remove(filename);
-            std::fstream plot(filename, std::ios::out);
+        case operation_t::record: {
+            // 记录路径
+            std::filesystem::remove(path_file);
+            std::fstream plot(path_file, std::ios::out);
             
             size_t count = 0;
             double x, y, ignore;
-            native::get_odometry(
-                ignore, ignore,
-                x, y, ignore,
-                ignore, ignore, ignore);
+            odometry_simple(x, y, ignore);
             plot << x << ' ' << y << std::endl;
             while (!_kbhit()) {
                 using namespace std::chrono_literals;
-                std::this_thread::sleep_for(100ms);
                 double tx, ty;
-                native::get_odometry(
-                    ignore, ignore,
-                    tx, ty, ignore,
-                    ignore, ignore, ignore);
-                if (std::abs(tx - x) + std::abs(ty - y) > 0.05) {
+                odometry_simple(tx, ty, ignore);
+                if (std::abs(tx - x) + std::abs(ty - y) > step) {
                     plot << (x = tx) << ' ' << (y = ty) << std::endl;
                     std::cout << "count = " << count++ << std::endl;
                 }
+                std::this_thread::sleep_for(100ms);
             }
             plot.flush();
             plot.close();
         }
             break;
-        case operation::navigate: {
-            native::set_command_enabled(true);
+        case operation_t::navigate: {
+            // 导航算法
+            std::filesystem::remove(navigation_file);
+            std::fstream plot(navigation_file, std::ios::out);
             
-            constexpr static auto filename = "navigation.txt";
-            std::filesystem::remove(filename);
-            std::fstream plot(filename, std::ios::out);
-    
-    
             // 资源
-            auto path = load_path("path.txt");
-    
+            auto path = load_path(path_file);
+            
             path_follower_t<decltype(path)> controller(.2, .0, .2);
             using state_t = typename decltype(controller)::following_state_t;
-            
+        
+            // 初始化
             controller.set_path(path.begin(), path.end());
+            native::set_command_enabled(true);
+            
             auto finish = false;
             while (!finish) {
                 using namespace std::chrono_literals;
                 
                 double x, y, theta, ignore;
-                native::get_odometry(
-                    ignore, ignore,
-                    x, y, theta,
-                    ignore, ignore, ignore);
-    
+                odometry_simple(x, y, theta);
                 auto result = controller(x, y, theta);
     
                 switch (result.type()) {

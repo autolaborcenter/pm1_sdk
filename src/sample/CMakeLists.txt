@@ -5,15 +5,15 @@ include_directories(../main)
 include_directories(../main/utilities)
 
 # navigation
-#add_executable(pm1_sdk_sample
-#        navigation_test/pid/point_t.h
-#        navigation_test/pid/path_manage.hpp
-#        navigation_test/pid/shape_t.hpp
-#        navigation_test/pid/virtual_light_sensor_t.hpp
-#        navigation_test/pid/path_follower_t.hpp
-#
-#        navigation_test/main.cpp)
-#target_link_libraries(pm1_sdk_sample pm1_sdk)
+add_executable(pm1_sdk_sample
+        navigation_test/pid/point_t.h
+        navigation_test/pid/path_manage.hpp
+        navigation_test/pid/shape_t.hpp
+        navigation_test/pid/virtual_light_sensor_t.hpp
+        navigation_test/pid/path_follower_t.hpp
+
+        navigation_test/main.cpp)
+target_link_libraries(pm1_sdk_sample pm1_sdk)
 
 # faselase
 #add_executable(faselase_test
