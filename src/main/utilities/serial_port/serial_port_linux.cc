@@ -8,12 +8,14 @@
 
 #include <vector>
 #include <thread>
-#include "macros.h"
 
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
 #include <cstring>
+
+#include "macros.h"
+#include "raii/weak_lock_guard.hpp"
 
 #define TRY(OPERATION) if(!OPERATION) THROW(#OPERATION, std::strerror(errno))
 
@@ -62,7 +64,7 @@ serial_port::~serial_port() {
     close(temp);
 }
 
-void serial_port::send(const uint8_t *buffer, size_t size) {
+void serial_port::send(const uint8_t *buffer, size_t size) noexcept {
     if (size > 0) TRY(size == write(handle, buffer, size));
 }
 
@@ -76,7 +78,7 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
     }
 }
 
-void serial_port::break_read() const {
+void serial_port::break_read() const noexcept {
     weak_lock_guard lock(read_mutex);
     break_flag = true;
     while (!lock.retry())

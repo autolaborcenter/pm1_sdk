@@ -17,7 +17,7 @@
 #include <iostream>
 #include <thread>
 #include <filesystem>
-#include <conio.h>
+//#include <conio.h>
 
 enum operation_t : uint8_t {
     record,
@@ -114,7 +114,7 @@ int main() {
             double x, y, ignore;
             odometry_simple(x, y, ignore);
             plot << x << ' ' << y << std::endl;
-            while (!_kbhit()) {
+            while (true) {
                 using namespace std::chrono_literals;
                 double tx, ty;
                 odometry_simple(tx, ty, ignore);
@@ -123,8 +123,8 @@ int main() {
                     std::cout << "count = " << count++ << std::endl;
                 }
                 std::this_thread::sleep_for(100ms);
+                plot.flush();
             }
-            plot.flush();
             plot.close();
         }
             break;

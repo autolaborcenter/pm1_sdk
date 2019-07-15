@@ -8,10 +8,11 @@
 
 #include <vector>
 #include <thread>
-#include "macros.h"
 
 #include <Windows.h>
-#include "../raii/weak_lock_guard.hpp"
+
+#include "macros.h"
+#include "raii/weak_lock_guard.hpp"
 
 #define TRY(OPERATION) if(!OPERATION) THROW(#OPERATION, GetLastError())
 
