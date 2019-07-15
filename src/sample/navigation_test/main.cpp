@@ -83,10 +83,13 @@ int main() {
             std::filesystem::remove(filename);
             std::fstream plot(filename, std::ios::out);
     
-            path_follower_t controller(.2, .0, .2);
-            
+    
             // 资源
             auto path = load_path("path.txt");
+    
+            path_follower_t<decltype(path)> controller(.2, .0, .2);
+            using state_t = typename decltype(controller)::following_state_t;
+            
             controller.set_path(path.begin(), path.end());
             auto finish = false;
             while (!finish) {
@@ -101,10 +104,11 @@ int main() {
                 auto result = controller(x, y, theta);
     
                 switch (result.type()) {
-                    case path_follower_t::result_type_t::following:
+                    case state_t::following:
                         native::drive_physical(result.speed, result.rudder);
                         break;
-                    case path_follower_t::result_type_t::turning:
+                    case state_t::turning:
+                        std::cout << "turning" << std::endl;
                         native::drive_physical(0, NAN);
                         std::this_thread::sleep_for(100ms);
             
@@ -113,9 +117,9 @@ int main() {
                                               ignore);
                         native::adjust_rudder(0, ignore);
                         break;
-                    case path_follower_t::result_type_t::failed:
+                    case state_t::failed:
                         std::cerr << "following failed" << std::endl;
-                    case path_follower_t::result_type_t::finish:
+                    case state_t::finish:
                         finish = true;
                         break;
                 }

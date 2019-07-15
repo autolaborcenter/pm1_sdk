@@ -523,8 +523,15 @@ handler_t block(double v,
                     
                     // 检查状态
                     auto states = ptr->state().states;
-                    if (std::find(states.begin(), states.end(), unknown) != states.end())
-                        throw std::logic_error("critical error");
+                    if (std::find(states.begin(), states.end(), unknown) != states.end()) {
+                        std::stringstream builder;
+                        builder << "critical error: error state -> [ecu0|ecu1|tcu|vcu] = ["
+                                << static_cast<int>(states[0]) << '|'
+                                << static_cast<int>(states[1]) << '|'
+                                << static_cast<int>(states[2]) << '|'
+                                << static_cast<int>(states[3]) << ']';
+                        throw std::logic_error(builder.str());
+                    }
                     if (std::find(states.begin(), states.end(), disabled) != states.end()
                         && ptr->target_state() != enabled)
                         throw std::logic_error("chassis is locked");

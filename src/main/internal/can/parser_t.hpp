@@ -52,11 +52,12 @@ namespace autolabor {
             template<class iterator_t>
             result_t operator()(iterator_t &begin, iterator_t &end) const {
                 // 找到一个帧头
-                while (*begin != 0xfe)
-                    if (++begin + sizeof(pack_no_data) > end)
+                do {
+                    if (begin + sizeof(pack_no_data) > end)
                         return {result_type_t::nothing};
+                } while (*begin++ != 0xfe);
                 // 初始化帧结构
-                result_t result{result_type_t::nothing, {0xfe, begin[1]}};
+                result_t result{result_type_t::nothing, {0xfe, *begin--}};
                 // 确定帧长度
                 auto     frame_end = begin + (result.message.payload
                                               ? sizeof(pack_with_data)

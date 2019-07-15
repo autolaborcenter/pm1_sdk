@@ -13,6 +13,11 @@
  * 虚拟光电传感器
  */
 struct virtual_light_sensor_t {
+    /**
+     * 构造器
+     * @param position 传感器圆心相对于机器人中心位置
+     * @param radius   传感器感应区域半径
+     */
     virtual_light_sensor_t(
         point_t position,
         double radius
@@ -79,8 +84,8 @@ virtual_light_sensor_t::operator()(
     point_t position,
     double direction,
     t &local_begin,
-    t &local_end
-) {
+    t &local_end) {
+    
     // 重新定位传感器
     auto cos = std::cos(direction),
          sin = std::sin(direction);
@@ -89,23 +94,23 @@ virtual_light_sensor_t::operator()(
         position.y + sin * _position.x + cos * _position.y,
     };
     range.direction = direction;
-    
     // 确定局部路径起点
     const auto check = [&](point_t point) { return range.check_inside(point); };
     const auto end   = local_end;
-    while (local_begin < local_end) {
+    while (true) {
+        // 未能搜寻到任何局部路径（路径已丢失）
+        if (local_begin >= local_end)
+            return {0, false, NAN};
+        // 搜寻到局部路径起点
         if (check(*local_begin)) {
             local_end = local_begin + 1;
             break;
         }
         ++local_begin;
     }
-    
-    if (local_begin->type == point_type_t::tip) {
-        std::cout << "tip!" << std::endl;
+    // 起点为尖点
+    if (local_begin->type == point_type_t::tip)
         return {1, true, NAN};
-    }
-    
     // 确定局部路径终点
     while (local_end < end && check(*local_end)) {
         if (local_end->type == point_type_t::tip) {
@@ -113,11 +118,8 @@ virtual_light_sensor_t::operator()(
         }
         ++local_end;
     }
-    
+    // 计算局部点数
     size_t local_count = local_end - local_begin;
-    if (local_count == 0)
-        return {local_count, false, NAN};
-    
     // 连接面积范围
     auto shape  = range.to_vector();
     auto index1 = min_by(shape.begin(), shape.end(),
