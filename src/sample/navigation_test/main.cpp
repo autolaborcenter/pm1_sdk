@@ -9,15 +9,15 @@
 
 #include "utilities/serial_parser/parse_engine.hpp"
 
+#include <iostream>
+#include <filesystem>
+
 #ifdef MARVELMIND
+#include <thread>
+
 #include "utilities/serial_port/serial_port.hh"
 #include "marvelmind/parser_t.hpp"
 #endif
-
-#include <iostream>
-#include <thread>
-#include <filesystem>
-//#include <conio.h>
 
 enum operation_t : uint8_t {
     record,
@@ -55,12 +55,14 @@ int main() {
         std::cout << "connected" << std::endl;
     }
     
-    native::set_parameter(0, 0.465);
-    native::set_parameter(1, 0.355);
-    native::set_parameter(2, 0.105);
-    
-    native::set_enabled(true);
-    native::set_command_enabled(false);
+    { // 设置参数、修改状态
+        native::set_parameter(0, 0.465);
+        native::set_parameter(1, 0.355);
+        native::set_parameter(2, 0.105);
+        
+        native::set_enabled(true);
+        native::set_command_enabled(false);
+    }
     
     { // 读取指令
         std::string command;
@@ -72,8 +74,8 @@ int main() {
             : operation_t::navigate;
     }
     
+    #ifdef MARVELMIND
     std::thread([] {
-        #ifdef MARVELMIND
         using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
         
         std::filesystem::remove(marvelmind_file);
@@ -101,12 +103,11 @@ int main() {
                                break;
                        }
                    });
-        #endif
     }).detach();
+    #endif
     
     switch (this_time) {
-        case operation_t::record: {
-            // 记录路径
+        case operation_t::record: { // 记录路径
             std::filesystem::remove(path_file);
             std::fstream plot(path_file, std::ios::out);
             
@@ -125,17 +126,16 @@ int main() {
                 std::this_thread::sleep_for(100ms);
                 plot.flush();
             }
-            plot.close();
         }
             break;
-        case operation_t::navigate: {
-            // 导航算法
+        case operation_t::navigate: { // 进行导航
             std::filesystem::remove(navigation_file);
             std::fstream plot(navigation_file, std::ios::out);
-            
-            // 资源
+        
+            // 加载路径
             auto path = load_path(path_file);
-            
+        
+            // 加载控制器
             path_follower_t<decltype(path)> controller(.2, .0, .2);
             using state_t = typename decltype(controller)::following_state_t;
         
@@ -168,6 +168,7 @@ int main() {
                     case state_t::failed:
                         std::cerr << "following failed" << std::endl;
                     case state_t::finish:
+                        std::cout << "stopped" << std::endl;
                         finish = true;
                         break;
                 }
