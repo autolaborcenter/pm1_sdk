@@ -28,7 +28,7 @@ namespace marvelmind {
         struct result_t {
             /** 结果类型 */
             result_type_t       type;
-            std::vector<word_t> buffer;
+            std::vector<word_t> bytes;
         };
         
         /**
@@ -57,14 +57,30 @@ namespace marvelmind {
             auto frame_end      = begin + payload_length + 7;
             // 尚未接收完，退出
             if (frame_end > end) return {result_type_t::nothing};
+            // 准备返回值
+            result_t result{result_type_t::nothing,
+                            std::vector<word_t>(payload_length + 7)};
             // crc 校验，限定返回值类型并准备查找下一个帧头
+            if (crc16_check(begin, frame_end)) {
+                std::copy(begin, frame_end, result.bytes.begin());
+                result.type = result_type_t::success;
+                begin = frame_end;
+            } else {
+                result.type = result_type_t::failed;
+                begin += 2;
+            }
             // 找到下一个帧头
             while (true) {
-                if (end - begin < 7)
-                    return {result_type_t::nothing};
-                if (destination_address_of(begin) == destination_address
-                    && packet_type_of(begin) == packet_type)
+                if (begin == end)
                     break;
+                if (destination_address_of(begin) == destination_address) {
+                    if (end == begin + 1)
+                        break;
+                    if (packet_type_of(begin) == packet_type) {
+                        end = begin + 2;
+                        break;
+                    }
+                }
                 ++begin;
             }
             return result;

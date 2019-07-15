@@ -4,41 +4,33 @@
 
 #include <iostream>
 #include <chrono>
-#include <thread>
+#include <utilities/serial_parser/parse_engine.hpp>
 #include "utilities/serial_port/serial_port.hh"
-
-class parser_t {
-public:
-    struct result_t {
-        enum class type_t : uint8_t {
-            none,
-            reset,
-            crc_error,
-            success
-        };
-    
-        type_t   type;
-        uint32_t time_stamp;
-        uint8_t  address, flags;
-        uint16_t orientation, delay;
-        float    x, y, z;
-    };
-    
-    template<size_t payload_size>
-    struct packet_t {
-        uint8_t destination_address = 0xff,
-                packet_type         = 0x47;
-        
-        uint16_t data_code = 0;
-        uint8_t  size      = payload_size,
-                 payload[payload_size]{};
-        
-        uint16_t crc_bytes = 0;
-    };
-};
+#include "parser_t.hpp"
 
 int main() {
-    std::unique_ptr<serial_port> port = nullptr;
+    using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
     
+    serial_port port("COM11", 115200);
+    engine_t    engine;
+    uint8_t     buffer[256];
+    while (true)
+        engine(buffer, buffer + port.read(buffer, sizeof(buffer)),
+               [](const typename engine_t::result_t &result) {
+                   switch (result.type) {
+                       case marvelmind::parser_t::result_type_t::nothing:
+                           break;
+                       case marvelmind::parser_t::result_type_t::failed:
+                           std::cout << "crc check failed" << std::endl;
+                           break;
+                       case marvelmind::parser_t::result_type_t::success:
+                           using namespace marvelmind::resolution_coordinate;
+                           auto begin = result.bytes.data() + 5;
+                           std::cout << x(begin) / 1000.0 << ", "
+                                     << y(begin) / 1000.0 << ", "
+                                     << z(begin) / 1000.0 << std::endl;
+                           break;
+                   }
+               });
     return 0;
 }
