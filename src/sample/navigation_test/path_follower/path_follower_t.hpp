@@ -29,6 +29,8 @@ namespace path_follower {
             local_end;
     
     public:
+        double speed = 2.0;
+        
         /**
          * 构造器
          * @param senser_x      传感器相对位置 x
@@ -89,7 +91,7 @@ namespace path_follower {
                 return {NAN, NAN};
             // 正常情况
             if (!result.tip_begin)
-                return {2.0, -PI / 2 * result.error};
+                return {speed, -PI / 2 * result.error};
             
             auto direction = local_begin + 1;
             // 到达路径终点

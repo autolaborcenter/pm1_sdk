@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <chrono>
 
 #define MARVELMIND
 
@@ -55,12 +56,13 @@ int main() {
     }
     
     #ifdef MARVELMIND
-    // 连接定位标签
     decltype(marvelmind::find_beacon()) beacon;
-    try { beacon = marvelmind::find_beacon(); }
-    catch (std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        return 1;
+    { // 连接定位标签
+        try { beacon = marvelmind::find_beacon(); }
+        catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            return 1;
+        }
     }
     #endif
     
@@ -90,8 +92,17 @@ int main() {
     
         std::vector<marvelmind::telementry_t> space;
         while (true) {
+            using namespace std::chrono_literals;
+            auto size = space.size();
             beacon->fetch(space);
-            std::cout << space.size() << std::endl;
+            if (space.size() > size) std::this_thread::sleep_for(50ms);
+            for (size_t i = size; i < space.size(); ++i) {
+                plot << space[i].time_stamp << ' '
+                     << space[i].time_passed << ' '
+                     << space[i].x << ' '
+                     << space[i].y << ' '
+                     << space[i].z << std::endl;
+            }
         }
     }).detach();
     #endif

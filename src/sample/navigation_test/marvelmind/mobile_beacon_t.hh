@@ -7,6 +7,7 @@
 
 
 #include <memory>
+#include <mutex>
 #include <deque>
 #include <utilities/time_extensions.h>
 
@@ -30,6 +31,8 @@ namespace marvelmind {
     
         std::shared_ptr<bool>    running;
         std::deque<telementry_t> buffer;
+    
+        std::mutex buffer_mutex;
     public:
         explicit mobile_beacon_t(const std::string &port_name);
     
@@ -37,6 +40,8 @@ namespace marvelmind {
     
         template<class t>
         void fetch(t &container) {
+            std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
+            
             auto begin = buffer.begin(),
                  end   = buffer.end();
             container.insert(container.end(), begin, end);

@@ -17,7 +17,7 @@ using word_t   = typename engine_t::word_t;
 marvelmind::mobile_beacon_t::
 mobile_beacon_t(const std::string &port_name)
     : port(std::make_unique<serial_port>(port_name, 115200)),
-      running(std::make_shared<bool>(false)) {
+      running(std::make_shared<bool>(true)) {
     std::condition_variable signal;
     std::mutex              signal_mutex;
     
@@ -60,17 +60,23 @@ mobile_beacon_t(const std::string &port_name)
                             return;
                 
                         using namespace marvelmind::resolution_coordinate;
-                        auto begin = result.bytes.data() + 5;
-                        buffer.push_back({
-                                             autolabor::now(),
-                                             time_stamp(begin),
-                                             time_passed(begin),
-                                             x(begin) / 1000.0,
-                                             y(begin) / 1000.0,
-                                             z(begin) / 1000.0
-                                         });
+    
+                        auto         begin = result.bytes.data() + 5;
+                        telementry_t telementry{
+                            autolabor::now(),
+                            time_stamp(begin),
+                            time_passed(begin),
+                            x(begin) / 1000.0,
+                            y(begin) / 1000.0,
+                            z(begin) / 1000.0
+                        };
+    
+                        if (telementry.time_passed > 250)
+                            return;
+    
+                        std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
+                        buffer.push_back(telementry);
                     });
-        std::cout << "Hello world!" << std::endl;
     }).detach();
 }
 
