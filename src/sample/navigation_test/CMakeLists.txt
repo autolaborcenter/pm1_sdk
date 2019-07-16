@@ -11,10 +11,10 @@ add_executable(navigation
         path_follower/virtual_light_sensor_t.hpp
         path_follower/path_follower_t.hpp
 
-        marvelmind/protocol.hpp
+        marvelmind/protocol.h
         marvelmind/parser_t.hpp
         marvelmind/mobile_beacon_t.hh
         marvelmind/mobile_beacon_t.cc
 
-        main.cpp)
+        main.cpp marvelmind/protocol.cpp)
 target_link_libraries(navigation pm1_sdk)

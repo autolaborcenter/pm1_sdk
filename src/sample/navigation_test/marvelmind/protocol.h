@@ -2,10 +2,11 @@
 // Created by ydrml on 2019/7/13.
 //
 
-#ifndef PM1_SDK_PROTOCOL_HPP
-#define PM1_SDK_PROTOCOL_HPP
+#ifndef MARVELMIND_PROTOCOL_H
+#define MARVELMIND_PROTOCOL_H
 
-#include <vector>
+
+#include <cstdint>
 
 namespace marvelmind {
     constexpr uint8_t
@@ -54,28 +55,23 @@ namespace marvelmind {
     }
     
     namespace resolution_coordinate {
-        #define DEFINE_ELEMENT(NAME, TYPE, OFFSET) \
-        TYPE NAME(const uint8_t *begin) { return *(TYPE *) (begin + (OFFSET)); }
-        
-        DEFINE_ELEMENT(time_stamp, uint32_t, 0)
-        
-        DEFINE_ELEMENT(x, int32_t, 4)
-        
-        DEFINE_ELEMENT(y, int32_t, 8)
-        
-        DEFINE_ELEMENT(z, int32_t, 12)
-        
-        DEFINE_ELEMENT(flags, uint8_t, 16)
-        
-        DEFINE_ELEMENT(address, uint8_t, 17)
-        
-        DEFINE_ELEMENT(pair_direction, uint16_t, 18)
-        
-        DEFINE_ELEMENT(time_passed, uint16_t, 20)
+        uint32_t time_stamp(const uint8_t *);
     
-        #undef DEFINE_ELEMENT
+        int32_t x(const uint8_t *);
+    
+        int32_t y(const uint8_t *);
+    
+        int32_t z(const uint8_t *);
+    
+        uint8_t flags(const uint8_t *);
+    
+        uint8_t address(const uint8_t *);
+    
+        uint16_t pair_direction(const uint8_t *);
+    
+        uint16_t time_passed(const uint8_t *);
     }
 }
 
 
-#endif //PM1_SDK_PROTOCOL_HPP
+#endif // MARVELMIND_PROTOCOL_H

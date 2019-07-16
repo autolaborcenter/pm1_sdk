@@ -2,10 +2,15 @@
 // Created by User on 2019/7/16.
 //
 
-#include <utilities/raii/weak_lock_guard.hpp>
 #include "mobile_beacon_t.hh"
 
-marvelmind::mobile_beacon_t::mobile_beacon_t(const std::string &port_name)
+#include <algorithm>
+#include <sstream>
+
+#include "utilities/serial_port/serial.h"
+
+marvelmind::mobile_beacon_t::
+mobile_beacon_t(const std::string &port_name)
     : port(std::make_unique<serial_port>(port_name, 115200)) {
     std::condition_variable signal;
     std::mutex              signal_mutex;
@@ -35,5 +40,45 @@ marvelmind::mobile_beacon_t::mobile_beacon_t(const std::string &port_name)
                        signal.notify_all();
                    }
                });
+    }
+}
+
+marvelmind::mobile_beacon_t::
+mobile_beacon_t(marvelmind::mobile_beacon_t &&others) noexcept
+    : port(std::move(others.port)) {}
+
+marvelmind::mobile_beacon_t &
+marvelmind::mobile_beacon_t::
+operator=(marvelmind::mobile_beacon_t &&others) noexcept {
+    port = std::move(others.port);
+    return *this;
+}
+
+marvelmind::mobile_beacon_t marvelmind::find_beacon(const std::string &port_name) {
+    const static auto serial_ports = [] {
+        auto                     info = serial::list_ports();
+        std::vector<std::string> result(info.size());
+        std::transform(info.begin(), info.end(), result.begin(),
+                       [](const serial::PortInfo &it) { return it.port; });
+        return result;
+    };
+    
+    auto list = port_name.empty()
+                ? serial_ports()
+                : std::vector<std::string>{port_name};
+    
+    if (list.empty())
+        throw std::runtime_error("no available port");
+    else {
+        std::stringstream builder;
+        for (auto         name = list.begin();;)
+            try { return mobile_beacon_t(*name); }
+            catch (std::exception &e) {
+                builder << *name << " : " << e.what();
+                if (++name < list.end())
+                    builder << std::endl;
+                else
+                    throw std::runtime_error(builder.str());
+            }
     }
 }

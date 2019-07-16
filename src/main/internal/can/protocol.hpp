@@ -2,8 +2,8 @@
 // Created by ydrml on 2019/2/25.
 //
 
-#ifndef PM1_SDK_PROTOCOL_HPP
-#define PM1_SDK_PROTOCOL_HPP
+#ifndef PM1_SDK_AUTOCAN_PROTOCOL_HPP
+#define PM1_SDK_AUTOCAN_PROTOCOL_HPP
 
 
 #include <sstream>
@@ -192,4 +192,5 @@ namespace autolabor {
     } // namespace can
 } // namespace autolabor
 
-#endif //PM1_SDK_PROTOCOL_HPP
+
+#endif // PM1_SDK_AUTOCAN_PROTOCOL_HPP
