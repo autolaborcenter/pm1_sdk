@@ -161,9 +161,9 @@ chassis::chassis(const std::string &port_name)
             if (abandon) {
                 std::stringstream builder;
                 builder << "it's not a pm1 chassis: [ecu0|ecu1|tcu0] = ["
-                        << static_cast<int>(temp[0]) << '|'
-                        << static_cast<int>(temp[1]) << '|'
-                        << static_cast<int>(temp[2]) << ']';
+                        << (temp[0] ? '*' : '-') << '|'
+                        << (temp[1] ? '*' : '-') << '|'
+                        << (temp[2] ? '*' : '-') << ']';
                 
                 throw std::runtime_error(builder.str());
             }

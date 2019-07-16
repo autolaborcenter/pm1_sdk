@@ -79,34 +79,33 @@ int main() {
     }
     
     #ifdef MARVELMIND
-    //    std::thread([&] {
-    //        using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
-    //
-    //        std::filesystem::remove(marvelmind_file);
-    //        std::fstream plot(marvelmind_file, std::ios::out);
-    //
-    //        engine_t engine;
-    //        uint8_t  buffer[256];
-    //        while (true)
-    //            engine(buffer, buffer + port.read(buffer, sizeof(buffer)),
-    //                   [&](const typename engine_t::result_t &result) {
-    //                       switch (result.type) {
-    //                           case marvelmind::parser_t::result_type_t::nothing:
-    //                               break;
-    //                           case marvelmind::parser_t::result_type_t::failed:
-    //                               std::cout << "crc check failed" << std::endl;
-    //                               break;
-    //                           case marvelmind::parser_t::result_type_t::success:
-    //                               using namespace marvelmind::resolution_coordinate;
-    //                               auto begin = result.bytes.data() + 5;
-    //                               plot << x(begin) / 1000.0 << ", "
-    //                                    << y(begin) / 1000.0 << ", "
-    //                                    << z(begin) / 1000.0 << std::endl;
-    //                               plot.flush();
-    //                               break;
-    //                       }
-    //                   });
-    //    }).detach();
+    std::thread([&] {
+        using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
+        
+        std::filesystem::remove(marvelmind_file);
+        std::fstream plot(marvelmind_file, std::ios::out);
+        
+        double   _x = NAN, _y = NAN, _z = NAN;
+        engine_t engine;
+        while (true)
+            beacon.receive([&](const typename engine_t::result_t &result) {
+                switch (result.type) {
+                    case marvelmind::parser_t::result_type_t::nothing:
+                        break;
+                    case marvelmind::parser_t::result_type_t::failed:
+                        std::cout << "crc check failed" << std::endl;
+                        break;
+                    case marvelmind::parser_t::result_type_t::success:
+                        using namespace marvelmind::resolution_coordinate;
+                        auto begin = result.bytes.data() + 5;
+                        plot << x(begin) / 1000.0 << ", "
+                             << y(begin) / 1000.0 << ", "
+                             << z(begin) / 1000.0 << std::endl;
+                        plot.flush();
+                        break;
+                }
+            });
+    }).detach();
     #endif
     
     switch (this_time) {

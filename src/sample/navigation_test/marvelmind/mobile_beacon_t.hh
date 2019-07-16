@@ -29,6 +29,8 @@ namespace marvelmind {
     public:
         explicit mobile_beacon_t(const std::string &port_name);
     
+        ~mobile_beacon_t();
+        
         mobile_beacon_t(const mobile_beacon_t &) = delete;
     
         mobile_beacon_t(mobile_beacon_t &&) noexcept;
@@ -36,6 +38,8 @@ namespace marvelmind {
         mobile_beacon_t &operator=(const mobile_beacon_t &) = delete;
     
         mobile_beacon_t &operator=(mobile_beacon_t &&) noexcept;
+    
+        void receive(const typename engine_t::callback_t &);
     };
     
     mobile_beacon_t find_beacon(const std::string &port_name = "");

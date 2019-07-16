@@ -44,6 +44,9 @@ mobile_beacon_t(const std::string &port_name)
 }
 
 marvelmind::mobile_beacon_t::
+~mobile_beacon_t() {}
+
+marvelmind::mobile_beacon_t::
 mobile_beacon_t(marvelmind::mobile_beacon_t &&others) noexcept
     : port(std::move(others.port)) {}
 
@@ -52,6 +55,12 @@ marvelmind::mobile_beacon_t::
 operator=(marvelmind::mobile_beacon_t &&others) noexcept {
     port = std::move(others.port);
     return *this;
+}
+
+void
+marvelmind::mobile_beacon_t::
+receive(typename marvelmind::mobile_beacon_t::engine_t::callback_t const &callback) {
+    engine(buffer, buffer + port->read(buffer, sizeof(buffer)), callback);
 }
 
 marvelmind::mobile_beacon_t marvelmind::find_beacon(const std::string &port_name) {
