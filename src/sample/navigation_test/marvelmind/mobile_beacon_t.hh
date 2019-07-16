@@ -16,6 +16,9 @@
 #include "parser_t.hpp"
 
 namespace marvelmind {
+    /**
+     * 定位数据
+     */
     struct telementry_t {
         decltype(autolabor::now()) time;
         uint32_t                   time_stamp;
@@ -23,21 +26,28 @@ namespace marvelmind {
         double                     x, y, z;
     };
     
+    /**
+     * 移动标签类
+     */
     class mobile_beacon_t {
-    
         using serial_ptr = std::unique_ptr<serial_port>;
         
         serial_ptr port;
-    
-        std::shared_ptr<bool>    running;
+        
+        std::shared_ptr<bool> running;
+        
         std::deque<telementry_t> buffer;
-    
-        std::mutex buffer_mutex;
+        std::mutex               buffer_mutex;
     public:
         explicit mobile_beacon_t(const std::string &port_name);
-    
+        
         ~mobile_beacon_t();
-    
+        
+        /**
+         * 读取定位数据
+         * @tparam t 容器类型
+         * @param container 容器
+         */
         template<class t>
         void fetch(t &container) {
             std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);

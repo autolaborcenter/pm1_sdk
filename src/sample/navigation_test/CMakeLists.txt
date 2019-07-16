@@ -12,9 +12,14 @@ add_executable(navigation
         path_follower/path_follower_t.hpp
 
         marvelmind/protocol.h
+        marvelmind/protocol.cpp
         marvelmind/parser_t.hpp
         marvelmind/mobile_beacon_t.hh
         marvelmind/mobile_beacon_t.cc
 
-        main.cpp marvelmind/protocol.cpp)
+        mixer/stamped_t.h
+        mixer/mixer_t.hh
+        mixer/mixer_t.cc
+
+        main.cpp)
 target_link_libraries(navigation pm1_sdk)
