@@ -123,7 +123,7 @@ namespace autolabor {
             std::atomic<odometry_t> _odometry{};
             
             /** 底层线程是否运行 */
-            volatile bool running;
+            std::atomic_bool running;
             
             std::thread read_thread,
                         write_thread;
@@ -133,9 +133,6 @@ namespace autolabor {
             
             /** 目标设定锁 */
             std::mutex target_mutex;
-    
-            /** 避免多次析构 */
-            std::atomic_flag destruct_once = ATOMIC_FLAG_INIT;
             
             /** 目标运动 */
             physical target{};

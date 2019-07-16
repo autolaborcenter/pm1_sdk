@@ -6,12 +6,18 @@
 
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 
 #include "utilities/serial_port/serial.h"
+#include "utilities/serial_parser/parse_engine.hpp"
+
+using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
+using word_t   = typename engine_t::word_t;
 
 marvelmind::mobile_beacon_t::
 mobile_beacon_t(const std::string &port_name)
-    : port(std::make_unique<serial_port>(port_name, 115200)) {
+    : port(std::make_unique<serial_port>(port_name, 115200)),
+      running(std::make_shared<bool>(false)) {
     std::condition_variable signal;
     std::mutex              signal_mutex;
     
@@ -29,41 +35,51 @@ mobile_beacon_t(const std::string &port_name)
         port->break_read();
     }).detach();
     
+    engine_t _engine;
+    word_t   _buffer[64]{};
     while (!parsed) {
         constexpr static auto error_message = "no position data until timeout";
         
         if (abandon) throw std::runtime_error(error_message);
-        engine(buffer, buffer + port->read(buffer, sizeof(buffer)),
-               [&](const typename engine_t::result_t &result) {
-                   if (result.type == parser_t::result_type_t::success) {
-                       parsed = true;
-                       signal.notify_all();
-                   }
-               });
+        _engine(_buffer, _buffer + port->read(_buffer, sizeof(_buffer)),
+                [&](const typename engine_t::result_t &result) {
+                    if (result.type == parser_t::result_type_t::success) {
+                        parsed = true;
+                        signal.notify_all();
+                    }
+                });
     }
+    
+    std::thread([flag = running, this] {
+        engine_t _engine;
+        word_t   _buffer[64]{};
+        while (*flag)
+            _engine(_buffer, _buffer + port->read(_buffer, sizeof(_buffer)),
+                    [&](const typename engine_t::result_t &result) {
+                        if (result.type != parser_t::result_type_t::success)
+                            return;
+                
+                        using namespace marvelmind::resolution_coordinate;
+                        auto begin = result.bytes.data() + 5;
+                        buffer.push_back({
+                                             autolabor::now(),
+                                             time_stamp(begin),
+                                             time_passed(begin),
+                                             x(begin) / 1000.0,
+                                             y(begin) / 1000.0,
+                                             z(begin) / 1000.0
+                                         });
+                    });
+        std::cout << "Hello world!" << std::endl;
+    }).detach();
 }
 
-marvelmind::mobile_beacon_t::
-~mobile_beacon_t() {}
-
-marvelmind::mobile_beacon_t::
-mobile_beacon_t(marvelmind::mobile_beacon_t &&others) noexcept
-    : port(std::move(others.port)) {}
-
-marvelmind::mobile_beacon_t &
-marvelmind::mobile_beacon_t::
-operator=(marvelmind::mobile_beacon_t &&others) noexcept {
-    port = std::move(others.port);
-    return *this;
+marvelmind::mobile_beacon_t::~mobile_beacon_t() {
+    *running = false;
 }
 
-void
-marvelmind::mobile_beacon_t::
-receive(typename marvelmind::mobile_beacon_t::engine_t::callback_t const &callback) {
-    engine(buffer, buffer + port->read(buffer, sizeof(buffer)), callback);
-}
-
-marvelmind::mobile_beacon_t marvelmind::find_beacon(const std::string &port_name) {
+std::shared_ptr<marvelmind::mobile_beacon_t>
+marvelmind::find_beacon(const std::string &port_name) {
     const static auto serial_ports = [] {
         auto                     info = serial::list_ports();
         std::vector<std::string> result(info.size());
@@ -81,7 +97,7 @@ marvelmind::mobile_beacon_t marvelmind::find_beacon(const std::string &port_name
     else {
         std::stringstream builder;
         for (auto         name = list.begin();;)
-            try { return mobile_beacon_t(*name); }
+            try { return std::make_shared<mobile_beacon_t>(*name); }
             catch (std::exception &e) {
                 builder << *name << " : " << e.what();
                 if (++name < list.end())

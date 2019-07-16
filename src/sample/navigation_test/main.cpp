@@ -56,7 +56,12 @@ int main() {
     
     #ifdef MARVELMIND
     // 连接定位标签
-    auto beacon = marvelmind::find_beacon();
+    decltype(marvelmind::find_beacon()) beacon;
+    try { beacon = marvelmind::find_beacon(); }
+    catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
     #endif
     
     { // 设置参数、修改状态
@@ -80,31 +85,14 @@ int main() {
     
     #ifdef MARVELMIND
     std::thread([&] {
-        using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
-        
         std::filesystem::remove(marvelmind_file);
         std::fstream plot(marvelmind_file, std::ios::out);
-        
-        double   _x = NAN, _y = NAN, _z = NAN;
-        engine_t engine;
-        while (true)
-            beacon.receive([&](const typename engine_t::result_t &result) {
-                switch (result.type) {
-                    case marvelmind::parser_t::result_type_t::nothing:
-                        break;
-                    case marvelmind::parser_t::result_type_t::failed:
-                        std::cout << "crc check failed" << std::endl;
-                        break;
-                    case marvelmind::parser_t::result_type_t::success:
-                        using namespace marvelmind::resolution_coordinate;
-                        auto begin = result.bytes.data() + 5;
-                        plot << x(begin) / 1000.0 << ", "
-                             << y(begin) / 1000.0 << ", "
-                             << z(begin) / 1000.0 << std::endl;
-                        plot.flush();
-                        break;
-                }
-            });
+    
+        std::vector<marvelmind::telementry_t> space;
+        while (true) {
+            beacon->fetch(space);
+            std::cout << space.size() << std::endl;
+        }
     }).detach();
     #endif
     

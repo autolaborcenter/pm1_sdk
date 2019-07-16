@@ -7,42 +7,44 @@
 
 
 #include <memory>
-#include <chrono>
-#include <thread>
-#include <condition_variable>
+#include <deque>
+#include <utilities/time_extensions.h>
 
-#include "utilities/time_extensions.h"
 #include "utilities/serial_port/serial_port.hh"
-#include "utilities/serial_parser/parse_engine.hpp"
 
 #include "parser_t.hpp"
 
 namespace marvelmind {
+    struct telementry_t {
+        decltype(autolabor::now()) time;
+        uint32_t                   time_stamp;
+        uint16_t                   time_passed;
+        double                     x, y, z;
+    };
+    
     class mobile_beacon_t {
-        using engine_t   = autolabor::parse_engine_t<parser_t>;
-        using word_t     = typename engine_t::word_t;
+    
         using serial_ptr = std::unique_ptr<serial_port>;
         
         serial_ptr port;
-        engine_t   engine;
-        word_t     buffer[256]{};
+    
+        std::shared_ptr<bool>    running;
+        std::deque<telementry_t> buffer;
     public:
         explicit mobile_beacon_t(const std::string &port_name);
     
         ~mobile_beacon_t();
-        
-        mobile_beacon_t(const mobile_beacon_t &) = delete;
     
-        mobile_beacon_t(mobile_beacon_t &&) noexcept;
-    
-        mobile_beacon_t &operator=(const mobile_beacon_t &) = delete;
-    
-        mobile_beacon_t &operator=(mobile_beacon_t &&) noexcept;
-    
-        void receive(const typename engine_t::callback_t &);
+        template<class t>
+        void fetch(t &container) {
+            auto begin = buffer.begin(),
+                 end   = buffer.end();
+            container.insert(container.end(), begin, end);
+            buffer.erase(begin, end);
+        }
     };
     
-    mobile_beacon_t find_beacon(const std::string &port_name = "");
+    std::shared_ptr<mobile_beacon_t> find_beacon(const std::string &port_name = "");
 }
 
 
