@@ -5,18 +5,22 @@
 #include "pm1_sdk_native.h"
 #include "path_follower/path_manage.hpp"
 #include "path_follower/path_follower_t.hpp"
-#include "marvelmind/protocol.hpp"
-
-#include "utilities/serial_parser/parse_engine.hpp"
 
 #include <iostream>
 #include <filesystem>
 
+//#define MARVELMIND
+
 #ifdef MARVELMIND
+
 #include <thread>
 
 #include "utilities/serial_port/serial_port.hh"
+#include "utilities/serial_parser/parse_engine.hpp"
+
+#include "marvelmind/protocol.hpp"
 #include "marvelmind/parser_t.hpp"
+
 #endif
 
 enum operation_t : uint8_t {
@@ -55,6 +59,11 @@ int main() {
         std::cout << "connected" << std::endl;
     }
     
+    #ifdef MARVELMIND
+    // 连接定位标签
+    serial_port port("COM11", 115200);
+    #endif
+    
     { // 设置参数、修改状态
         native::set_parameter(0, 0.465);
         native::set_parameter(1, 0.355);
@@ -75,15 +84,14 @@ int main() {
     }
     
     #ifdef MARVELMIND
-    std::thread([] {
+    std::thread([&] {
         using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
         
         std::filesystem::remove(marvelmind_file);
         std::fstream plot(marvelmind_file, std::ios::out);
         
-        serial_port port("COM11", 115200);
-        engine_t    engine;
-        uint8_t     buffer[256];
+        engine_t engine;
+        uint8_t  buffer[256];
         while (true)
             engine(buffer, buffer + port.read(buffer, sizeof(buffer)),
                    [&](const typename engine_t::result_t &result) {
@@ -133,9 +141,10 @@ int main() {
             std::fstream plot(navigation_file, std::ios::out);
             // 加载路径
             auto         path = path_follower::load_path(path_file);
+            std::cout << "path length = " << path.size() << std::endl;
             // 加载控制器
             path_follower::path_follower_t<decltype(path)>
-                         controller(.2, .0, .2);
+                controller(.2, .0, .2);
             using state_t = typename decltype(controller)::following_state_t;
             // 初始化
             controller.set_path(path.begin(), path.end());

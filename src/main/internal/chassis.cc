@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <condition_variable>
+
 #include "can/parser_t.hpp"
 #include "serial_parser/parse_engine.hpp"
 #include "raii/weak_shared_lock.hpp"
@@ -115,30 +117,31 @@ chassis::chassis(const std::string &port_name)
     {
         port << autolabor::can::pack<ecu<>::current_position_tx>()
              << autolabor::can::pack<tcu<0>::current_position_tx>();
-        
-        const auto time = now();
-        bool       temp[]{false, false, false};
-        
-        auto is_timeout = [time] { return now() - time > check_timeout; };
-        auto done       = [&temp] { return temp[0] && temp[1] && temp[2]; };
-        
-        auto task = std::thread([&] {
-            while (!done()) {
-                if (is_timeout()) {
-                    port.break_read();
-                    return;
-                }
-                std::this_thread::sleep_for(check_timeout / 20);
-            }
-        });
     
+        std::condition_variable signal;
+        std::mutex              signal_mutex;
+    
+        volatile bool temp[]{false, false, false},
+                      abandon = false;
+    
+        std::thread([&, this] {
+            using namespace std::chrono_literals;
+        
+            std::unique_lock<std::mutex> own(signal_mutex);
+            if (signal.wait_for(own, check_timeout, [&] { return temp[0] && temp[1] && temp[2]; }))
+                return;
+        
+            abandon = true;
+            port.break_read();
+        }).detach();
+        
         auto parse = [&, this](const autolabor::can::parser_t::result_t &result) {
             if (result.type != result_t::message) return;
-        
+    
             can::union_with_data msg{};
             msg.data = result.message;
             auto _now = now();
-        
+    
             if (ecu<0>::current_position_rx::match(msg)) {
                 _left.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
                 temp[0] = true;
@@ -152,23 +155,20 @@ chassis::chassis(const std::string &port_name)
         };
     
         engine_t engine;
-        
-        uint8_t buffer[64];
-        while (!done()) {
+        uint8_t  buffer[64];
+        while (!temp[0] || !temp[1] || !temp[2]) {
             engine(buffer, buffer + port.read(buffer, sizeof(buffer)), parse);
-            
-            if (is_timeout()) {
+            if (abandon) {
                 std::stringstream builder;
                 builder << "it's not a pm1 chassis: [ecu0|ecu1|tcu0] = ["
                         << static_cast<int>(temp[0]) << '|'
                         << static_cast<int>(temp[1]) << '|'
                         << static_cast<int>(temp[2]) << ']';
                 
-                task.join();
                 throw std::runtime_error(builder.str());
             }
         }
-        task.join();
+        signal.notify_all();
     }
     // endregion
     // region initialize ask

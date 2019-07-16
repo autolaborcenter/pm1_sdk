@@ -72,6 +72,8 @@ namespace marvelmind {
         DEFINE_ELEMENT(pair_direction, uint16_t, 18)
         
         DEFINE_ELEMENT(time_passed, uint16_t, 20)
+    
+        #undef DEFINE_ELEMENT
     }
 }
 

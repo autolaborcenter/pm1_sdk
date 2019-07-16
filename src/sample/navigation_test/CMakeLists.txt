@@ -13,6 +13,8 @@ add_executable(navigation
 
         marvelmind/protocol.hpp
         marvelmind/parser_t.hpp
+        marvelmind/mobile_beacon_t.hh
+        marvelmind/mobile_beacon_t.cc
 
         main.cpp)
 target_link_libraries(navigation pm1_sdk)

@@ -13,6 +13,6 @@ add_subdirectory(navigation_test)
 #target_link_libraries(faselase_test pm1_sdk)
 
 # test
-#add_executable(pm1_sdk_sample
-#        test_sample/test_sdk_5.cpp)
-#target_link_libraries(pm1_sdk_sample pm1_sdk)
+add_executable(pm1_sdk_sample
+        test_sample/test_sdk_2.cpp)
+target_link_libraries(pm1_sdk_sample pm1_sdk)
