@@ -13,6 +13,20 @@
 #include <fstream>
 
 namespace path_follower {
+    template<class iterator_t>
+    void check_tip(iterator_t begin, iterator_t end, size_t order) {
+        for (auto item = begin + order; item < end - order; ++item) {
+            if (item->type == point_type_t::tip)
+                continue;
+            auto x0 = item->x - (item - 1)->x,
+                 y0 = item->y - (item - 1)->y,
+                 x1 = (item + 1)->x - item->x,
+                 y1 = (item + 1)->y - item->y;
+            if (x0 * x1 + y0 * y1 < 0)
+                item->type = point_type_t::tip;
+        }
+    }
+    
     /**
      * 从文件加载路径
      *
@@ -35,21 +49,9 @@ namespace path_follower {
         
         path.shrink_to_fit();
         path.back().type = point_type_t::tip;
-        
-        if (path.size() < 3)
-            return path;
-        
-        // 识别尖点
-        for (auto item = path.begin() + 1;
-             item < path.end() - 1;
-             ++item) {
-            auto x0 = item->x - (item - 1)->x,
-                 y0 = item->y - (item - 1)->y,
-                 x1 = (item + 1)->x - item->x,
-                 y1 = (item + 1)->y - item->y;
-            if (x0 * x1 + y0 * y1 < 0)
-                item->type = point_type_t::tip;
-        }
+    
+        check_tip(path.begin(), path.end(), 1);
+        check_tip(path.begin(), path.end(), 2);
         return path;
     }
 }

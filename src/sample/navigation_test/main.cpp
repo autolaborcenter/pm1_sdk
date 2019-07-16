@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <chrono>
 
-#define MARVELMIND
+//#define MARVELMIND
 
 #ifdef MARVELMIND
 
@@ -89,7 +89,7 @@ int main() {
     std::thread([&] {
         std::filesystem::remove(marvelmind_file);
         std::fstream plot(marvelmind_file, std::ios::out);
-    
+        
         std::vector<marvelmind::telementry_t> space;
         while (true) {
             using namespace std::chrono_literals;
@@ -137,7 +137,7 @@ int main() {
             std::cout << "path length = " << path.size() << std::endl;
             // 加载控制器
             path_follower::path_follower_t<decltype(path)>
-                controller(.2, .0, .2);
+                controller(.2, .0, .25);
             using state_t = typename decltype(controller)::following_state_t;
             // 初始化
             controller.set_path(path.begin(), path.end());
@@ -154,6 +154,7 @@ int main() {
                 switch (result.type()) {
                     case state_t::following:
                         native::drive_physical(result.speed, result.rudder);
+                        std::cout << result.speed << std::endl;
                         break;
                     case state_t::turning:
                         std::cout << "turning" << std::endl;

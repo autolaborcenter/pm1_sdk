@@ -27,6 +27,7 @@ namespace path_follower {
         
         struct result_t {
             size_t local_count;
+            double local_size;
             bool   tip_begin;
             double error;
         };
@@ -101,7 +102,7 @@ namespace path_follower {
         while (true) {
             // 未能搜寻到任何局部路径（路径已丢失）
             if (local_begin >= local_end)
-                return {0, false, NAN};
+                return {0, 0, false, NAN};
             // 搜寻到局部路径起点
             if (check(*local_begin)) {
                 local_end = local_begin + 1;
@@ -111,7 +112,7 @@ namespace path_follower {
         }
         // 起点为尖点
         if (local_begin->type == point_type_t::tip)
-            return {1, true, NAN};
+            return {1, 0, true, NAN};
         // 确定局部路径终点
         while (local_end < end && check(*local_end)) {
             if (local_end->type == point_type_t::tip) {
@@ -121,13 +122,14 @@ namespace path_follower {
         }
         // 计算局部点数
         size_t local_count = local_end - local_begin;
+    
         // 连接面积范围
-        auto   shape       = range.to_vector();
-        auto   index1      = min_by(shape.begin(), shape.end(),
-                                    [=](point_t point) {
-                                        return std::hypot(local_begin->x - point.x,
-                                                          local_begin->y - point.y);
-                                    }) - shape.begin();
+        auto shape  = range.to_vector();
+        auto index1 = min_by(shape.begin(), shape.end(),
+                             [=](point_t point) {
+                                 return std::hypot(local_begin->x - point.x,
+                                                   local_begin->y - point.y);
+                             }) - shape.begin();
         
         auto index0 = local_end->type == point_type_t::tip
                       ? max_by(shape.begin(), shape.end(),
@@ -153,6 +155,7 @@ namespace path_follower {
         
         return {
             local_count,
+            local_count > 2 ? std::abs(any_shape(local_begin, local_end).size()) : .0,
             false,
             2 * (0.5 - any_shape(shape).size() / range.size())
         };

@@ -111,6 +111,10 @@ namespace path_follower {
     struct any_shape : public shape_t {
         explicit any_shape(std::vector<point_t> vertex)
             : shape_t(vertex.size()), vertex(std::move(vertex)) {}
+    
+        template<class iterator_t>
+        any_shape(iterator_t begin, iterator_t end)
+            : shape_t(end - begin), vertex(decltype(vertex)(begin, end)) {}
         
         [[nodiscard]] point_t
         operator[](size_t index) const override {

@@ -29,7 +29,7 @@ namespace path_follower {
             local_end;
     
     public:
-        double speed = 2.0;
+        double speed = 2.5;
         
         /**
          * 构造器
@@ -91,7 +91,7 @@ namespace path_follower {
                 return {NAN, NAN};
             // 正常情况
             if (!result.tip_begin)
-                return {speed, -PI / 2 * result.error};
+                return {std::max(0.5, speed - 100 * result.local_size), -PI / 2 * result.error};
             
             auto direction = local_begin + 1;
             // 到达路径终点
