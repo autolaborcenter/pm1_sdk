@@ -26,10 +26,10 @@ namespace path_follower {
             range(32, radius) {}
         
         struct result_t {
-            size_t local_count;
-            double local_size;
-            bool   tip_begin;
-            double error;
+            size_t  local_count;
+            double  local_size;
+            uint8_t tip_order;
+            double  error;
         };
         
         template<class t>
@@ -102,7 +102,7 @@ namespace path_follower {
         while (true) {
             // 未能搜寻到任何局部路径（路径已丢失）
             if (local_begin >= local_end)
-                return {0, 0, false, NAN};
+                return {0, 0, 255, NAN};
             // 搜寻到局部路径起点
             if (check(*local_begin)) {
                 local_end = local_begin + 1;
@@ -111,13 +111,11 @@ namespace path_follower {
             ++local_begin;
         }
         // 起点为尖点
-        if (local_begin->type == point_type_t::tip)
-            return {1, 0, true, NAN};
+        if (local_begin->tip_order < 255)
+            return {1, 0, local_begin->tip_order, NAN};
         // 确定局部路径终点
         while (local_end < end && check(*local_end)) {
-            if (local_end->type == point_type_t::tip) {
-                break;
-            }
+            if (local_end->tip_order < 255) break;
             ++local_end;
         }
         // 计算局部点数
@@ -130,14 +128,14 @@ namespace path_follower {
                                  return std::hypot(local_begin->x - point.x,
                                                    local_begin->y - point.y);
                              }) - shape.begin();
-        
-        auto index0 = local_end->type == point_type_t::tip
+    
+        auto index0 = local_end->tip_order < 255
                       ? max_by(shape.begin(), shape.end(),
                                [=](point_t point) {
                                    auto x0 = point.x - local_end->x,
-                                        x1 = local_end->x - (local_end - 1)->x,
+                                        x1 = local_end->x - (local_end - local_end->tip_order)->x,
                                         y0 = point.y - local_end->y,
-                                        y1 = local_end->y - (local_end - 1)->y;
+                                        y1 = local_end->y - (local_end - local_end->tip_order)->y;
                                    return x0 * x1 + y0 * y1;
                                }) - shape.begin()
                       : min_by(shape.begin(), shape.end(),
@@ -156,7 +154,7 @@ namespace path_follower {
         return {
             local_count,
             local_count > 2 ? std::abs(any_shape(local_begin, local_end).size()) : .0,
-            false,
+            255,
             2 * (0.5 - any_shape(shape).size() / range.size())
         };
     }

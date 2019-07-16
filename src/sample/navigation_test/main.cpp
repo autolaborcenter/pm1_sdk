@@ -135,6 +135,10 @@ int main() {
             // 加载路径
             auto         path = path_follower::load_path(path_file);
             std::cout << "path length = " << path.size() << std::endl;
+    
+            for (auto item:path)
+                std::cout << item.x << ' ' << item.y << ' ' << +item.tip_order << std::endl;
+            
             // 加载控制器
             path_follower::path_follower_t<decltype(path)>
                 controller(.2, .0, .25);

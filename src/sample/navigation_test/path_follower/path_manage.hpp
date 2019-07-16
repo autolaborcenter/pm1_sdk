@@ -13,17 +13,28 @@
 #include <fstream>
 
 namespace path_follower {
+    /**
+     * 尖点检测
+     *
+     * @tparam iterator_t 迭代器类型
+     * @param begin 迭代起点
+     * @param end   迭代终点
+     * @param order 阶数
+     */
     template<class iterator_t>
-    void check_tip(iterator_t begin, iterator_t end, size_t order) {
+    void check_tip(iterator_t begin, iterator_t end, uint8_t order) {
+        if (order > 1)
+            check_tip(begin, end, order - 1);
+        
         for (auto item = begin + order; item < end - order; ++item) {
-            if (item->type == point_type_t::tip)
+            if (item->tip_order < order)
                 continue;
-            auto x0 = item->x - (item - 1)->x,
-                 y0 = item->y - (item - 1)->y,
-                 x1 = (item + 1)->x - item->x,
-                 y1 = (item + 1)->y - item->y;
-            if (x0 * x1 + y0 * y1 < 0)
-                item->type = point_type_t::tip;
+            auto dx0 = item->x - (item - order)->x,
+                 dy0 = item->y - (item - order)->y,
+                 dx1 = (item + order)->x - item->x,
+                 dy1 = (item + order)->y - item->y;
+            if (dx0 * dx1 + dy0 * dy1 < 0)
+                item->tip_order = order;
         }
     }
     
@@ -43,14 +54,11 @@ namespace path_follower {
             if (!(file >> temp.x >> temp.y)) break;
             path.push_back(temp);
         }
-        
-        if (path.empty())
-            return {};
-        
+        // 处理
+        if (path.empty()) return {};
         path.shrink_to_fit();
-        path.back().type = point_type_t::tip;
-    
-        check_tip(path.begin(), path.end(), 1);
+        path.back().tip_order = 1;
+        // 尖点检测
         check_tip(path.begin(), path.end(), 2);
         return path;
     }
