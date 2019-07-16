@@ -5,7 +5,6 @@
 #ifndef PM1_SDK_MEMORY_HPP
 #define PM1_SDK_MEMORY_HPP
 
-
 /**
  * 内存解释器
  * @return 视作字节数组的内存起点

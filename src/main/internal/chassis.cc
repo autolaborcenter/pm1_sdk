@@ -34,8 +34,8 @@ using namespace autolabor::pm1;
 template<class t>
 inline serial_port &operator<<(
     serial_port &port,
-    const autolabor::can::msg_union<t> &msg) noexcept {
-    port.send(msg.bytes, sizeof(t));
+    const t &msg) noexcept {
+    port.send(bytes_begin(msg), sizeof(t));
     return port;
 }
 
@@ -138,18 +138,14 @@ chassis::chassis(const std::string &port_name)
         auto parse = [&, this](const autolabor::can::parser_t::result_t &result) {
             if (result.type != result_t::message) return;
     
-            can::union_with_data msg{};
-            msg.data = result.message;
-            auto _now = now();
-    
-            if (ecu<0>::current_position_rx::match(msg)) {
-                _left.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
+            if (ecu<0>::current_position_rx::match(result.message)) {
+                _left.update(now(), RAD_OF(get_data_value<int>(result.message), default_wheel_k));
                 temp[0] = true;
-            } else if (ecu<1>::current_position_rx::match(msg)) {
-                _right.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
+            } else if (ecu<1>::current_position_rx::match(result.message)) {
+                _right.update(now(), RAD_OF(get_data_value<int>(result.message), default_wheel_k));
                 temp[1] = true;
-            } else if (tcu<0>::current_position_rx::match(msg)) {
-                _rudder.update(_now, RAD_OF(get_data_value<short>(msg), default_rudder_k));
+            } else if (tcu<0>::current_position_rx::match(result.message)) {
+                _rudder.update(now(), RAD_OF(get_data_value<short>(result.message), default_rudder_k));
                 temp[2] = true;
             }
         };
@@ -172,9 +168,9 @@ chassis::chassis(const std::string &port_name)
     }
     // endregion
     // region initialize ask
-    port << can::pack<ecu<>::timeout>({2, 0}) // 设置动力超时时间到 200 ms
-         << can::pack<unit<>::emergency_stop>()           // 从锁定状态启动
-         << can::pack<unit<>::state_tx>();                // 询问状态
+    port << can::pack<ecu<>::timeout>({2, 0})    // 设置动力超时时间到 200 ms
+         << can::pack<unit<>::emergency_stop>()  // 从锁定状态启动
+         << can::pack<unit<>::state_tx>();       // 询问状态
     // endregion
     // region ask
     write_thread         = std::thread([this] {
@@ -222,14 +218,12 @@ chassis::chassis(const std::string &port_name)
             for (size_t i = 0; i < reply_time.size(); ++i)
                 if (_now - reply_time[i] > state_timeout)
                     chassis_state.states[i] = node_state_t::unknown;
-            
-            // 处理
-            can::union_with_data msg{};
-            msg.data = result.message;
+    
+            auto msg = result.message;
             
             if (unit<ecu<0>>::state_rx::match(msg)) {
                 reply_time[0] = _now;
-                if (node_state_t::enabled == (chassis_state.ecu0() = parse_state(*msg.data.data))) {
+                if (node_state_t::enabled == (chassis_state.ecu0() = parse_state(*msg.data))) {
                     if (!enabled_target)
                         port << can::pack<unit<ecu<0>>::emergency_stop>();
                 } else {
@@ -239,7 +233,7 @@ chassis::chassis(const std::string &port_name)
                 
             } else if (unit<ecu<1>>::state_rx::match(msg)) {
                 reply_time[1] = _now;
-                if (node_state_t::enabled == (chassis_state.ecu1() = parse_state(*msg.data.data))) {
+                if (node_state_t::enabled == (chassis_state.ecu1() = parse_state(*msg.data))) {
                     if (!enabled_target)
                         port << can::pack<unit<ecu<1>>::emergency_stop>();
                 } else {
@@ -249,7 +243,7 @@ chassis::chassis(const std::string &port_name)
                 
             } else if (unit<tcu<0>>::state_rx::match(msg)) {
                 reply_time[2] = _now;
-                if (node_state_t::enabled == (chassis_state.tcu() = parse_state(*msg.data.data))) {
+                if (node_state_t::enabled == (chassis_state.tcu() = parse_state(*msg.data))) {
                     if (!enabled_target)
                         port << can::pack<unit<tcu<0>>::emergency_stop>();
                 } else {
@@ -259,7 +253,7 @@ chassis::chassis(const std::string &port_name)
                 
             } else if (unit<vcu<0>>::state_rx::match(msg)) {
                 reply_time[3] = _now;
-                chassis_state.vcu() = parse_state(*msg.data.data);
+                chassis_state.vcu() = parse_state(*msg.data);
                 
             } else if (ecu<0>::current_position_rx::match(msg)) {
                 

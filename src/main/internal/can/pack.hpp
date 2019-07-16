@@ -12,9 +12,6 @@
 
 namespace autolabor {
     namespace can {
-        using sgn_u = autolabor::can::union_no_data;   // 信号，无数据
-        using msg_u = autolabor::can::union_with_data; // 消息，有数据
-        
         /**
          * CAN 包信息定义
          *
@@ -34,8 +31,8 @@ namespace autolabor {
         class pack_define_t {
         public:
             using type_t = _type_t;
-            
-            static_assert(std::is_same<_type_t, sgn_u>::value || std::is_same<_type_t, msg_u>::value,
+    
+            static_assert(std::is_same<_type_t, pack_with_data>::value || std::is_same<_type_t, pack_no_data>::value,
                           "struct must be a can pack type");
             static_assert(_network <= autolabor::can::mask(2), "network in 2 bits");
             static_assert(_priority <= autolabor::can::mask(3), "property in 3 bits");
@@ -43,13 +40,13 @@ namespace autolabor {
             static_assert(_node_index <= autolabor::can::mask(4), "node index in 4 bits");
             
             constexpr static auto network    = _network;
-            constexpr static auto data_field = std::is_same<_type_t, msg_u>::value;
+            constexpr static auto data_field = std::is_same<_type_t, pack_with_data>::value;
             constexpr static auto priority   = _priority;
             constexpr static auto node_type  = _node_type;
             constexpr static auto node_index = _node_index;
             constexpr static auto msg_type   = _msg_type;
-            
-            constexpr static decltype(type_t::data)
+    
+            constexpr static type_t
                 stub{0xfe,
                 
                      node_type >> 4u,
@@ -63,21 +60,21 @@ namespace autolabor {
                      msg_type};
             
             inline static bool match(const type_t &msg) {
-                return msg.data.node_type() == node_type
-                       && msg.data.node_index == node_index
-                       && msg.data.msg_type == msg_type;
+                return msg.node_type() == node_type
+                       && msg.node_index == node_index
+                       && msg.msg_type == msg_type;
             }
         };
         
         /** 打包（无数据域） */
         template<class info_t>
         inline typename info_t::type_t pack(uint8_t reserve = 0) {
-            static_assert(std::is_same<typename info_t::type_t, sgn_u>::value,
+            static_assert(std::is_same<typename info_t::type_t, pack_no_data>::value,
                           "cannot build a signal pack with message info");
             
             typename info_t::type_t msg{};
-            msg.data         = info_t::stub;
-            msg.data.reserve = reserve;
+            msg = info_t::stub;
+            msg.reserve = reserve;
             fill_crc(bytes_begin(msg) + 1, bytes_end(msg));
             return msg;
         }
@@ -85,13 +82,13 @@ namespace autolabor {
         /** 打包（有数据域） */
         template<class info_t>
         inline typename info_t::type_t pack(const std::array<uint8_t, 8> &data, uint8_t frame_id = 0) {
-            static_assert(std::is_same<typename info_t::type_t, msg_u>::value,
+            static_assert(std::is_same<typename info_t::type_t, pack_with_data>::value,
                           "cannot build a message pack with signal info");
             
             typename info_t::type_t msg{};
-            msg.data          = info_t::stub;
-            msg.data.frame_id = frame_id;
-            std::memcpy(msg.data.data, data.data(), data.size());
+            msg = info_t::stub;
+            msg.frame_id = frame_id;
+            std::memcpy(msg.data, data.data(), data.size());
             fill_crc(bytes_begin(msg) + 1, bytes_end(msg));
             return msg;
         }

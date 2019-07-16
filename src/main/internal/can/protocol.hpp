@@ -13,16 +13,6 @@
 
 namespace autolabor {
     namespace can {
-        /**
-         * 转换器
-         * @tparam t 内容类型
-         */
-        template<class t>
-        union msg_union {
-            uint8_t bytes[sizeof(t)];
-            t       data;
-        };
-    
         /** 计算某个长度的位遮盖 */
         constexpr inline uint8_t mask(uint8_t length) { return 0xffu >> (8u - length); }
         
@@ -79,12 +69,6 @@ namespace autolabor {
             [[nodiscard]] inline std::string to_string() const;
         };
         
-        /** 无数据域 CAN 包转换器 */
-        using union_no_data = msg_union<pack_no_data>;
-        
-        /** 有数据域 CAN 包转换器 */
-        using union_with_data = msg_union<pack_with_data>;
-    
         /**
          * 循环冗余计算
          *
@@ -111,10 +95,10 @@ namespace autolabor {
                 87, 9, 235, 181, 54, 104, 138, 212, 149, 203, 41, 119, 244, 170, 72, 22,
                 233, 183, 85, 11, 136, 214, 52, 106, 43, 117, 151, 201, 74, 20, 246, 168,
                 116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53};
-        
+    
             return std::accumulate(begin, end, static_cast<uint8_t>(0),
                                    [&](uint8_t sum, uint8_t it) { return crc8[sum ^ it]; });
-        
+    
         }
     
         /**

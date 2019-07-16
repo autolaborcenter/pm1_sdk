@@ -21,8 +21,8 @@ namespace autolabor {
         /** 问答结构 */
         template<class node, uint8_t _msg_type>
         struct dialog {
-            using sgn = pack_define_t<sgn_u, 0, 0, node::type_id, node::node_index, _msg_type>;
-            using msg = pack_define_t<msg_u, 0, 0, node::type_id, node::node_index, _msg_type>;
+            using sgn = pack_define_t<pack_no_data, 0, 0, node::type_id, node::node_index, _msg_type>;
+            using msg = pack_define_t<pack_with_data, 0, 0, node::type_id, node::node_index, _msg_type>;
             
             using tx  = sgn;
             using rx  = msg;
@@ -142,14 +142,14 @@ namespace autolabor {
          * @return 数据值
          */
         template<class data_t>
-        inline auto get_data_value(const union_with_data &msg)
+        inline auto get_data_value(const pack_with_data &msg)
         -> typename std::decay<data_t>::type {
             using actual_type = typename std::decay<data_t>::type;
             static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
-            
-            msg_union<actual_type> buffer{};
-            std::reverse_copy(msg.data.data, msg.data.data + sizeof(actual_type), buffer.bytes);
-            return buffer.data;
+    
+            data_t data;
+            std::reverse_copy(msg.data, msg.data + sizeof(actual_type), bytes_begin(data));
+            return data;
         }
         
         /**
@@ -166,13 +166,10 @@ namespace autolabor {
         -> decltype(pack<pack_info_t>()) {
             using actual_type = typename std::decay<data_t>::type;
             static_assert(sizeof(actual_type) <= 8, "a pack cannot load more than 8 bytes");
-            
-            msg_union<actual_type> buffer1{};
-            std::array<uint8_t, 8> buffer2{};
-            
-            buffer1.data = value;
-            std::reverse_copy(buffer1.bytes, buffer1.bytes + sizeof(actual_type), buffer2.data());
-            return pack<pack_info_t>(buffer2);
+    
+            std::array<uint8_t, 8> buffer{};
+            std::reverse_copy(bytes_begin(value), bytes_end(value), buffer.data());
+            return pack<pack_info_t>(buffer);
         }
         
         /** 节点状态 */
