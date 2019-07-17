@@ -111,7 +111,7 @@ int main() {
     
             autolabor::telementry_t global{}, odometry{};
             while (mixer.solve(global, odometry))
-                plot << global.x << ' ' << global.x << ' '
+                plot << global.x << ' ' << global.y << ' '
                      << odometry.x << ' ' << odometry.y << std::endl;
             
             using namespace std::chrono_literals;
