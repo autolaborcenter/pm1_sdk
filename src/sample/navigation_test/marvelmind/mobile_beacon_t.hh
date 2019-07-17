@@ -14,20 +14,17 @@
 #include "utilities/serial_port/serial_port.hh"
 
 #include "parser_t.hpp"
+
+#include "../telementry_t.h"
 #include "../mixer/stamped_t.h"
 
 namespace marvelmind {
-    /**
-     * 定位数据
-     */
-    struct telementry_t { double x, y, z; };
-    
     /**
      * 移动标签类
      */
     struct mobile_beacon_t {
         using serial_ptr     = std::unique_ptr<serial_port>;
-        using stamped_data_t = autolabor::stamped_t<telementry_t>;
+        using stamped_data_t = autolabor::stamped_t<autolabor::telementry_t>;
     private:
         serial_ptr port;
         
@@ -35,8 +32,6 @@ namespace marvelmind {
     
         std::deque<stamped_data_t> buffer;
         std::mutex                 buffer_mutex;
-    
-        telementry_t memory[2]{};
     public:
         explicit mobile_beacon_t(const std::string &port_name);
         
@@ -48,13 +43,13 @@ namespace marvelmind {
          * @param container 容器
          */
         template<class t>
-        void fetch(t &container) {
+        size_t fetch(t &container) {
             std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
-            
-            auto begin = buffer.begin(),
-                 end   = buffer.end();
-            container.insert(container.end(), begin, end);
-            buffer.erase(begin, end);
+    
+            auto size = buffer.size();
+            container.insert(container.end(), buffer.begin(), buffer.end());
+            buffer.clear();
+            return size;
         }
     };
     

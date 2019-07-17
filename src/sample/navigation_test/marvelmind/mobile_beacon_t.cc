@@ -35,11 +35,7 @@ mobile_beacon_t(const std::string &port_name)
                            std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
                            buffer.push_back({
                                                 autolabor::now() - std::chrono::milliseconds(delay),
-                                                {
-                                                    x(begin) / 1000.0,
-                                                    y(begin) / 1000.0,
-                                                    z(begin) / 1000.0
-                                                }
+                                                {x(begin) / 1000.0, y(begin) / 1000.0}
                                             });
                 
                            if (first_time) {

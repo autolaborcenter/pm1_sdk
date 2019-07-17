@@ -2,13 +2,14 @@
 // Created by User on 2019/7/3.
 //
 
-#include "pm1_sdk_native.h"
-#include "path_follower/path_manage.hpp"
-#include "path_follower/path_follower_t.hpp"
-
 #include <iostream>
 #include <filesystem>
 #include <chrono>
+
+#include "pm1_sdk_native.h"
+#include "path_follower/path_manage.hpp"
+#include "path_follower/path_follower_t.hpp"
+#include "telementry_t.h"
 
 #define MARVELMIND
 
@@ -16,6 +17,7 @@
 
 #include <thread>
 #include "marvelmind/mobile_beacon_t.hh"
+#include "mixer/mixer_t.hpp"
 
 #endif
 
@@ -67,6 +69,10 @@ int main() {
             return 1;
         }
     }
+    
+    autolabor::mixer_t<autolabor::telementry_t,
+                       autolabor::telementry_t>
+        mixer;
     #endif
     
     { // 设置参数、修改状态
@@ -93,19 +99,23 @@ int main() {
         std::filesystem::remove(marvelmind_file);
         std::fstream plot(marvelmind_file, std::ios::out);
     
-        std::vector<data_t> space;
-        auto                time = autolabor::now();
+        auto time = autolabor::now();
         while (true) {
+            std::vector<data_t> temp;
+            beacon->fetch(temp);
+            for (auto item : temp) mixer.push_back1(item);
+    
+            double x, y, ignore;
+            odometry_simple(x, y, ignore);
+            mixer.push_back2({autolabor::now(), {x, y}});
+    
+            autolabor::telementry_t global{}, odometry{};
+            while (mixer.solve(global, odometry))
+                plot << global.x << ' ' << global.x << ' '
+                     << odometry.x << ' ' << odometry.y << std::endl;
+            
             using namespace std::chrono_literals;
-            auto size = space.size();
-            beacon->fetch(space);
-            if (space.size() > size) std::this_thread::sleep_for(50ms);
-            for (size_t i = size; i < space.size(); ++i) {
-                plot << autolabor::duration_seconds(space[i].time - time) << ' '
-                     << space[i].value.x << ' '
-                     << space[i].value.y << ' '
-                     << space[i].value.z << std::endl;
-            }
+            std::this_thread::sleep_for(50ms);
         }
     }).detach();
     #endif
@@ -127,7 +137,7 @@ int main() {
                     plot << (x = tx) << ' ' << (y = ty) << std::endl;
                     std::cout << "count = " << count++ << std::endl;
                 }
-                std::this_thread::sleep_for(100ms);
+                std::this_thread::sleep_for(50ms);
                 plot.flush();
             }
         }
@@ -180,8 +190,8 @@ int main() {
                         finish = true;
                         break;
                 }
-                
-                std::this_thread::sleep_for(100ms);
+    
+                std::this_thread::sleep_for(50ms);
                 
                 plot << x << ' ' << y << std::endl;
                 plot.flush();
