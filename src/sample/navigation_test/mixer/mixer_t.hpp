@@ -25,10 +25,17 @@ namespace autolabor {
             auto _master = queue1.begin();
             auto _helper = queue2.begin() + 1;
             auto result  = false;
-            while (_master < queue1.end() && _helper < queue2.end())
-                if (_master->time < (_helper - 1)->time) ++_master;
-                else if (_master->time > _helper->time) ++_helper;
-                else {
+            std::cout << queue1.size() << ' ' << queue2.size() << std::endl;
+            while (_master < queue1.end() && _helper < queue2.end()) {
+                std::cout << "0" << std::endl;
+                if (_master->time < (_helper - 1)->time) {
+                    std::cout << "1" << std::endl;
+                    ++_master;
+                } else if (_master->time > _helper->time) {
+                    std::cout << "2" << std::endl;
+                    ++_helper;
+                } else {
+                    std::cout << "3" << std::endl;
                     auto temp1 = _master->time - (_helper - 1)->time,
                          temp2 = _helper->time - _master->time;
                     master = _master->value;
@@ -38,8 +45,9 @@ namespace autolabor {
                     result = true;
                     break;
                 }
+            }
             queue1.erase(queue1.begin(), std::min(queue1.end(), _master + 1));
-            queue2.erase(queue2.begin(), _helper);
+            queue2.erase(queue2.begin(), std::max(queue2.begin(), _helper - 1));
             return result;
         }
     };

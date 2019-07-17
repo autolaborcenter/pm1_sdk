@@ -171,7 +171,6 @@ int main() {
                 switch (result.type()) {
                     case state_t::following:
                         native::drive_physical(result.speed, result.rudder);
-                        std::cout << result.speed << std::endl;
                         break;
                     case state_t::turning:
                         std::cout << "turning" << std::endl;
