@@ -7,10 +7,8 @@
 
 
 namespace autolabor {
-    /**
-     * 定位数据
-     */
     struct telementry_t { double x, y; };
+    struct pose_t { double x, y, theta; };
 }
 
 

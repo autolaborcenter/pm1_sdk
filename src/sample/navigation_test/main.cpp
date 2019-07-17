@@ -11,28 +11,15 @@
 #include "path_follower/path_follower_t.hpp"
 #include "telementry_t.h"
 
-#define MARVELMIND
-
-#ifdef MARVELMIND
-
 #include <thread>
+#include <forward_list>
 #include "marvelmind/mobile_beacon_t.hh"
-#include "mixer/mixer_t.hpp"
-
-#endif
+#include "mixer/matcher_t.hpp"
 
 enum operation_t : uint8_t {
     record,
     navigate
 } operation;
-
-void odometry_simple(double &x, double &y, double &theta) {
-    double ignore;
-    autolabor::pm1::native::get_odometry(
-        ignore, ignore,
-        x, y, theta,
-        ignore, ignore, ignore);
-}
 
 constexpr auto
     path_file       = "path.txt",
@@ -43,6 +30,7 @@ constexpr auto
     step = 0.05;
 
 int main() {
+    using namespace autolabor;
     using namespace autolabor::pm1;
     
     { // native sdk 连接串口
@@ -57,7 +45,6 @@ int main() {
         std::cout << "connected" << std::endl;
     }
     
-    #ifdef MARVELMIND
     using beacon_t = decltype(marvelmind::find_beacon());
     using data_t   = typename marvelmind::mobile_beacon_t::stamped_data_t;
     
@@ -70,10 +57,7 @@ int main() {
         }
     }
     
-    autolabor::mixer_t<autolabor::telementry_t,
-                       autolabor::telementry_t>
-        mixer;
-    #endif
+    autolabor::matcher_t<telementry_t, telementry_t> matcher;
     
     { // 设置参数、修改状态
         native::set_parameter(0, 0.465);
@@ -94,52 +78,69 @@ int main() {
             : operation_t::navigate;
     }
     
-    #ifdef MARVELMIND
-    std::thread([&] {
-        std::filesystem::remove(marvelmind_file);
-        std::fstream plot(marvelmind_file, std::ios::out);
+    std::deque<std::pair<telementry_t, telementry_t>> pairs;
     
-        auto time = autolabor::now();
-        while (true) {
+    const auto locate = [&] {
+        pose_t pose{};
+        { // 取定位数据
             std::vector<data_t> temp;
             beacon->fetch(temp);
-            for (auto item : temp) mixer.push_back1(item);
-    
-            double x, y, ignore;
-            odometry_simple(x, y, ignore);
-            mixer.push_back2({autolabor::now(), {x, y}});
-    
-            autolabor::telementry_t global{}, odometry{};
-            while (mixer.solve(global, odometry))
-                plot << global.x << ' ' << global.y << ' '
-                     << odometry.x << ' ' << odometry.y << std::endl;
-            
-            using namespace std::chrono_literals;
-            std::this_thread::sleep_for(50ms);
+            for (auto item : temp) matcher.push_back1(item);
         }
-    }).detach();
-    #endif
+        { // 取里程计数据
+            double ignore;
+            autolabor::pm1::native::get_odometry(
+                ignore, ignore,
+                pose.x, pose.y, pose.theta,
+                ignore, ignore, ignore);
+            matcher.push_back2({autolabor::now(), {pose.x, pose.y}});
+        }
+        { // 匹配
+            typename decltype(pairs)::value_type pair;
+            while (matcher.match(pair.first, pair.second))
+                pairs.push_back(pair);
+            if (pairs.size() > 50)
+                pairs.erase(pairs.begin(), pairs.end() - 50);
+        }
+        return pose;
+    };
     
     switch (operation) {
         case operation_t::record: { // 记录路径
-            std::filesystem::remove(path_file);
-            std::fstream plot(path_file, std::ios::out);
+            volatile auto flag   = true;
+            auto          thread = std::thread([&] {
+                std::filesystem::remove(path_file);
+                std::fstream recorder(path_file, std::ios::out);
+        
+                size_t size = 0;
+                pose_t pose{NAN, NAN, NAN};
+                while (flag) {
+                    auto location = locate();
+                    bool next;
+                    if (std::isnan(pose.x))
+                        next = true;
+                    else {
+                        auto dx = pose.x - location.x,
+                             dy = pose.y - location.y;
+                        next = dx * dx + dy * dy > step * step;
+                    }
+                    if (next) {
+                        pose = location;
+                        recorder << pose.x << ' ' << pose.y << std::endl;
+                        std::cout << "count = " << ++size << std::endl;
+                    }
             
-            size_t count = 0;
-            double x, y, ignore;
-            odometry_simple(x, y, ignore);
-            plot << x << ' ' << y << std::endl;
-            while (true) {
-                using namespace std::chrono_literals;
-                double tx, ty;
-                odometry_simple(tx, ty, ignore);
-                if (std::abs(tx - x) + std::abs(ty - y) > step) {
-                    plot << (x = tx) << ' ' << (y = ty) << std::endl;
-                    std::cout << "count = " << count++ << std::endl;
+                    recorder.flush();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
-                std::this_thread::sleep_for(50ms);
-                plot.flush();
-            }
+                recorder.close();
+            });
+    
+            std::string command;
+            do std::cin >> command;
+            while (command != "stop");
+            flag = false;
+            thread.join();
         }
             break;
         case operation_t::navigate: { // 进行导航
@@ -163,11 +164,10 @@ int main() {
             auto finish = false;
             while (!finish) {
                 using namespace std::chrono_literals;
-                
-                double x, y, theta, ignore;
-                odometry_simple(x, y, theta);
-                auto result = controller(x, y, theta);
     
+                auto pose   = locate();
+                auto result = controller(pose.x, pose.y, pose.theta);
+                
                 switch (result.type()) {
                     case state_t::following:
                         native::drive_physical(result.speed, result.rudder);
@@ -176,11 +176,13 @@ int main() {
                         std::cout << "turning" << std::endl;
                         native::drive_physical(0, NAN);
                         std::this_thread::sleep_for(100ms);
-            
-                        native::drive_spatial(0, result.rudder > 0 ? 1 : -1,
-                                              0, result.rudder,
-                                              ignore);
-                        native::adjust_rudder(0, ignore);
+                        {
+                            double ignore;
+                            native::drive_spatial(0, result.rudder > 0 ? 1 : -1,
+                                                  0, result.rudder,
+                                                  ignore);
+                            native::adjust_rudder(0, ignore);
+                        }
                         break;
                     case state_t::failed:
                         std::cerr << "following failed" << std::endl;
@@ -190,10 +192,10 @@ int main() {
                         break;
                 }
     
-                std::this_thread::sleep_for(50ms);
-                
-                plot << x << ' ' << y << std::endl;
+                plot << pose.x << ' ' << pose.y << std::endl;
                 plot.flush();
+                
+                std::this_thread::sleep_for(50ms);
             }
             plot.close();
         }

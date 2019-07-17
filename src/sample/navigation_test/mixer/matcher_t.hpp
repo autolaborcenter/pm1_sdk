@@ -2,8 +2,8 @@
 // Created by User on 2019/7/16.
 //
 
-#ifndef PM1_SDK_MIXER_T_HPP
-#define PM1_SDK_MIXER_T_HPP
+#ifndef PM1_SDK_MATCHER_T_HPP
+#define PM1_SDK_MATCHER_T_HPP
 
 
 #include <deque>
@@ -13,7 +13,7 @@
 
 namespace autolabor {
     template<class t1, class t2>
-    class mixer_t {
+    class matcher_t {
         std::deque<stamped_t < t1>> queue1;
         std::deque<stamped_t < t2>> queue2;
     public:
@@ -21,7 +21,7 @@ namespace autolabor {
     
         void push_back2(const stamped_t <t2> &data) { queue2.push_back(data); }
     
-        bool solve(t1 &master, t2 &helper) {
+        bool match(t1 &master, t2 &helper) {
             auto _master = queue1.begin();
             auto _helper = queue2.begin() + 1;
             auto result  = false;
@@ -54,4 +54,4 @@ namespace autolabor {
 }
 
 
-#endif //PM1_SDK_MIXER_T_HPP
+#endif //PM1_SDK_MATCHER_T_HPP
