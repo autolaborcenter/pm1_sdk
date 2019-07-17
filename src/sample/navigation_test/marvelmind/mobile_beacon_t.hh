@@ -14,30 +14,27 @@
 #include "utilities/serial_port/serial_port.hh"
 
 #include "parser_t.hpp"
+#include "../mixer/stamped_t.h"
 
 namespace marvelmind {
     /**
      * 定位数据
      */
-    struct telementry_t {
-        decltype(autolabor::now()) time;
-        uint32_t                   time_stamp;
-        uint16_t                   time_passed;
-        double                     x, y, z;
-    };
+    struct telementry_t { double x, y, z; };
     
     /**
      * 移动标签类
      */
-    class mobile_beacon_t {
-        using serial_ptr = std::unique_ptr<serial_port>;
-        
+    struct mobile_beacon_t {
+        using serial_ptr     = std::unique_ptr<serial_port>;
+        using stamped_data_t = autolabor::stamped_t<telementry_t>;
+    private:
         serial_ptr port;
         
         std::shared_ptr<bool> running;
-        
-        std::deque<telementry_t> buffer;
-        std::mutex               buffer_mutex;
+    
+        std::deque<stamped_data_t> buffer;
+        std::mutex                 buffer_mutex;
     public:
         explicit mobile_beacon_t(const std::string &port_name);
         

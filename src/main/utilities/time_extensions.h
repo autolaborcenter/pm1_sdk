@@ -24,6 +24,17 @@ namespace autolabor {
     }
     
     /**
+     * 转换为[duration]
+     *
+     * @param seconds 秒数
+     * @return 对应的 std::chrono::duration
+     */
+    template<class t1, class t2>
+    inline double duration_seconds(const std::chrono::duration<t1, t2> &duration) {
+        return std::chrono::duration_cast<seconds_floating>(duration).count();
+    }
+    
+    /**
      * 从高精度时钟获取当前时间
      *
      * @return 当前时间

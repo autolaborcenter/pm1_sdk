@@ -22,7 +22,7 @@
 enum operation_t : uint8_t {
     record,
     navigate
-} this_time;
+} operation;
 
 void odometry_simple(double &x, double &y, double &theta) {
     double ignore;
@@ -56,7 +56,10 @@ int main() {
     }
     
     #ifdef MARVELMIND
-    decltype(marvelmind::find_beacon()) beacon;
+    using beacon_t = decltype(marvelmind::find_beacon());
+    using data_t   = typename marvelmind::mobile_beacon_t::stamped_data_t;
+    
+    beacon_t beacon;
     { // 连接定位标签
         try { beacon = marvelmind::find_beacon(); }
         catch (std::exception &e) {
@@ -79,7 +82,7 @@ int main() {
         std::string command;
         std::cout << "input operation: ";
         std::cin >> command;
-        this_time =
+        operation =
             command == "record"
             ? operation_t::record
             : operation_t::navigate;
@@ -89,25 +92,25 @@ int main() {
     std::thread([&] {
         std::filesystem::remove(marvelmind_file);
         std::fstream plot(marvelmind_file, std::ios::out);
-        
-        std::vector<marvelmind::telementry_t> space;
+    
+        std::vector<data_t> space;
+        auto                time = autolabor::now();
         while (true) {
             using namespace std::chrono_literals;
             auto size = space.size();
             beacon->fetch(space);
             if (space.size() > size) std::this_thread::sleep_for(50ms);
             for (size_t i = size; i < space.size(); ++i) {
-                plot << space[i].time_stamp << ' '
-                     << space[i].time_passed << ' '
-                     << space[i].x << ' '
-                     << space[i].y << ' '
-                     << space[i].z << std::endl;
+                plot << autolabor::duration_seconds(space[i].time - time) << ' '
+                     << space[i].value.x << ' '
+                     << space[i].value.y << ' '
+                     << space[i].value.z << std::endl;
             }
         }
     }).detach();
     #endif
     
-    switch (this_time) {
+    switch (operation) {
         case operation_t::record: { // 记录路径
             std::filesystem::remove(path_file);
             std::fstream plot(path_file, std::ios::out);

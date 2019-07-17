@@ -61,21 +61,19 @@ mobile_beacon_t(const std::string &port_name)
                 
                         using namespace marvelmind::resolution_coordinate;
     
-                        auto         begin = result.bytes.data() + 5;
-                        telementry_t telementry{
-                            autolabor::now(),
-                            time_stamp(begin),
-                            time_passed(begin),
-                            x(begin) / 1000.0,
-                            y(begin) / 1000.0,
-                            z(begin) / 1000.0
-                        };
-    
-                        if (telementry.time_passed > 250)
-                            return;
-    
+                        auto begin = result.bytes.data() + 5;
+                        auto delay = time_passed(begin);
+                        if (delay > 250) return;
+                
                         std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
-                        buffer.push_back(telementry);
+                        buffer.push_back({
+                                             autolabor::now() - std::chrono::milliseconds(delay),
+                                             {
+                                                 x(begin) / 1000.0,
+                                                 y(begin) / 1000.0,
+                                                 z(begin) / 1000.0
+                                             }
+                                         });
                     });
     }).detach();
 }
