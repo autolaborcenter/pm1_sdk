@@ -65,18 +65,15 @@ struct tool_t {
     void                 *handle;
 };
 
-void WINAPI callback(DWORD error_code,
-                     DWORD actual,
-                     LPOVERLAPPED overlapped) {
+void WINAPI callback(
+    DWORD error_code,
+    DWORD actual,
+    LPOVERLAPPED overlapped
+) {
     auto tool = static_cast<tool_t *>(overlapped->hEvent);
     
-    if (error_code != ERROR_SUCCESS) {
+    if (error_code != ERROR_SUCCESS)
         PurgeComm(tool->handle, PURGE_TXABORT | PURGE_TXCLEAR);
-        ClearCommError(tool->handle,
-                       (LPDWORD) (CE_BREAK | CE_FRAME | CE_OVERRUN | CE_RXOVER | CE_RXPARITY),
-                       nullptr);
-    }
-    
     delete tool;
     delete overlapped;
 }
@@ -98,16 +95,15 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
     weak_lock_guard<std::mutex> lock(read_mutex);
     if (!lock) return 0;
     
-    DWORD      event = 0;
+    DWORD      event = 0,
+               error = ERROR_SUCCESS;
     OVERLAPPED overlapped{};
     
     do {
         overlapped.hEvent = CreateEventA(nullptr, true, false, nullptr);
-        if (!WaitCommEvent(handle, &event, &overlapped)) {
-            auto condition = GetLastError();
-            if (condition != ERROR_IO_PENDING)
-                THROW("WaitCommEvent", condition);
-        }
+        if (!WaitCommEvent(handle, &event, &overlapped)
+            && (error = GetLastError()) != ERROR_IO_PENDING)
+            THROW("WaitCommEvent", error);
         
         DWORD progress = 0;
         GetOverlappedResult(handle, &overlapped, &progress, true);
@@ -115,8 +111,7 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
     } while (!(event & EV_RXCHAR));
     
     ReadFile(handle, buffer, size, nullptr, &overlapped);
-    auto condition = GetLastError();
-    switch (condition) {
+    switch (error = GetLastError()) {
         case ERROR_SUCCESS:
         case ERROR_IO_PENDING: {
             DWORD actual = 0;
@@ -125,7 +120,7 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
         }
         default:
             PurgeComm(handle, PURGE_RXABORT | PURGE_RXCLEAR);
-            THROW("ReadFile", condition);
+            THROW("ReadFile", error);
     }
 }
 

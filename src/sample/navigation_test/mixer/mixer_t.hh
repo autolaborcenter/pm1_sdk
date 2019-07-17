@@ -7,6 +7,7 @@
 
 
 namespace autolabor {
+    template<class t1, class t2>
     class mixer_t {
     
     };

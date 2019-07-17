@@ -19,63 +19,50 @@ mobile_beacon_t(const std::string &port_name)
     : port(std::make_unique<serial_port>(port_name, 115200)),
       running(std::make_shared<bool>(true)) {
     std::condition_variable signal;
-    std::mutex              signal_mutex;
     
-    std::atomic_bool parsed  = false,
-                     abandon = false;
-    
-    std::thread([&] {
-        using namespace std::chrono_literals;
+    std::thread([&, _running = running] {
+        auto       first_time = true;
+        const auto function   =
+                       [&](const typename engine_t::result_t &result) {
+                           if (!*_running || result.type != parser_t::result_type_t::success)
+                               return;
+                
+                           using namespace marvelmind::resolution_coordinate;
+                           auto begin = result.bytes.data() + 5;
+                           auto delay = time_passed(begin);
+                           if (delay > 250) return;
+                
+                           std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
+                           buffer.push_back({
+                                                autolabor::now() - std::chrono::milliseconds(delay),
+                                                {
+                                                    x(begin) / 1000.0,
+                                                    y(begin) / 1000.0,
+                                                    z(begin) / 1000.0
+                                                }
+                                            });
+                
+                           if (first_time) {
+                               first_time = false;
+                               signal.notify_all();
+                           }
+                       };
         
-        std::unique_lock<std::mutex> own(signal_mutex);
-        if (signal.wait_for(own, 1s, [&] { return parsed.load(); }))
-            return;
-        
-        abandon = true;
-        port->break_read();
-    }).detach();
-    
-    engine_t _engine;
-    word_t   _buffer[64]{};
-    while (!parsed) {
-        constexpr static auto error_message = "no position data until timeout";
-        
-        if (abandon) throw std::runtime_error(error_message);
-        _engine(_buffer, _buffer + port->read(_buffer, sizeof(_buffer)),
-                [&](const typename engine_t::result_t &result) {
-                    if (result.type == parser_t::result_type_t::success) {
-                        parsed = true;
-                        signal.notify_all();
-                    }
-                });
-    }
-    
-    std::thread([flag = running, this] {
         engine_t _engine;
         word_t   _buffer[64]{};
-        while (*flag)
-            _engine(_buffer, _buffer + port->read(_buffer, sizeof(_buffer)),
-                    [&](const typename engine_t::result_t &result) {
-                        if (result.type != parser_t::result_type_t::success)
-                            return;
-                
-                        using namespace marvelmind::resolution_coordinate;
-    
-                        auto begin = result.bytes.data() + 5;
-                        auto delay = time_passed(begin);
-                        if (delay > 250) return;
-                
-                        std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
-                        buffer.push_back({
-                                             autolabor::now() - std::chrono::milliseconds(delay),
-                                             {
-                                                 x(begin) / 1000.0,
-                                                 y(begin) / 1000.0,
-                                                 z(begin) / 1000.0
-                                             }
-                                         });
-                    });
+        while (*_running) _engine(_buffer, _buffer + port->read(_buffer, sizeof(_buffer)), function);
     }).detach();
+    
+    using namespace std::chrono_literals;
+    
+    std::mutex                   signal_mutex;
+    std::unique_lock<std::mutex> own(signal_mutex);
+    if (signal.wait_for(own, 1s, [&] { return !buffer.empty(); }))
+        return;
+    
+    *running = false;
+    port->break_read();
+    throw std::runtime_error("no position data until timeout");
 }
 
 marvelmind::mobile_beacon_t::~mobile_beacon_t() {

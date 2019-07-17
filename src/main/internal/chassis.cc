@@ -40,7 +40,7 @@ inline serial_port &operator<<(
 }
 
 template<class t>
-inline void atomic_plus_assign(std::atomic <t> &a, const t &b) noexcept {
+inline void atomic_plus_assign(std::atomic<t> &a, const t &b) noexcept {
     auto expected = a.load();
     auto desired  = expected + b;
     while (!a.compare_exchange_strong(expected, desired))
@@ -119,25 +119,25 @@ chassis::chassis(const std::string &port_name)
              << autolabor::can::pack<tcu<0>::current_position_tx>();
     
         std::condition_variable signal;
-        std::mutex              signal_mutex;
     
         volatile bool temp[]{false, false, false},
                       abandon = false;
     
-        std::thread([&, this] {
+        auto timer = std::thread([&] {
             using namespace std::chrono_literals;
         
-            std::unique_lock <std::mutex> own(signal_mutex);
-            if (signal.wait_for(own, check_timeout, [&] { return temp[0] && temp[1] && temp[2]; }))
+            std::mutex                   signal_mutex;
+            std::unique_lock<std::mutex> own(signal_mutex);
+            if (signal.wait_for(own, 1s, [&] { return temp[0] && temp[1] && temp[2]; }))
                 return;
         
             abandon = true;
             port.break_read();
-        }).detach();
-        
-        auto parse = [&, this](const autolabor::can::parser_t::result_t &result) {
-            if (result.type != result_t::message) return;
+        });
     
+        auto parse = [&](const autolabor::can::parser_t::result_t &result) {
+            if (result.type != result_t::message) return;
+        
             if (ecu<0>::current_position_rx::match(result.message)) {
                 _left.update(now(), RAD_OF(get_data_value<int>(result.message), default_wheel_k));
                 temp[0] = true;
@@ -153,17 +153,20 @@ chassis::chassis(const std::string &port_name)
         engine_t engine;
         uint8_t  buffer[64];
         while (!temp[0] || !temp[1] || !temp[2]) {
-            engine(buffer, buffer + port.read(buffer, sizeof(buffer)), parse);
+            try { engine(buffer, buffer + port.read(buffer, sizeof(buffer)), parse); }
+            catch (...) { abandon = true; }
             if (abandon) {
                 std::stringstream builder;
                 builder << "it's not a pm1 chassis: [ecu0|ecu1|tcu0] = ["
                         << (temp[0] ? '*' : 'x') << '|'
                         << (temp[1] ? '*' : 'x') << '|'
                         << (temp[2] ? '*' : 'x') << ']';
+                timer.join();
                 throw std::runtime_error(builder.str());
             }
         }
         signal.notify_all();
+        timer.join();
     }
     // endregion
     // region initialize ask
@@ -219,37 +222,37 @@ chassis::chassis(const std::string &port_name)
         
             auto msg = result.message;
         
-            if (unit < ecu < 0 >> ::state_rx::match(msg)) {
+            if (unit<ecu<0 >>::state_rx::match(msg)) {
                 reply_time[0] = _now;
                 if (node_state_t::enabled == (chassis_state.ecu0() = parse_state(*msg.data))) {
                     if (!enabled_target)
-                        port << can::pack < unit < ecu < 0 >> ::emergency_stop > ();
+                        port << can::pack<unit<ecu<0 >>::emergency_stop>();
                 } else {
                     if (enabled_target)
-                        port << pack_value < unit < ecu < 0 >> ::release_stop, uint8_t > (0xff);
+                        port << pack_value<unit<ecu<0 >>::release_stop, uint8_t>(0xff);
                 }
             
-            } else if (unit < ecu < 1 >> ::state_rx::match(msg)) {
+            } else if (unit<ecu<1 >>::state_rx::match(msg)) {
                 reply_time[1] = _now;
                 if (node_state_t::enabled == (chassis_state.ecu1() = parse_state(*msg.data))) {
                     if (!enabled_target)
-                        port << can::pack < unit < ecu < 1 >> ::emergency_stop > ();
+                        port << can::pack<unit<ecu<1 >>::emergency_stop>();
                 } else {
                     if (enabled_target)
-                        port << pack_value < unit < ecu < 1 >> ::release_stop, uint8_t > (0xff);
+                        port << pack_value<unit<ecu<1 >>::release_stop, uint8_t>(0xff);
                 }
             
-            } else if (unit < tcu < 0 >> ::state_rx::match(msg)) {
+            } else if (unit<tcu<0 >>::state_rx::match(msg)) {
                 reply_time[2] = _now;
                 if (node_state_t::enabled == (chassis_state.tcu() = parse_state(*msg.data))) {
                     if (!enabled_target)
-                        port << can::pack < unit < tcu < 0 >> ::emergency_stop > ();
+                        port << can::pack<unit<tcu<0 >>::emergency_stop>();
                 } else {
                     if (enabled_target)
-                        port << pack_value < unit < tcu < 0 >> ::release_stop, uint8_t > (0xff);
+                        port << pack_value<unit<tcu<0 >>::release_stop, uint8_t>(0xff);
                 }
             
-            } else if (unit < vcu < 0 >> ::state_rx::match(msg)) {
+            } else if (unit<vcu<0 >>::state_rx::match(msg)) {
                 reply_time[3] = _now;
                 chassis_state.vcu() = parse_state(*msg.data);
                 

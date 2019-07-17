@@ -35,6 +35,8 @@ namespace marvelmind {
     
         std::deque<stamped_data_t> buffer;
         std::mutex                 buffer_mutex;
+    
+        telementry_t memory[2]{};
     public:
         explicit mobile_beacon_t(const std::string &port_name);
         
