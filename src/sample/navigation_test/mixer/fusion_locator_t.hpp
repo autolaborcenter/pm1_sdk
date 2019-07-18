@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <numeric>
+#include <eigen3/Eigen/LU>
 
 #include "../telementry_t.h"
 #include "matcher_t.hpp"
@@ -106,7 +107,6 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
             typename _t::targets_t    y;
             p.resize(2 * size, 4);
             y.resize(2 * size);
-            std::cout << 2 * size << std::endl;
             
             size_t          i = 0;
             for (const auto &item : pairs) {
@@ -129,14 +129,18 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
                 y(i)    = target[1];
                 ++i;
             }
-            auto pt   = p.transpose();
-            auto temp = pt * p;
-            std::cout << temp.rows() << ' ' << temp.cols() << std::endl;
-            //std::cout << temp.determinant() << std::endl;
+            auto pt          = p.transpose();
+            auto temp        = pt * p;
+            auto determinant = temp.determinant();
+            std::cout << "size = " << size << std::endl
+                      << "det = " << determinant << std::endl;
+            if (std::abs(determinant) < 0.2)
+                break;
+            auto solve = temp.inverse() * pt * y;
+            std::cout << solve << std::endl;
         }
             break;
     }
-    std::cout << "xxx: " << transformer.core << std::endl;
 }
 
 #endif // PM1_SDK_FUSION_LOCATOR_T_HPP

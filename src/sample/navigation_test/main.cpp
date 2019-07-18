@@ -44,7 +44,7 @@ int main() {
             std::cout << error << std::endl;
             return 1;
         }
-        std::cout << "connected" << std::endl;
+        std::cout << "chassis connected" << std::endl;
     }
     
     using beacon_t = decltype(marvelmind::find_beacon());
@@ -57,6 +57,7 @@ int main() {
             std::cerr << e.what() << std::endl;
             return 1;
         }
+        std::cout << "beacon connected" << std::endl;
     }
     
     autolabor::fusion_locator_t<50> locator;
