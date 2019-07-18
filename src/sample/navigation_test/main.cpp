@@ -96,7 +96,7 @@ int main() {
             matcher.push_back2({autolabor::now(), {pose.x, pose.y}});
         }
         { // 匹配
-            typename decltype(pairs)::value_type pair;
+            std::pair<telementry_t, telementry_t> pair;
             while (matcher.match(pair.first, pair.second))
                 pairs.push_back(pair);
             if (pairs.size() > 50)
