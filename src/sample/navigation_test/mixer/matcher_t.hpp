@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by User on 2019/7/16.
 //
 
@@ -12,30 +12,39 @@
 #include "stamped_t.h"
 
 namespace autolabor {
-    template<class t1, class t2>
+    /**
+     * 时序匹配器
+     * @tparam master_t 主配类型
+     * @tparam helper_t 匹配类型
+     */
+    template<class master_t, class helper_t>
     class matcher_t {
-        std::deque<stamped_t < t1>> queue1;
-        std::deque<stamped_t < t2>> queue2;
+        std::deque<stamped_t < master_t>> queue1;
+        std::deque<stamped_t < helper_t>> queue2;
     public:
-        void push_back1(const stamped_t <t1> &data) { queue1.push_back(data); }
+        /** 向主配队列添加元素 */
+        void push_back_master(const stamped_t <master_t> &data) { queue1.push_back(data); }
     
-        void push_back2(const stamped_t <t2> &data) { queue2.push_back(data); }
+        /** 向匹配队列增加元素 */
+        void push_back_helper(const stamped_t <helper_t> &data) { queue2.push_back(data); }
     
-        bool match(t1 &master, t2 &helper) {
-            auto _master = queue1.begin();
-            auto _helper = queue2.begin() + 1;
+        /** 
+         * 执行一次匹配
+         * 找到一对匹配项或无法找到匹配项时退出
+         * 匹配项满足：
+         * * 主配元素时刻在一对匹配元素时刻之间
+         * * 匹配元素在整个匹配列表中与主配元素最接近
+         */
+        bool match(master_t &master, helper_t &helper) {
+            auto _master = queue1.begin();     // 主配元素迭代器，每一个都能匹配
+            auto _helper = queue2.begin() + 1; // 匹配元素迭代器，至少要有两个
             auto result  = false;
-            std::cout << queue1.size() << ' ' << queue2.size() << std::endl;
             while (_master < queue1.end() && _helper < queue2.end()) {
-                std::cout << "0" << std::endl;
-                if (_master->time < (_helper - 1)->time) {
-                    std::cout << "1" << std::endl;
+                if (_master->time < (_helper - 1)->time)
                     ++_master;
-                } else if (_master->time > _helper->time) {
-                    std::cout << "2" << std::endl;
+                else if (_master->time > _helper->time)
                     ++_helper;
-                } else {
-                    std::cout << "3" << std::endl;
+                else {
                     auto temp1 = _master->time - (_helper - 1)->time,
                          temp2 = _helper->time - _master->time;
                     master = _master->value;

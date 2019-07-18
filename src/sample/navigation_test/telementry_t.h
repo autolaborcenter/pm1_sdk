@@ -9,6 +9,7 @@
 namespace autolabor {
     struct telementry_t { double x, y; };
     struct pose_t { double x, y, theta; };
+    const pose_t invalid_pose{NAN, NAN, NAN};
 }
 
 

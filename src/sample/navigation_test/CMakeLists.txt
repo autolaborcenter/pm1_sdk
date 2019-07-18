@@ -19,6 +19,8 @@ add_executable(navigation
 
         mixer/stamped_t.h
         mixer/matcher_t.hpp
+        mixer/fusion_locator_t.hpp
+        mixer/transformer_t.hpp
 
         main.cpp telementry_t.h)
 target_link_libraries(navigation pm1_sdk)

@@ -2,9 +2,11 @@
 // Created by User on 2019/7/3.
 //
 
+#include <string>
 #include <iostream>
 #include <filesystem>
 #include <chrono>
+#include <numeric>
 
 #include "pm1_sdk_native.h"
 #include "path_follower/path_manage.hpp"
@@ -12,9 +14,9 @@
 #include "telementry_t.h"
 
 #include <thread>
-#include <forward_list>
 #include "marvelmind/mobile_beacon_t.hh"
 #include "mixer/matcher_t.hpp"
+#include "mixer/fusion_locator_t.hpp"
 
 enum operation_t : uint8_t {
     record,
@@ -57,7 +59,7 @@ int main() {
         }
     }
     
-    autolabor::matcher_t<telementry_t, telementry_t> matcher;
+    autolabor::fusion_locator_t locator(50);
     
     { // 设置参数、修改状态
         native::set_parameter(0, 0.465);
@@ -78,14 +80,14 @@ int main() {
             : operation_t::navigate;
     }
     
-    std::deque<std::pair<telementry_t, telementry_t>> pairs;
+    using location_pair = std::pair<telementry_t, telementry_t>;
     
     const auto locate = [&] {
         pose_t pose{};
         { // 取定位数据
             std::vector<data_t> temp;
             beacon->fetch(temp);
-            for (auto item : temp) matcher.push_back1(item);
+            for (auto item : temp) locator.push_back_master(item);
         }
         { // 取里程计数据
             double ignore;
@@ -93,16 +95,10 @@ int main() {
                 ignore, ignore,
                 pose.x, pose.y, pose.theta,
                 ignore, ignore, ignore);
-            matcher.push_back2({autolabor::now(), {pose.x, pose.y}});
+            locator.push_back_helper({autolabor::now(), {pose.x, pose.y}});
         }
-        { // 匹配
-            std::pair<telementry_t, telementry_t> pair;
-            while (matcher.match(pair.first, pair.second))
-                pairs.push_back(pair);
-            if (pairs.size() > 50)
-                pairs.erase(pairs.begin(), pairs.end() - 50);
-        }
-        return pose;
+        locator.refresh();
+        return locator[pose];
     };
     
     switch (operation) {
@@ -111,7 +107,7 @@ int main() {
             auto          thread = std::thread([&] {
                 std::filesystem::remove(path_file);
                 std::fstream recorder(path_file, std::ios::out);
-        
+    
                 size_t size = 0;
                 pose_t pose{NAN, NAN, NAN};
                 while (flag) {
@@ -129,7 +125,7 @@ int main() {
                         recorder << pose.x << ' ' << pose.y << std::endl;
                         std::cout << "count = " << ++size << std::endl;
                     }
-            
+    
                     recorder.flush();
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
