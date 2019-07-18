@@ -6,6 +6,8 @@
 #define PM1_SDK_TELEMENTRY_T_H
 
 
+#include <cmath>
+
 namespace autolabor {
     struct telementry_t { double x, y; };
     struct pose_t { double x, y, theta; };

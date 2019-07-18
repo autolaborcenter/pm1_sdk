@@ -123,7 +123,6 @@ int main() {
                     if (next) {
                         pose = location;
                         recorder << pose.x << ' ' << pose.y << std::endl;
-                        std::cout << "count = " << ++size << std::endl;
                     }
     
                     recorder.flush();

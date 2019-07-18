@@ -49,12 +49,10 @@ namespace autolabor {
 } // namespace autolabor
 
 template<size_t max_size> struct types {
-    using vector2d_t = Eigen::Vector<double, 2>;
+    using vector2d_t           = Eigen::Vector<double, 2>;
     using linear_transformer_t = Eigen::Matrix<double, 2, 2>;
-    using parameters_t =
-    Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::StorageOptions::ColMajor,
-                  2 * max_size, 4>;
-    using targets_t = Eigen::Vector<double, 2 * max_size>;
+    using parameters_t         = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+    using targets_t            = Eigen::Vector<double, Eigen::Dynamic>;
 };
 
 template<size_t max_size>
@@ -108,6 +106,7 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
             typename _t::targets_t    y;
             p.resize(2 * size, 4);
             y.resize(2 * size);
+            std::cout << 2 * size << std::endl;
             
             size_t          i = 0;
             for (const auto &item : pairs) {
@@ -132,11 +131,12 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
             }
             auto pt   = p.transpose();
             auto temp = pt * p;
-            std::cout << temp.determinant() << std::endl;
+            std::cout << temp.rows() << ' ' << temp.cols() << std::endl;
+            //std::cout << temp.determinant() << std::endl;
         }
             break;
     }
-    std::cout << transformer.core << std::endl;
+    std::cout << "xxx: " << transformer.core << std::endl;
 }
 
 #endif // PM1_SDK_FUSION_LOCATOR_T_HPP

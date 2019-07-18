@@ -7,6 +7,7 @@
 
 
 #include <cstdint>
+#include <cstddef>
 
 namespace marvelmind {
     constexpr uint8_t
