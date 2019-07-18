@@ -6,7 +6,6 @@
 #include <iostream>
 #include <filesystem>
 #include <chrono>
-#include <numeric>
 
 #include "pm1_sdk_native.h"
 #include "path_follower/path_manage.hpp"
@@ -25,8 +24,7 @@ enum operation_t : uint8_t {
 
 constexpr auto
     path_file       = "path.txt",
-    navigation_file = "navigation.txt",
-    marvelmind_file = "marvelmind.txt";
+    navigation_file = "navigation.txt";
 
 constexpr auto
     step = 0.05;
@@ -46,11 +44,7 @@ int main() {
         }
         std::cout << "chassis connected" << std::endl;
     }
-    
-    using beacon_t = decltype(marvelmind::find_beacon());
-    using data_t   = typename marvelmind::mobile_beacon_t::stamped_data_t;
-    
-    beacon_t beacon;
+    decltype(marvelmind::find_beacon()) beacon;
     { // 连接定位标签
         try { beacon = marvelmind::find_beacon(); }
         catch (std::exception &e) {
@@ -59,9 +53,6 @@ int main() {
         }
         std::cout << "beacon connected" << std::endl;
     }
-    
-    autolabor::fusion_locator_t<50> locator;
-    
     { // 设置参数、修改状态
         native::set_parameter(0, 0.465);
         native::set_parameter(1, 0.355);
@@ -70,7 +61,6 @@ int main() {
         native::set_enabled(true);
         native::set_command_enabled(false);
     }
-    
     { // 读取指令
         std::string command;
         std::cout << "input operation: ";
@@ -81,11 +71,11 @@ int main() {
             : operation_t::navigate;
     }
     
-    using location_pair = std::pair<telementry_t, telementry_t>;
-    
-    const auto locate = [&] {
+    autolabor::fusion_locator_t<50> locator;
+    const auto                      locate = [&] {
         pose_t pose{};
         { // 取定位数据
+            using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
             std::vector<data_t> temp;
             beacon->fetch(temp);
             for (auto item : temp) locator.push_back_master(item);
@@ -161,9 +151,9 @@ int main() {
             while (!finish) {
                 using namespace std::chrono_literals;
     
-                auto pose   = locate();
+                auto pose = locate();
                 std::cout << pose.x << ' ' << pose.y << std::endl;
-
+    
                 auto result = controller(pose.x, pose.y, pose.theta);
                 
                 switch (result.type()) {

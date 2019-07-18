@@ -92,6 +92,7 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
         }
             break;
         default: { // 更多点匹配，确定坐标系
+            // 求质心
             auto centres = std::accumulate(
                 pairs.begin(), pairs.end(), location_pair{},
                 [](const location_pair &sum, const location_pair &item) {
@@ -102,7 +103,8 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
             
             typename _t::vector2d_t cs{centres.first.x / size, centres.first.y / size},
                                     ct{centres.second.x / size, centres.second.y / size};
-            
+    
+            // 初始化
             typename _t::parameters_t p;
             typename _t::targets_t    y;
             p.resize(2 * size, 4);
@@ -114,30 +116,25 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
                                         target{item.second.x, item.second.y};
                 source -= cs;
                 target -= ct;
-                
-                p(i, 0) = source[0];
-                p(i, 1) = source[1];
-                p(i, 2) = 0;
-                p(i, 3) = 0;
-                y(i)    = target[0];
-                ++i;
-                
-                p(i, 0) = 0;
-                p(i, 1) = 0;
-                p(i, 2) = source[0];
-                p(i, 3) = source[1];
-                y(i)    = target[1];
-                ++i;
+    
+                p.row(i) << source[0], source[1], 0, 0;
+                y(i++) = target[0];
+                p.row(i) << 0, 0, source[0], source[1];
+                y(i++) = target[1];
             }
-            auto pt          = p.transpose();
-            auto temp        = pt * p;
-            auto determinant = temp.determinant();
-            std::cout << "size = " << size << std::endl
-                      << "det = " << determinant << std::endl;
-            if (std::abs(determinant) < 0.2)
+            auto pt  = p.transpose();
+            auto ptp = pt * p;
+            if (std::abs(ptp.determinant()) < 1E-6)
                 break;
-            auto solve = temp.inverse() * pt * y;
-            std::cout << solve << std::endl;
+    
+            auto solve = ptp.inverse() * pt * y;
+            a << solve[0], solve[1], solve[2], solve[3];
+            auto det = a.determinant();
+            std::cout << "size = " << size << std::endl
+                      << "det = " << det << std::endl;
+            if (std::abs(det) < 0.4 || std::abs(det) < 2.5)
+                break;
+            transformer.build(cs, ct, a);
         }
             break;
     }
