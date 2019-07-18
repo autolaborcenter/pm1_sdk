@@ -8,17 +8,14 @@
 #include <eigen3/Eigen/Core>
 
 template<class scalar_t = double, int dimension = 2>
-class transformer_t {
-public:
+struct transformer_t {
     using linear_t      = Eigen::Matrix<scalar_t, dimension, dimension>;
     using core_t        = Eigen::Matrix<scalar_t, dimension, dimension + 1>;
     using coordinates_t = Eigen::Vector<scalar_t, dimension>;
-
-private:
+    
     // 核心变换矩阵
     core_t core;
-
-public:
+    
     transformer_t() : core(core_t::Zero()) {
         for (size_t i = 0; i < dimension; ++i)
             core(i, i) = 1;
@@ -39,7 +36,7 @@ public:
         homogeneous_t temp = homogeneous_t::Zero();
         
         for (size_t i = 0; i < dimension; ++i) temp[i] = value[i];
-        temp[dimension - 1]                            = 1;
+        temp[dimension]                                = 1;
         value = core * temp;
     }
 };

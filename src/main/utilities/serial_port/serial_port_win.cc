@@ -56,8 +56,9 @@ serial_port::serial_port(const std::string &name,
 serial_port::~serial_port() noexcept {
     auto temp = handle.exchange(nullptr);
     if (!temp) return;
-    PurgeComm(handle, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
+    PurgeComm(temp, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
     CloseHandle(temp);
+    std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 }
 
 struct tool_t {
@@ -79,7 +80,7 @@ void WINAPI callback(
 }
 
 void serial_port::send(const uint8_t *buffer, size_t size) noexcept {
-    if (size <= 0) return;
+    if (size <= 0 || !handle.load()) return;
     
     auto overlapped = new OVERLAPPED{};
     auto ptr        = new tool_t{
@@ -92,6 +93,7 @@ void serial_port::send(const uint8_t *buffer, size_t size) noexcept {
 }
 
 size_t serial_port::read(uint8_t *buffer, size_t size) {
+    if (!handle.load()) return 0;
     weak_lock_guard<std::mutex> lock(read_mutex);
     if (!lock) return 0;
     
@@ -125,6 +127,7 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
 }
 
 void serial_port::break_read() const noexcept {
+    if (!handle.load()) return;
     weak_lock_guard lock(read_mutex);
     
     while (!lock.retry()) {

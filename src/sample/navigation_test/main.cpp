@@ -59,7 +59,7 @@ int main() {
         }
     }
     
-    autolabor::fusion_locator_t locator(50);
+    autolabor::fusion_locator_t<50> locator;
     
     { // 设置参数、修改状态
         native::set_parameter(0, 0.465);
@@ -109,7 +109,7 @@ int main() {
                 std::fstream recorder(path_file, std::ios::out);
     
                 size_t size = 0;
-                pose_t pose{NAN, NAN, NAN};
+                pose_t pose = invalid_pose;
                 while (flag) {
                     auto location = locate();
                     bool next;
@@ -162,6 +162,8 @@ int main() {
                 using namespace std::chrono_literals;
     
                 auto pose   = locate();
+                std::cout << pose.x << ' ' << pose.y << std::endl;
+
                 auto result = controller(pose.x, pose.y, pose.theta);
                 
                 switch (result.type()) {
