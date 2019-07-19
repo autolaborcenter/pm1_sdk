@@ -33,8 +33,6 @@ autolabor::pm1::navigation_system_t::navigation_system_t(size_t locator_queue_si
 }
 
 bool autolabor::pm1::navigation_system_t::refresh() {
-    pose_t pose{};
-    // 取定位数据
     using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
     std::vector<data_t> temp;
     beacon->fetch(temp);

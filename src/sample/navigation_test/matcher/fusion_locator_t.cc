@@ -8,7 +8,6 @@
 #include <filesystem>
 #include <eigen3/Eigen/LU>
 
-
 autolabor::fusion_locator_t::fusion_locator_t(size_t queue_size)
     : queue_size(queue_size),
       plot("locator.txt", std::ios::out) {
@@ -88,9 +87,9 @@ bool autolabor::fusion_locator_t::refresh() {
                         {sum.first.x + item.first.x,   sum.first.y + item.first.y},
                         {sum.second.x + item.second.x, sum.second.y + item.second.y}};
                 });
-            
-            Eigen::Vector2d cs{centres.first.x / size, centres.first.y / size},
-                            ct{centres.second.x / size, centres.second.y / size};
+    
+            Eigen::Vector2d ct{centres.first.x / size, centres.first.y / size},
+                            cs{centres.second.x / size, centres.second.y / size};
             
             // 初始化
             Eigen::MatrixXd p;
@@ -100,8 +99,8 @@ bool autolabor::fusion_locator_t::refresh() {
             
             size_t          i = 0;
             for (const auto &item : pairs) {
-                auto source = Eigen::Vector2d{item.first.x, item.first.y} - cs,
-                     target = Eigen::Vector2d{item.second.x, item.second.y} - ct;
+                auto target = Eigen::Vector2d{item.first.x, item.first.y} - ct,
+                     source = Eigen::Vector2d{item.second.x, item.second.y} - cs;
                 
                 p.row(i) << source[0], source[1], 0, 0;
                 y(i++) = target[0];
