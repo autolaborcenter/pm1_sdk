@@ -19,7 +19,7 @@ namespace autolabor {
     /**
      * 融合定位器
      */
-    template<size_t> class fusion_locator_t {
+    class fusion_locator_t {
         using location_pair = std::pair<telementry_t, telementry_t>;
         using stamped_data = stamped_t<telementry_t>;
         
@@ -28,13 +28,15 @@ namespace autolabor {
         matcher_t <telementry_t, telementry_t> matcher;
         transformer_t<>                        transformer;
     
+        size_t queue_size;
+        
         std::ofstream plot;
         
         // 更新队列
         inline bool update_queue() {
-            auto result = false;
+            auto          result = false;
+            location_pair pair;
             while (matcher.match(pair.first, pair.second)) {
-                location_pair pair;
                 if (!pairs.empty()) {
                     auto temp = pairs.back().second;
                     auto dx   = pair.second.x - temp.x,
@@ -51,7 +53,9 @@ namespace autolabor {
         }
     
     public:
-        fusion_locator_t() : plot("log.txt", std::ios::out) {
+        explicit fusion_locator_t(size_t queue_size)
+            : queue_size(queue_size),
+              plot("log.txt", std::ios::out) {
             std::error_code _noexcept;
             std::filesystem::remove("log.txt", _noexcept);
         }
@@ -86,23 +90,13 @@ namespace autolabor {
     };
 } // namespace autolabor
 
-template<size_t max_size> struct types {
-    using vector2d_t           = Eigen::Vector<double, 2>;
-    using linear_transformer_t = Eigen::Matrix<double, 2, 2>;
-    using parameters_t         = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
-    using targets_t            = Eigen::Vector<double, Eigen::Dynamic>;
-};
-
-template<size_t max_size>
-void autolabor::fusion_locator_t<max_size>::refresh() {
+void autolabor::fusion_locator_t::refresh() {
     if (!update_queue())
         return;
-    if (pairs.size() > max_size)
-        pairs.erase(pairs.begin(), pairs.end() - max_size);
+    if (pairs.size() > queue_size)
+        pairs.erase(pairs.begin(), pairs.end() - queue_size);
     
-    using _t = types<max_size>;
-    
-    typename _t::linear_transformer_t a;
+    Eigen::Matrix2d a;
     a << 1, 0, 0, 1;
     const auto size = pairs.size();
     switch (size) {
@@ -136,20 +130,20 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
                         {sum.first.x + item.first.x,   sum.first.y + item.first.y},
                         {sum.second.x + item.second.x, sum.second.y + item.second.y}};
                 });
-            
-            typename _t::vector2d_t cs{centres.first.x / size, centres.first.y / size},
-                                    ct{centres.second.x / size, centres.second.y / size};
     
+            Eigen::Vector2d cs{centres.first.x / size, centres.first.y / size},
+                            ct{centres.second.x / size, centres.second.y / size};
+            
             // 初始化
-            typename _t::parameters_t p;
-            typename _t::targets_t    y;
+            Eigen::MatrixXd p;
+            Eigen::VectorXd y;
             p.resize(2 * size, 4);
             y.resize(2 * size);
             
             size_t          i = 0;
             for (const auto &item : pairs) {
-                typename _t::vector2d_t source{item.first.x, item.first.y},
-                                        target{item.second.x, item.second.y};
+                Eigen::Vector2d source{item.first.x, item.first.y},
+                                target{item.second.x, item.second.y};
                 source -= cs;
                 target -= ct;
     
@@ -168,9 +162,10 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
             auto det = a.determinant();
             std::cout << "size = " << size << std::endl
                       << "det = " << det << std::endl;
-            if (std::abs(det) < 0.5 || std::abs(det) < 2.0)
+            if (std::abs(det) < 0.625 || std::abs(det) > 1.6)
                 break;
-            std::cout << "Hello world!" << std::endl;
+            std::cout << "---------------" << std::endl
+                      << a << std::endl;
             transformer.build(cs, ct, a);
         }
             break;

@@ -71,8 +71,8 @@ int main() {
             : operation_t::navigate;
     }
     
-    autolabor::fusion_locator_t<30> locator;
-    const auto                      locate = [&] {
+    autolabor::fusion_locator_t locator(30);
+    const auto                  locate = [&] {
         pose_t pose{};
         { // 取定位数据
             using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
