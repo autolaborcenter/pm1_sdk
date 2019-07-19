@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by User on 2019/7/18.
 //
 
@@ -14,6 +14,9 @@
 #include "transformer_t.hpp"
 
 namespace autolabor {
+    /**
+     * 融合定位器
+     */
     template<size_t> class fusion_locator_t {
         using location_pair = std::pair<telementry_t, telementry_t>;
         using stamped_data = stamped_t<telementry_t>;
@@ -22,6 +25,21 @@ namespace autolabor {
         
         matcher_t <telementry_t, telementry_t> matcher;
         transformer_t<>                        transformer;
+        
+        // 更新队列
+        inline void update_queue() {
+            location_pair pair;
+            while (matcher.match(pair.first, pair.second)) {
+                if (!pairs.empty()) {
+                    auto temp = pairs.back().second;
+                    auto dx   = pair.second.x - temp.x,
+                         dy   = pair.second.y - temp.y;
+                    if (dx * dx + dy * dy < 0.05 * 0.05)
+                        continue;
+                }
+                pairs.push_back(pair);
+            }
+        }
     
     public:
         /** 向主配队列添加元素 */
@@ -58,9 +76,7 @@ template<size_t max_size> struct types {
 
 template<size_t max_size>
 void autolabor::fusion_locator_t<max_size>::refresh() {
-    location_pair pair;
-    while (matcher.match(pair.first, pair.second))
-        pairs.push_back(pair);
+    update_queue();
     if (pairs.size() > max_size)
         pairs.erase(pairs.begin(), pairs.end() - max_size);
     

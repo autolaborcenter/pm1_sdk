@@ -14,6 +14,7 @@
 namespace autolabor {
     /**
      * 时序匹配器
+     * 非线程安全
      * @tparam master_t 主配类型
      * @tparam helper_t 匹配类型
      */
@@ -21,14 +22,23 @@ namespace autolabor {
     class matcher_t {
         std::deque<stamped_t < master_t>> queue1;
         std::deque<stamped_t < helper_t>> queue2;
+    
+        seconds_floating max_error;
     public:
+        /**
+         * 构造器
+         * @param max_error 匹配项的最大时间偏差
+         */
+        explicit matcher_t(seconds_floating max_error = std::chrono::milliseconds(100))
+            : max_error(max_error) {}
+        
         /** 向主配队列添加元素 */
         void push_back_master(const stamped_t <master_t> &data) { queue1.push_back(data); }
     
         /** 向匹配队列增加元素 */
         void push_back_helper(const stamped_t <helper_t> &data) { queue2.push_back(data); }
     
-        /** 
+        /**
          * 执行一次匹配
          * 找到一对匹配项或无法找到匹配项时退出
          * 匹配项满足：
@@ -45,18 +55,21 @@ namespace autolabor {
                 else if (_master->time > _helper->time)
                     ++_helper;
                 else {
-                    auto temp1 = _master->time - (_helper - 1)->time,
-                         temp2 = _helper->time - _master->time;
-                    master = _master->value;
-                    helper = temp1 < temp2
-                             ? (_helper - 1)->value
-                             : _helper->value;
-                    result = true;
-                    break;
+                    auto duration0 = _master->time - (_helper - 1)->time,
+                         duration1 = _helper->time - _master->time;
+                    if ((result = duration0 < max_error || duration1 < max_error)) {
+                        // 主配元素一旦使用就要被消耗掉，绝不反复出现
+                        master = _master++->value;
+                        helper = duration0 < duration1
+                                 ? (_helper - 1)->value
+                                 : _helper->value;
+                        break;
+                    } else
+                        ++_master;
                 }
             }
-            queue1.erase(queue1.begin(), std::min(queue1.end(), _master + 1));
-            queue2.erase(queue2.begin(), std::max(queue2.begin(), _helper - 1));
+            queue1.erase(queue1.begin(), _master);
+            queue2.erase(queue2.begin(), _helper - 1);
             return result;
         }
     };
