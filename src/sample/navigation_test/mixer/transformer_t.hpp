@@ -7,19 +7,16 @@
 
 #include <eigen3/Eigen/Core>
 
-template<class scalar_t = double, int dimension = 2>
-struct transformer_t {
+template<class scalar_t = double, size_t dimension = 2>
+class transformer_t {
     using linear_t      = Eigen::Matrix<scalar_t, dimension, dimension>;
-    using core_t        = Eigen::Matrix<scalar_t, dimension, dimension + 1>;
+    using homogeneous_t = Eigen::Matrix<scalar_t, dimension, dimension + 1>;
     using coordinates_t = Eigen::Vector<scalar_t, dimension>;
     
     // 核心变换矩阵
-    core_t core;
-    
-    transformer_t() : core(core_t::Zero()) {
-        for (size_t i = 0; i < dimension; ++i)
-            core(i, i) = 1;
-    }
+    homogeneous_t core;
+public:
+    transformer_t() : core(homogeneous_t::Zero()) {}
     
     void build(coordinates_t x0, coordinates_t y0, linear_t a) {
         auto        b = y0 - a * x0;
@@ -31,12 +28,11 @@ struct transformer_t {
     }
     
     void operator()(coordinates_t &value) const {
-        using homogeneous_t = Eigen::Vector<scalar_t, dimension + 1>;
-        
-        homogeneous_t temp = homogeneous_t::Zero();
-        
-        for (size_t i = 0; i < dimension; ++i) temp[i] = value[i];
-        temp[dimension]                                = 1;
+        Eigen::Vector<scalar_t, dimension + 1> temp;
+    
+        for (size_t i = 0; i < dimension; ++i)
+            temp[i]     = value[i];
+        temp[dimension] = 1;
         value = core * temp;
     }
 };

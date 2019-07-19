@@ -79,10 +79,8 @@ namespace autolabor {
         void refresh();
         
         [[nodiscard]] pose_t operator[](pose_t pose) const {
-            using vector_t = typename decltype(transformer)::coordinates_t;
-            
-            auto location  = vector_t{pose.x, pose.y},
-                 direction = vector_t{std::cos(pose.theta), std::sin(pose.theta)};
+            Eigen::Vector2d location{pose.x, pose.y},
+                            direction{std::cos(pose.theta), std::sin(pose.theta)};
             transformer(location);
             transformer(direction);
             return {location[0], location[1], std::atan2(direction[1], direction[0])};
@@ -133,6 +131,10 @@ void autolabor::fusion_locator_t::refresh() {
     
             Eigen::Vector2d cs{centres.first.x / size, centres.first.y / size},
                             ct{centres.second.x / size, centres.second.y / size};
+    
+            std::cout << "---------------------------------------" << std::endl
+                      << "cs = " << cs.transpose() << std::endl
+                      << "ct = " << ct.transpose() << std::endl;
             
             // 初始化
             Eigen::MatrixXd p;
@@ -142,11 +144,9 @@ void autolabor::fusion_locator_t::refresh() {
             
             size_t          i = 0;
             for (const auto &item : pairs) {
-                Eigen::Vector2d source{item.first.x, item.first.y},
-                                target{item.second.x, item.second.y};
-                source -= cs;
-                target -= ct;
-    
+                auto source = Eigen::Vector2d{item.first.x, item.first.y} - cs,
+                     target = Eigen::Vector2d{item.second.x, item.second.y} - ct;
+                
                 p.row(i) << source[0], source[1], 0, 0;
                 y(i++) = target[0];
                 p.row(i) << 0, 0, source[0], source[1];
@@ -164,9 +164,13 @@ void autolabor::fusion_locator_t::refresh() {
                       << "det = " << det << std::endl;
             if (std::abs(det) < 0.625 || std::abs(det) > 1.6)
                 break;
-            std::cout << "---------------" << std::endl
-                      << a << std::endl;
+            std::cout << a << std::endl;
             transformer.build(cs, ct, a);
+            auto temp  = pairs.back();
+            auto value = Eigen::Vector2d{temp.second.x, temp.second.y};
+            std::cout << "source = " << value << std::endl;
+            transformer(value);
+            std::cout << "target = " << value << std::endl;
         }
             break;
     }
