@@ -16,7 +16,7 @@
 
 #include "parser_t.hpp"
 
-#include "../telementry_t.h"
+#include "../pose_t.h"
 #include "../matcher/stamped_t.h"
 
 namespace marvelmind {

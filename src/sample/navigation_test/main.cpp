@@ -10,7 +10,7 @@
 #include "pm1_sdk_native.h"
 #include "path_follower/path_manage.hpp"
 #include "path_follower/path_follower_t.hpp"
-#include "telementry_t.h"
+#include "pose_t.h"
 
 #include "navigation_system_t.hh"
 

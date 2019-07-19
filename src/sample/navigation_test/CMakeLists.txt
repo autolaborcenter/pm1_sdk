@@ -23,8 +23,16 @@ add_executable(navigation
         matcher/fusion_locator_t.hh
         matcher/fusion_locator_t.cc
 
-        telementry_t.h
+        pose_t.h
         navigation_system_t.hh
         navigation_system_t.cc
         main.cpp)
 target_link_libraries(navigation pm1_sdk)
+
+add_executable(test
+        matcher/stamped_t.h
+        matcher/matcher_t.hpp
+        matcher/transformer_t.hpp
+        matcher/fusion_locator_t.hh
+        matcher/fusion_locator_t.cc
+        matcher/test.cpp)

@@ -8,7 +8,7 @@
 #include <deque>
 #include <fstream>
 
-#include "../telementry_t.h"
+#include "../pose_t.h"
 #include "matcher_t.hpp"
 #include "transformer_t.hpp"
 
@@ -42,6 +42,9 @@ namespace autolabor {
         
         /** 向匹配队列增加元素 */
         void push_back_helper(const stamped_data &data);
+    
+        /** 向匹配队列增加匹配对 */
+        void push_back_pair(const Eigen::Vector2d &target, const Eigen::Vector2d &source);
         
         /** 匹配 */
         bool refresh();
