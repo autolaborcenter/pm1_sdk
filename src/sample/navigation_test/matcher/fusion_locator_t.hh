@@ -17,13 +17,13 @@ namespace autolabor {
      * 融合定位器
      */
     class fusion_locator_t {
-        using location_pair = std::pair<telementry_t, telementry_t>;
-        using stamped_data = stamped_t<telementry_t>;
+        using location_pair = std::pair<Eigen::Vector2d, Eigen::Vector2d>;
+        using stamped_data = stamped_t<Eigen::Vector2d>;
         
         std::deque<location_pair> pairs;
-        
-        matcher_t<telementry_t, telementry_t> matcher;
-        transformer_t<>                       transformer;
+    
+        matcher_t<Eigen::Vector2d, Eigen::Vector2d> matcher;
+        transformer_t<>                             transformer;
         
         size_t queue_size;
         
@@ -36,7 +36,7 @@ namespace autolabor {
         explicit fusion_locator_t(size_t queue_size);
         
         ~fusion_locator_t();
-        
+    
         /** 向主配队列添加元素 */
         void push_back_master(const stamped_data &data);
         

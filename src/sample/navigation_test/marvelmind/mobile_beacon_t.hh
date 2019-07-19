@@ -10,6 +10,7 @@
 #include <mutex>
 #include <deque>
 #include <utilities/time_extensions.h>
+#include <eigen3/Eigen/Core>
 
 #include "utilities/serial_port/serial_port.hh"
 
@@ -24,7 +25,7 @@ namespace marvelmind {
      */
     struct mobile_beacon_t {
         using serial_ptr     = std::unique_ptr<serial_port>;
-        using stamped_data_t = autolabor::stamped_t<autolabor::telementry_t>;
+        using stamped_data_t = autolabor::stamped_t<Eigen::Vector2d>;
     private:
         serial_ptr port;
         

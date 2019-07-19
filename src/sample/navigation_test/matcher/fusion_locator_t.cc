@@ -19,17 +19,12 @@ bool autolabor::fusion_locator_t::update_queue() {
     auto          result = false;
     location_pair pair;
     while (matcher.match(pair.first, pair.second)) {
-        if (!pairs.empty()) {
-            auto temp = pairs.back().second;
-            auto dx   = pair.second.x - temp.x,
-                 dy   = pair.second.y - temp.y;
-            if (dx * dx + dy * dy < 0.05 * 0.05)
-                continue;
-        }
+        if (!pairs.empty() && (pair.second - pairs.back().second).norm() < 0.05)
+            continue;
         result = true;
         pairs.push_back(pair);
-        plot << pair.first.x << ' ' << pair.first.y << ' '
-             << pair.second.x << ' ' << pair.second.y << std::endl;
+        plot << pair.first[0] << ' ' << pair.first[1] << ' '
+             << pair.second[0] << ' ' << pair.second[1] << std::endl;
     }
     return result;
 }
@@ -57,25 +52,20 @@ bool autolabor::fusion_locator_t::refresh() {
     a << 1, 0, 0, 1;
     const auto size = pairs.size();
     switch (size) {
-        case 0: { // 没有匹配点对
+        case 0:  // 没有匹配点对
             transformer.build({0, 0}, {0, 0}, a);
             return false;
-        }
-        case 1: { // 一点匹配，可平移
-            telementry_t t0{}, t1{};
-            std::tie(t0, t1) = pairs.front();
-            transformer.build({t0.x, t0.y}, {t1.x, t1.y}, a);
+        case 1:  // 一点匹配，可平移
+            transformer.build(pairs.front().second, pairs.front().first, a);
             return false;
-        }
         case 2: { // 两点匹配，可旋转
-            telementry_t t[4]{};
-            std::tie(t[0], t[1]) = pairs[0];
-            std::tie(t[2], t[3]) = pairs[1];
-            auto angle = std::atan2(t[3].y - t[1].y, t[3].x - t[1].x) -
-                         std::atan2(t[2].y - t[0].y, t[2].x - t[0].x),
-                 cos   = std::cos(angle), sin = std::sin(angle);
+            auto source = pairs[1].second - pairs[0].second,
+                 target = pairs[1].first - pairs[0].first;
+            auto angle  = std::atan2(target[1], target[0]) - std::atan2(source[1], source[0]),
+                 cos    = std::cos(angle),
+                 sin    = std::sin(angle);
             a << cos, -sin, sin, cos;
-            transformer.build({t[0].x, t[0].y}, {t[1].x, t[1].y}, a);
+            transformer.build(source, target, a);
             return false;
         }
         default: { // 更多点匹配，确定坐标系
@@ -83,13 +73,11 @@ bool autolabor::fusion_locator_t::refresh() {
             auto centres = std::accumulate(
                 pairs.begin(), pairs.end(), location_pair{},
                 [](const location_pair &sum, const location_pair &item) {
-                    return location_pair{
-                        {sum.first.x + item.first.x,   sum.first.y + item.first.y},
-                        {sum.second.x + item.second.x, sum.second.y + item.second.y}};
+                    return location_pair{sum.first + item.first, sum.second + item.second};
                 });
     
-            Eigen::Vector2d ct{centres.first.x / size, centres.first.y / size},
-                            cs{centres.second.x / size, centres.second.y / size};
+            auto ct = centres.first / size,
+                 cs = centres.second / size;
             
             // 初始化
             Eigen::MatrixXd p;
@@ -99,8 +87,8 @@ bool autolabor::fusion_locator_t::refresh() {
             
             size_t          i = 0;
             for (const auto &item : pairs) {
-                auto target = Eigen::Vector2d{item.first.x, item.first.y} - ct,
-                     source = Eigen::Vector2d{item.second.x, item.second.y} - cs;
+                auto target = item.first - ct,
+                     source = item.second - cs;
                 
                 p.row(i) << source[0], source[1], 0, 0;
                 y(i++) = target[0];
