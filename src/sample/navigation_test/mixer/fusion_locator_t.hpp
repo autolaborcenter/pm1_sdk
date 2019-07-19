@@ -49,7 +49,8 @@ namespace autolabor {
     
     public:
         fusion_locator_t() : plot("log.txt", std::ios::out) {
-            std::filesystem::remove("log.txt");
+            std::error_code _noexcept;
+            std::filesystem::remove("log.txt", _noexcept);
         }
     
         ~fusion_locator_t() {

@@ -96,7 +96,8 @@ int main() {
         case operation_t::record: { // 记录路径
             volatile auto flag   = true;
             auto          thread = std::thread([&] {
-                std::filesystem::remove(path_file);
+                std::error_code _noexcept;
+                std::filesystem::remove(path_file, _noexcept);
                 std::fstream recorder(path_file, std::ios::out);
     
                 size_t size = 0;
@@ -130,7 +131,8 @@ int main() {
         }
             break;
         case operation_t::navigate: { // 进行导航
-            std::filesystem::remove(navigation_file);
+            std::error_code _noexcept;
+            std::filesystem::remove(navigation_file, _noexcept);
             std::fstream plot(navigation_file, std::ios::out);
             // 加载路径
             auto         path = path_follower::load_path(path_file);
