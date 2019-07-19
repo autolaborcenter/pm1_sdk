@@ -7,6 +7,8 @@
 
 #include <deque>
 #include <numeric>
+#include <filesystem>
+#include <fstream>
 #include <eigen3/Eigen/LU>
 
 #include "../telementry_t.h"
@@ -25,6 +27,8 @@ namespace autolabor {
         
         matcher_t <telementry_t, telementry_t> matcher;
         transformer_t<>                        transformer;
+    
+        std::ofstream plot;
         
         // 更新队列
         inline void update_queue() {
@@ -38,10 +42,21 @@ namespace autolabor {
                         continue;
                 }
                 pairs.push_back(pair);
+                plot << pair.first.x << ' ' << pair.first.y << ' '
+                     << pair.second.x << ' ' << pair.second.y << std::endl;
             }
         }
     
     public:
+        fusion_locator_t() : plot("log.txt", std::ios::out) {
+            std::filesystem::remove("log.txt");
+        }
+    
+        ~fusion_locator_t() {
+            plot.flush();
+            plot.close();
+        }
+        
         /** 向主配队列添加元素 */
         void push_back_master(const stamped_data &data) {
             matcher.push_back_master(data);
@@ -148,7 +163,7 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
             auto det = a.determinant();
             std::cout << "size = " << size << std::endl
                       << "det = " << det << std::endl;
-            if (std::abs(det) < 0.4 || std::abs(det) < 2.5)
+            if (std::abs(det) < 0.5 || std::abs(det) < 2.0)
                 break;
             transformer.build(cs, ct, a);
         }
