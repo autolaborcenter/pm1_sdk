@@ -17,10 +17,14 @@ add_executable(navigation
         marvelmind/mobile_beacon_t.hh
         marvelmind/mobile_beacon_t.cc
 
-        mixer/stamped_t.h
-        mixer/matcher_t.hpp
-        mixer/fusion_locator_t.hpp
-        mixer/transformer_t.hpp
+        matcher/stamped_t.h
+        matcher/matcher_t.hpp
+        matcher/transformer_t.hpp
+        matcher/fusion_locator_t.hh
+        matcher/fusion_locator_t.cc
 
-        main.cpp telementry_t.h)
+        telementry_t.h
+        navigation_system_t.hh
+        navigation_system_t.cc
+        main.cpp)
 target_link_libraries(navigation pm1_sdk)
