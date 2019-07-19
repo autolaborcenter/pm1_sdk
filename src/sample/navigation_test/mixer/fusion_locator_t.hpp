@@ -31,9 +31,10 @@ namespace autolabor {
         std::ofstream plot;
         
         // 更新队列
-        inline void update_queue() {
-            location_pair pair;
+        inline bool update_queue() {
+            auto result = false;
             while (matcher.match(pair.first, pair.second)) {
+                location_pair pair;
                 if (!pairs.empty()) {
                     auto temp = pairs.back().second;
                     auto dx   = pair.second.x - temp.x,
@@ -41,10 +42,12 @@ namespace autolabor {
                     if (dx * dx + dy * dy < 0.05 * 0.05)
                         continue;
                 }
+                result = true;
                 pairs.push_back(pair);
                 plot << pair.first.x << ' ' << pair.first.y << ' '
                      << pair.second.x << ' ' << pair.second.y << std::endl;
             }
+            return result;
         }
     
     public:
@@ -92,7 +95,8 @@ template<size_t max_size> struct types {
 
 template<size_t max_size>
 void autolabor::fusion_locator_t<max_size>::refresh() {
-    update_queue();
+    if (!update_queue())
+        return;
     if (pairs.size() > max_size)
         pairs.erase(pairs.begin(), pairs.end() - max_size);
     
@@ -166,6 +170,7 @@ void autolabor::fusion_locator_t<max_size>::refresh() {
                       << "det = " << det << std::endl;
             if (std::abs(det) < 0.5 || std::abs(det) < 2.0)
                 break;
+            std::cout << "Hello world!" << std::endl;
             transformer.build(cs, ct, a);
         }
             break;

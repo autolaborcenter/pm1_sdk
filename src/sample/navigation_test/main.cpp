@@ -71,7 +71,7 @@ int main() {
             : operation_t::navigate;
     }
     
-    autolabor::fusion_locator_t<50> locator;
+    autolabor::fusion_locator_t<30> locator;
     const auto                      locate = [&] {
         pose_t pose{};
         { // 取定位数据
