@@ -112,9 +112,12 @@ bool autolabor::fusion_locator_t::refresh() {
 }
 
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
-    Eigen::Vector2d location{pose.x, pose.y},
+    if (pairs.empty()) return pose;
+    
+    Eigen::Vector2d delta = Eigen::Vector2d{pose.x, pose.y} - pairs.back().second,
                     direction{std::cos(pose.theta), std::sin(pose.theta)};
-    transformer(location);
+    transformer(delta);
     transformer(direction);
+    auto location = pairs.back().first + delta;
     return {location[0], location[1], std::atan2(direction[1], direction[0])};
 }
