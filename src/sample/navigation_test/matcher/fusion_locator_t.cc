@@ -9,9 +9,11 @@
 #include <eigen3/Eigen/LU>
 #include <iostream>
 
-autolabor::fusion_locator_t::fusion_locator_t(size_t queue_size)
-    : queue_size(queue_size),
-      plot("locator.txt", std::ios::out) {
+autolabor::fusion_locator_t::fusion_locator_t(
+    size_t queue_size,
+    double step
+) : queue_size(queue_size),
+    plot("locator.txt", std::ios::out) {
     std::error_code _noexcept;
     std::filesystem::remove("locator.txt", _noexcept);
 }
@@ -20,7 +22,7 @@ bool autolabor::fusion_locator_t::update_queue() {
     auto          result = false;
     location_pair pair;
     while (matcher.match(pair.first, pair.second)) {
-        if (!pairs.empty() && (pair.second - pairs.back().second).norm() < 0.05)
+        if (!pairs.empty() && (pair.second - pairs.back().second).norm() < step)
             continue;
         result = true;
         pairs.push_back(pair);
@@ -82,28 +84,32 @@ bool autolabor::fusion_locator_t::refresh() {
     
     auto pt  = p.transpose();
     auto ptp = pt * p;
-    if (std::abs(ptp.determinant()) < 1E-6) {
-        std::cout << std::abs(ptp.determinant()) << std::endl;
+    std::cout << std::abs(ptp.determinant()) << std::endl;
+    if (std::abs(ptp.determinant()) < 1E-6)
         return false;
-    }
     
     Eigen::Matrix2d a;
     
     auto solve = ptp.inverse() * pt * y;
     a << solve[0], solve[1], solve[2], solve[3];
     auto det = a.determinant();
+    
+    std::cout << "det = " << det << std::endl
+              << "------------------------" << std::endl
+              << a << std::endl
+              << "------------------------" << std::endl;
+    
     if (std::abs(det) < 0.8 || std::abs(det) > 1.25)
         return false;
     transformer.build(cs, ct, a);
     
-    auto test = pairs.back().second;
-    transformer(test);
+    for (const auto &pair : pairs) {
+        Eigen::Vector2d target = pair.first,
+                        source = pair.second;
+        transformer(source);
+        std::cout << target.transpose() << ' ' << source.transpose() << std::endl;
+    }
     
-    std::cout << "det = " << det << std::endl
-              << a << std::endl
-              << "source = " << pairs.back().second.transpose() << std::endl
-              << "target = " << pairs.back().first.transpose() << std::endl
-              << "transformed = " << test.transpose() << std::endl;
     return true;
 }
 

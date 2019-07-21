@@ -8,8 +8,7 @@
 #include "fusion_locator_t.hh"
 
 int main() {
-    autolabor::fusion_locator_t locator(30);
-    
+    autolabor::fusion_locator_t locator(50, 0.02);
     
     std::fstream file("save.txt", std::ios::in);
     for (size_t  i = 0;; ++i) {

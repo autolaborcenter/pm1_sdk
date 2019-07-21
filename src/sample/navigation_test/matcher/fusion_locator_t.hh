@@ -26,6 +26,7 @@ namespace autolabor {
         transformer_t<>                             transformer;
         
         size_t queue_size;
+        double step;
         
         std::ofstream plot;
         
@@ -33,7 +34,7 @@ namespace autolabor {
         bool update_queue();
     
     public:
-        explicit fusion_locator_t(size_t queue_size);
+        explicit fusion_locator_t(size_t queue_size, double step);
         
         ~fusion_locator_t();
     
