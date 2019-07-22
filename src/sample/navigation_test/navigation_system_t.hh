@@ -16,7 +16,9 @@ namespace autolabor {
             autolabor::fusion_locator_t         locator;
         
         public:
-            explicit navigation_system_t(size_t locator_queue_size = 30);
+            explicit navigation_system_t(
+                size_t locator_queue_size = 50,
+                double step = 0.02);
             
             bool refresh();
             

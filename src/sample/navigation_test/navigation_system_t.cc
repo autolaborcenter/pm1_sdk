@@ -6,8 +6,10 @@
 
 #include "pm1_sdk_native.h"
 
-autolabor::pm1::navigation_system_t::navigation_system_t(size_t locator_queue_size)
-    : locator(locator_queue_size),
+autolabor::pm1::navigation_system_t::navigation_system_t(
+    size_t locator_queue_size,
+    double step)
+    : locator(locator_queue_size, step),
       beacon(marvelmind::find_beacon()) {
     // native sdk 连接串口
     double progress;
