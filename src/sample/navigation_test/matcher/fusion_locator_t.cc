@@ -24,7 +24,9 @@ bool autolabor::fusion_locator_t::update_queue() {
     auto            result = false;
     location_pair_t pair;
     while (matcher.match(pair.target, pair.source)) {
-        if (!pairs.empty() && (pair.source - pairs.back().source).norm() < step)
+        if (!pairs.empty()
+            && (pair.target - pairs.back().target).norm() < step
+            && (pair.source - pairs.back().source).norm() < step)
             continue;
         result = true;
         pairs.push_back(pair);
