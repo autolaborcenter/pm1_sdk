@@ -48,8 +48,8 @@ void autolabor::fusion_locator_t::push_back_helper(const autolabor::fusion_locat
 }
 
 bool autolabor::fusion_locator_t::refresh() {
-    //    if (!update_queue())
-    //        return false;
+    if (!update_queue())
+        return false;
     if (pairs.size() > queue_size)
         pairs.erase(pairs.begin(), pairs.end() - queue_size);
     
@@ -101,18 +101,16 @@ bool autolabor::fusion_locator_t::refresh() {
               << a << std::endl
               << "------------------------" << std::endl;
     
-    if (std::abs(det) < 0.8 || std::abs(det) > 1.25)
-        return false;
-    transformer.build(cs, ct, a);
-    
+    auto temp = 0.25 < std::abs(det) && std::abs(det) < 4.0;
+    if (temp) transformer.build(cs, ct, a);
+    std::cout << "x0 y0 x1 y1" << std::endl;
     for (const auto &pair : pairs) {
         Eigen::Vector2d target = pair.first,
                         source = pair.second;
         transformer(source);
         std::cout << target.transpose() << ' ' << source.transpose() << std::endl;
     }
-    
-    return true;
+    return temp;
 }
 
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
