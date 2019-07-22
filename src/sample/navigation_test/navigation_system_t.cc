@@ -47,6 +47,7 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     std::vector<data_t> temp;
     beacon->fetch(temp);
     for (const auto &item : temp) locator.push_back_master(item);
+    locator.refresh();
     
     return locator[pose];
 }

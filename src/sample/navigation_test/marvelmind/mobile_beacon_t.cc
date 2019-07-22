@@ -9,6 +9,9 @@
 #include <thread>
 #include <condition_variable>
 
+#include <fstream>
+#include <filesystem>
+
 #include "utilities/serial_port/serial.h"
 #include "utilities/serial_parser/parse_engine.hpp"
 
@@ -21,6 +24,9 @@ mobile_beacon_t(const std::string &port_name)
       running(std::make_shared<bool>(true)) {
     std::condition_variable signal;
     
+    std::filesystem::remove("marvelmind.txt");
+    std::ofstream plot("marvelmind.txt", std::ios::out);   、
+    
     std::thread([&, _running = running] {
         auto       first_time = true;
         const auto function   =
@@ -31,7 +37,9 @@ mobile_beacon_t(const std::string &port_name)
                            using namespace marvelmind::resolution_coordinate;
                            auto begin = result.bytes.data() + 5;
                            auto delay = time_passed(begin);
-                           if (delay > 250) return;
+                           plot << x(begin) / 1000.0 << ' ' << y(begin) / 1000.0 << ' ' << delay;
+                           plot.flush();
+                           if (delay > 1000) return;
                 
                            std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
                            buffer.push_back({
