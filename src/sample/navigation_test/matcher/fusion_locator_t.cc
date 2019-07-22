@@ -6,8 +6,8 @@
 
 #include <numeric>
 #include <filesystem>
-#include <eigen3/Eigen/LU>
 #include <iostream>
+#include <eigen3/Eigen/LU>
 
 autolabor::fusion_locator_t::fusion_locator_t(
     size_t queue_size,
@@ -55,14 +55,19 @@ void autolabor::fusion_locator_t::push_back_pair(
     pairs.push_back({target, source});
 }
 
-bool autolabor::fusion_locator_t::refresh() {
-    if (!update_queue())
-        return false;
+void autolabor::fusion_locator_t::refresh() {
+    if (!update_queue()) {
+        state = false;
+        return;
+    }
     if (pairs.size() > queue_size)
         pairs.erase(pairs.begin(), pairs.end() - queue_size);
     
     const auto size = pairs.size();
-    if (size < 3) return false;
+    if (size < 3) {
+        state = false;
+        return;
+    }
     
     // 求质心
     auto centres = std::accumulate(
@@ -72,8 +77,8 @@ bool autolabor::fusion_locator_t::refresh() {
             return location_pair_t{sum.target + item.target, sum.source + item.source};
         });
     
-    auto ct = centres.target / size,
-         cs = centres.source / size;
+    auto ct = pairs.back().target,
+         cs = pairs.back().source;
     
     // 初始化
     Eigen::MatrixXd p;
@@ -94,28 +99,39 @@ bool autolabor::fusion_locator_t::refresh() {
     
     auto pt  = p.transpose();
     auto ptp = pt * p;
-    std::cout << std::abs(ptp.determinant()) << std::endl;
-    if (std::abs(ptp.determinant()) < 1E-6)
-        return false;
+    if (std::abs(ptp(0, 0) * ptp(1, 1) - ptp(1, 0) * ptp(0, 1)) < 1E-6) {
+        state = false;
+        return;
+    }
     
     Eigen::Matrix2d a;
     
     auto solve = ptp.inverse() * pt * y;
     a << solve[0], solve[1], solve[2], solve[3];
-    auto det = a.determinant();
+    auto det = a(0, 0) * a(1, 1) - a(1, 0) * a(0, 1);
+    auto dot = a(0, 0) * a(0, 1) + a(1, 0) * a(1, 1);
     
-    std::cout << "det = " << det << std::endl
-              << "------------------------" << std::endl
-              << a << std::endl
-              << "------------------------" << std::endl;
+    //    std::cout << "det = " << det << std::endl
+    //              << "dot = " << dot << std::endl;
     
-    auto temp = 0.25 < std::abs(det) && std::abs(det) < 4.0;
-    if (temp) transformer.build(cs, ct, a);
-    std::cout << "x0 y0 x1 y1" << std::endl;
-    for (const auto &pair : pairs)
-        std::cout << pair.target.transpose() << ' '
-                  << transformer(pair.source).transpose() << std::endl;
-    return temp;
+    //    std::cout << "det = " << det << std::endl
+    //              << "------------------------" << std::endl
+    //              << a << std::endl
+    //              << "------------------------" << std::endl;
+    
+    if ((state = (0.25 < std::abs(det) && std::abs(det) < 4.0) && std::abs(dot) < 2))
+        transformer.build(cs, ct, a);
+    
+    if (state)
+        std::cout << solve[0] << ' '
+                  << solve[2] << ' '
+                  << solve[1] << ' '
+                  << solve[3] << std::endl;
+    
+    //    std::cout << "x0 y0 x1 y1" << std::endl;
+    //    for (const auto &pair : pairs)
+    //        std::cout << pair.target.transpose() << ' '
+    //                  << transformer(pair.source).transpose() << std::endl;
 }
 
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
@@ -124,4 +140,8 @@ autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose
         location  = transformer(Eigen::Vector2d{pose.x, pose.y}),
         direction = transformer({std::cos(pose.theta), std::sin(pose.theta)});
     return {location[0], location[1], std::atan2(direction[1], direction[0])};
+}
+
+bool autolabor::fusion_locator_t::get_state() {
+    return state;
 }

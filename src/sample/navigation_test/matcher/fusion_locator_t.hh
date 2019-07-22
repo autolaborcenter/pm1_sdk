@@ -31,6 +31,8 @@ namespace autolabor {
         double step;
         
         std::ofstream plot;
+    
+        bool state = false;
         
         // 更新队列
         bool update_queue();
@@ -50,7 +52,9 @@ namespace autolabor {
         void push_back_pair(const Eigen::Vector2d &target, const Eigen::Vector2d &source);
         
         /** 匹配 */
-        bool refresh();
+        void refresh();
+    
+        bool get_state();
         
         /** 变换一个坐标 */
         [[nodiscard]] pose_t operator[](pose_t pose) const;

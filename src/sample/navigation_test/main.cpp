@@ -53,7 +53,6 @@ int main() {
     
                 auto memory = invalid_pose;
                 while (flag) {
-                    system.refresh();
                     auto location = system.locate();
                     bool next;
                     if (std::isnan(memory.x))
@@ -103,7 +102,6 @@ int main() {
             while (!finish) {
                 using namespace std::chrono_literals;
     
-                system.refresh();
                 auto pose = system.locate();
                 std::cout << pose.x << ' ' << pose.y << std::endl;
     

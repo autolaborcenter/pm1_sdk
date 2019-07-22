@@ -20,8 +20,6 @@ namespace autolabor {
                 size_t locator_queue_size = 50,
                 double step = 0.02);
             
-            bool refresh();
-            
             pose_t locate();
         };
     }

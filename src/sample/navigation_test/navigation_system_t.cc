@@ -28,18 +28,10 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     native::set_command_enabled(false);
     
     using namespace std::chrono_literals;
-    while (!refresh()) {
+    while (!locator.get_state()) {
         locate();
         std::this_thread::sleep_for(50ms);
     }
-}
-
-bool autolabor::pm1::navigation_system_t::refresh() {
-    using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
-    std::vector<data_t> temp;
-    beacon->fetch(temp);
-    for (const auto &item : temp) locator.push_back_master(item);
-    return locator.refresh();
 }
 
 autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
@@ -50,5 +42,11 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
         pose.x, pose.y, pose.theta,
         ignore, ignore, ignore);
     locator.push_back_helper({autolabor::now(), {pose.x, pose.y}});
+    
+    using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
+    std::vector<data_t> temp;
+    beacon->fetch(temp);
+    for (const auto &item : temp) locator.push_back_master(item);
+    
     return locator[pose];
 }

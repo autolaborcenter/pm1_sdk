@@ -16,7 +16,7 @@ int main() {
         if (!(file >> a[0] >> a[1] >> b[0] >> b[1])) break;
         locator.push_back_pair(a, b);
         locator.refresh();
-        _getch();
+        //        _getch();
     }
     return 0;
 }
