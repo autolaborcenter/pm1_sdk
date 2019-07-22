@@ -39,12 +39,20 @@ autolabor::fusion_locator_t::~fusion_locator_t() {
     plot.close();
 }
 
-void autolabor::fusion_locator_t::push_back_master(const autolabor::fusion_locator_t::stamped_data &data) {
+void autolabor::fusion_locator_t::push_back_master(
+    const autolabor::fusion_locator_t::stamped_data &data) {
     matcher.push_back_master(data);
 }
 
-void autolabor::fusion_locator_t::push_back_helper(const autolabor::fusion_locator_t::stamped_data &data) {
+void autolabor::fusion_locator_t::push_back_helper(
+    const autolabor::fusion_locator_t::stamped_data &data) {
     matcher.push_back_helper(data);
+}
+
+void autolabor::fusion_locator_t::push_back_pair(
+    const Eigen::Vector2d &target,
+    const Eigen::Vector2d &source) {
+    pairs.push_back({target, source});
 }
 
 bool autolabor::fusion_locator_t::refresh() {
@@ -113,13 +121,7 @@ bool autolabor::fusion_locator_t::refresh() {
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
     if (pairs.empty()) return pose;
     Eigen::Vector2d
-        location  = transformer(Eigen::Vector2d{pose.x, pose.y} - pairs.back().source) + pairs.back().target,
+        location  = transformer(Eigen::Vector2d{pose.x, pose.y}),
         direction = transformer({std::cos(pose.theta), std::sin(pose.theta)});
     return {location[0], location[1], std::atan2(direction[1], direction[0])};
-}
-
-void autolabor::fusion_locator_t::push_back_pair(
-    const Eigen::Vector2d &target,
-    const Eigen::Vector2d &source) {
-    pairs.push_back({target, source});
 }

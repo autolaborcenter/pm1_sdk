@@ -38,7 +38,7 @@ bool autolabor::pm1::navigation_system_t::refresh() {
     using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
     std::vector<data_t> temp;
     beacon->fetch(temp);
-    for (auto item : temp) locator.push_back_master(item);
+    for (const auto &item : temp) locator.push_back_master(item);
     return locator.refresh();
 }
 
