@@ -21,15 +21,15 @@ autolabor::fusion_locator_t::fusion_locator_t(
 }
 
 bool autolabor::fusion_locator_t::update_queue() {
-    auto          result = false;
-    location_pair pair;
-    while (matcher.match(pair.first, pair.second)) {
-        if (!pairs.empty() && (pair.second - pairs.back().second).norm() < step)
+    auto            result = false;
+    location_pair_t pair;
+    while (matcher.match(pair.target, pair.source)) {
+        if (!pairs.empty() && (pair.source - pairs.back().source).norm() < step)
             continue;
         result = true;
         pairs.push_back(pair);
-        plot << pair.first[0] << ' ' << pair.first[1] << ' '
-             << pair.second[0] << ' ' << pair.second[1] << std::endl;
+        plot << pair.target[0] << ' ' << pair.target[1] << ' '
+             << pair.source[0] << ' ' << pair.source[1] << std::endl;
     }
     return result;
 }
@@ -59,13 +59,13 @@ bool autolabor::fusion_locator_t::refresh() {
     // 求质心
     auto centres = std::accumulate(
         pairs.begin(), pairs.end(),
-        location_pair{Eigen::Vector2d::Zero(), Eigen::Vector2d::Zero()},
-        [](const location_pair &sum, const location_pair &item) {
-            return location_pair{sum.first + item.first, sum.second + item.second};
+        location_pair_t{Eigen::Vector2d::Zero(), Eigen::Vector2d::Zero()},
+        [](const location_pair_t &sum, const location_pair_t &item) {
+            return location_pair_t{sum.target + item.target, sum.source + item.source};
         });
     
-    auto ct = centres.first / size,
-         cs = centres.second / size;
+    auto ct = centres.target / size,
+         cs = centres.source / size;
     
     // 初始化
     Eigen::MatrixXd p;
@@ -75,8 +75,8 @@ bool autolabor::fusion_locator_t::refresh() {
     
     size_t          i = 0;
     for (const auto &item : pairs) {
-        auto target = item.first - ct,
-             source = item.second - cs;
+        auto target = item.target - ct,
+             source = item.source - cs;
         
         p.row(i) << source[0], source[1], 0, 0;
         y(i++) = target[0];
@@ -104,28 +104,22 @@ bool autolabor::fusion_locator_t::refresh() {
     auto temp = 0.25 < std::abs(det) && std::abs(det) < 4.0;
     if (temp) transformer.build(cs, ct, a);
     std::cout << "x0 y0 x1 y1" << std::endl;
-    for (const auto &pair : pairs) {
-        Eigen::Vector2d target = pair.first,
-                        source = pair.second;
-        transformer(source);
-        std::cout << target.transpose() << ' ' << source.transpose() << std::endl;
-    }
+    for (const auto &pair : pairs)
+        std::cout << pair.target.transpose() << ' '
+                  << transformer(pair.source).transpose() << std::endl;
     return temp;
 }
 
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
     if (pairs.empty()) return pose;
-    
-    Eigen::Vector2d delta = Eigen::Vector2d{pose.x, pose.y} - pairs.back().second,
-                    direction{std::cos(pose.theta), std::sin(pose.theta)};
-    transformer(delta);
-    transformer(direction);
-    auto location = pairs.back().first + delta;
+    Eigen::Vector2d
+        location  = transformer(Eigen::Vector2d{pose.x, pose.y} - pairs.back().source) + pairs.back().target,
+        direction = transformer({std::cos(pose.theta), std::sin(pose.theta)});
     return {location[0], location[1], std::atan2(direction[1], direction[0])};
 }
 
 void autolabor::fusion_locator_t::push_back_pair(
     const Eigen::Vector2d &target,
     const Eigen::Vector2d &source) {
-    pairs.emplace_back(target, source);
+    pairs.push_back({target, source});
 }

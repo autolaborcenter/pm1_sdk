@@ -27,13 +27,14 @@ public:
         }
     }
     
-    void operator()(coordinates_t &value) const {
+    [[nodiscard]] coordinates_t
+    operator()(const coordinates_t &value) const {
         Eigen::Vector<scalar_t, dimension + 1> temp;
-    
+        
         for (size_t i = 0; i < dimension; ++i)
             temp[i]     = value[i];
         temp[dimension] = 1;
-        value = core * temp;
+        return core * temp;
     }
 };
 

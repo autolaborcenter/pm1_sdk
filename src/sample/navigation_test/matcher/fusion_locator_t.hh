@@ -17,11 +17,13 @@ namespace autolabor {
      * 融合定位器
      */
     class fusion_locator_t {
-        using location_pair = std::pair<Eigen::Vector2d, Eigen::Vector2d>;
+        struct location_pair_t {
+            Eigen::Vector2d target, source;
+        };
         using stamped_data = stamped_t<Eigen::Vector2d>;
-        
-        std::deque<location_pair> pairs;
     
+        std::deque<location_pair_t> pairs;
+        
         matcher_t<Eigen::Vector2d, Eigen::Vector2d> matcher;
         transformer_t<>                             transformer;
         
