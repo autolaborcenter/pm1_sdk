@@ -15,7 +15,7 @@ using engine_t = autolabor::parse_engine_t<marvelmind::parser_t>;
 using word_t   = typename engine_t::word_t;
 
 marvelmind::mobile_beacon_t::
-mobile_beacon_t(const std::string &port_name)
+mobile_beacon_t(const std::string &port_name, int delay_ms)
     : port(std::make_unique<serial_port>(port_name, 115200)),
       running(std::make_shared<bool>(true)) {
     std::condition_variable signal;
@@ -34,7 +34,7 @@ mobile_beacon_t(const std::string &port_name)
                 
                            std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
                            buffer.push_back({
-                                                autolabor::now() - std::chrono::milliseconds(delay),
+                                                autolabor::now() - std::chrono::milliseconds(delay + delay_ms),
                                                 {x(begin) / 1000.0, y(begin) / 1000.0}
                                             });
                 
@@ -66,7 +66,7 @@ marvelmind::mobile_beacon_t::~mobile_beacon_t() {
 }
 
 std::shared_ptr<marvelmind::mobile_beacon_t>
-marvelmind::find_beacon(const std::string &port_name) {
+marvelmind::find_beacon(const std::string &port_name, int delay_ms) {
     const static auto serial_ports = [] {
         auto                     info = serial::list_ports();
         std::vector<std::string> result(info.size());
@@ -84,7 +84,7 @@ marvelmind::find_beacon(const std::string &port_name) {
     else {
         std::stringstream builder;
         for (auto         name = list.begin();;)
-            try { return std::make_shared<mobile_beacon_t>(*name); }
+            try { return std::make_shared<mobile_beacon_t>(*name, delay_ms); }
             catch (std::exception &e) {
                 builder << *name << " : " << e.what();
                 if (++name < list.end())

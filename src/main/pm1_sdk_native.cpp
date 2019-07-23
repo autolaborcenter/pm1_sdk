@@ -96,7 +96,8 @@ get_current_port() noexcept {
 enum class parameter_id : uint32_t {
     width,           // 宽度（轮间距）
     length,          // 长度（轴间距）
-    wheel_radius,    // 轮半径
+    left_radius,     // 左轮半径
+    right_radius,    // 右轮半径
     max_wheel_speed, // 最大动力轮角速度
     max_v,           // 最大底盘线速度
     max_w,           // 最大底盘角速度
@@ -115,8 +116,11 @@ get_default_parameter(handler_t id) noexcept {
         case parameter_id::width:
             return default_config.width;
         
-        case parameter_id::wheel_radius:
-            return default_config.radius;
+        case parameter_id::left_radius:
+            return default_config.r_left;
+        
+        case parameter_id::right_radius:
+            return default_config.r_right;
         
         case parameter_id::max_wheel_speed:
             return chassis::default_max_wheel_speed;
@@ -157,8 +161,11 @@ get_parameter(handler_t id, double &value) noexcept {
             case parameter_id::width:
                 value = ptr->config.width;
                 break;
-            case parameter_id::wheel_radius:
-                value = ptr->config.radius;
+            case parameter_id::left_radius:
+                value = ptr->config.r_left;
+                break;
+            case parameter_id::right_radius:
+                value = ptr->config.r_right;
                 break;
             case parameter_id::max_wheel_speed:
                 value = ptr->max_wheel_speed;
@@ -193,8 +200,11 @@ set_parameter(handler_t id, double value) noexcept {
             case parameter_id::width:
                 ptr->config.width = temp;
                 break;
-            case parameter_id::wheel_radius:
-                ptr->config.radius = temp;
+            case parameter_id::left_radius:
+                ptr->config.r_left = temp;
+                break;
+            case parameter_id::right_radius:
+                ptr->config.r_right = temp;
                 break;
             case parameter_id::max_wheel_speed:
                 ptr->max_wheel_speed = temp;

@@ -266,8 +266,8 @@ chassis::chassis(const std::string &port_name)
                 if (right_ready) {
                     odometry_t delta = delta_differential_t{
                         config.width,
-                        config.radius * delta_left,
-                        config.radius * delta_right,
+                        config.r_left * delta_left,
+                        config.r_right * delta_right,
                         _now - time};
                     atomic_plus_assign(_odometry, delta);
                     right_ready = false;
@@ -285,8 +285,8 @@ chassis::chassis(const std::string &port_name)
                 if (left_ready) {
                     odometry_t delta = delta_differential_t{
                         config.width,
-                        config.radius * delta_left,
-                        config.radius * delta_right,
+                        config.r_left * delta_left,
+                        config.r_right * delta_right,
                         _now - time};
                     atomic_plus_assign(_odometry, delta);
                     left_ready = false;

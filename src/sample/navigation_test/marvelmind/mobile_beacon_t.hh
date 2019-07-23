@@ -34,7 +34,8 @@ namespace marvelmind {
         std::deque<stamped_data_t> buffer;
         std::mutex                 buffer_mutex;
     public:
-        explicit mobile_beacon_t(const std::string &port_name);
+        explicit mobile_beacon_t(const std::string &port_name,
+                                 int delay_ms);
         
         ~mobile_beacon_t();
         
@@ -54,7 +55,9 @@ namespace marvelmind {
         }
     };
     
-    std::shared_ptr<mobile_beacon_t> find_beacon(const std::string &port_name = "");
+    std::shared_ptr<mobile_beacon_t> find_beacon(
+        const std::string &port_name = "",
+        int delay_ms = 300);
 }
 
 

@@ -9,9 +9,10 @@
  * 底盘模型
  */
 struct chassis_config_t {
-    float width,  // 轮距
-          length, // 轴距
-          radius; // 轮半径
+    float width,   // 轮距
+          length,  // 轴距
+          r_left,  // 左轮半径
+          r_right; // 右轮半径
 };
 
 extern const float                   pi_f;

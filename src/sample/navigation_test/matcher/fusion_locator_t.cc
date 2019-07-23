@@ -58,10 +58,10 @@ void autolabor::fusion_locator_t::push_back_pair(
 }
 
 void autolabor::fusion_locator_t::refresh() {
-    if (!update_queue()) {
-        state = false;
-        return;
-    }
+    //    if (!update_queue()) {
+    //        state = false;
+    //        return;
+    //    }
     if (pairs.size() > queue_size)
         pairs.erase(pairs.begin(), pairs.end() - queue_size);
     
@@ -113,27 +113,26 @@ void autolabor::fusion_locator_t::refresh() {
     auto det = a(0, 0) * a(1, 1) - a(1, 0) * a(0, 1);
     auto dot = a(0, 0) * a(0, 1) + a(1, 0) * a(1, 1);
     
-    //    std::cout << "det = " << det << std::endl
-    //              << "dot = " << dot << std::endl;
-    
-    //    std::cout << "det = " << det << std::endl
-    //              << "------------------------" << std::endl
-    //              << a << std::endl
-    //              << "------------------------" << std::endl;
+    std::cout << "------------------------" << std::endl
+              << "det = " << det << std::endl
+              << "dot = " << dot << std::endl
+              << "------------------------" << std::endl
+              << a << std::endl
+              << "------------------------" << std::endl;
     
     if ((state = (0.25 < std::abs(det) && std::abs(det) < 4.0) && std::abs(dot) < 2))
         transformer.build(cs, ct, a);
     
-    if (state)
-        std::cout << solve[0] << ' '
-                  << solve[2] << ' '
-                  << solve[1] << ' '
-                  << solve[3] << std::endl;
+    //    if (state)
+    //        std::cout << solve[0] << ' '
+    //                  << solve[2] << ' '
+    //                  << solve[1] << ' '
+    //                  << solve[3] << std::endl;
     
-    //    std::cout << "x0 y0 x1 y1" << std::endl;
-    //    for (const auto &pair : pairs)
-    //        std::cout << pair.target.transpose() << ' '
-    //                  << transformer(pair.source).transpose() << std::endl;
+    std::cout << "x0 y0 x1 y1" << std::endl;
+    for (const auto &pair : pairs)
+        std::cout << pair.target.transpose() << ' '
+                  << transformer(pair.source).transpose() << std::endl;
 }
 
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {

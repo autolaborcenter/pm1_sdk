@@ -112,8 +112,8 @@ struct wheels velocity_to_wheels(
     const struct velocity velocity,
     const struct chassis_config_t *config) {
     struct wheels result = {
-        (velocity.v - config->width / 2 * velocity.w) / config->radius,
-        (velocity.v + config->width / 2 * velocity.w) / config->radius
+        (velocity.v - config->width / 2 * velocity.w) / config->r_left,
+        (velocity.v + config->width / 2 * velocity.w) / config->r_right
     };
     return result;
 }
@@ -122,8 +122,8 @@ struct velocity wheels_to_velocity(
     const struct wheels wheels,
     const struct chassis_config_t *config) {
     struct velocity result = {
-        config->radius * (wheels.right + wheels.left) / 2,
-        config->radius * (wheels.right - wheels.left) / config->width
+        config->r_left * (wheels.right + wheels.left) / 2,
+        config->r_right * (wheels.right - wheels.left) / config->width
     };
     return result;
 }
