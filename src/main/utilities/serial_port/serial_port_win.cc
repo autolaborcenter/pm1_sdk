@@ -57,8 +57,8 @@ serial_port::~serial_port() noexcept {
     auto temp = handle.exchange(nullptr);
     if (!temp) return;
     PurgeComm(temp, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
-    CloseHandle(temp);
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
+    CloseHandle(temp);
 }
 
 struct tool_t {

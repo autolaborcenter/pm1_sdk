@@ -29,9 +29,9 @@ namespace autolabor {
      * @param seconds 秒数
      * @return 对应的 std::chrono::duration
      */
-    template<class t1, class t2>
-    inline double duration_seconds(const std::chrono::duration<t1, t2> &duration) {
-        return std::chrono::duration_cast<seconds_floating>(duration).count();
+    template<class t, class t1, class t2>
+    constexpr inline t duration_seconds(const std::chrono::duration<t1, t2> &duration) {
+        return std::chrono::duration_cast<std::chrono::duration<t, std::ratio<1>>>(duration).count();
     }
     
     /**

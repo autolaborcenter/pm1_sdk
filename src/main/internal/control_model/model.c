@@ -6,7 +6,7 @@
 #include "model.h"
 
 struct wheels physical_to_wheels(
-    const struct physical physical,
+    struct physical physical,
     const struct chassis_config_t *config) {
     struct wheels result;
     
@@ -17,26 +17,26 @@ struct wheels physical_to_wheels(
         
     } else if (physical.rudder == 0) {
         // 直走
-        result.left  = physical.speed;
-        result.right = physical.speed;
+        result.left  = physical.speed / config->left_radius;
+        result.right = physical.speed / config->right_radius;
         
     } else {
         // 圆弧
         float r = -config->length / tanf(physical.rudder);
         
         if (physical.rudder > 0) {
-            // 右转，左轮速度快
+            // 右转，左轮线速度快
             float k = (r + config->width / 2) / (r - config->width / 2);
-            
-            result.left  = physical.speed;
-            result.right = physical.speed * k;
+    
+            result.left  = physical.speed / config->left_radius;
+            result.right = physical.speed / config->right_radius * k;
             
         } else {
-            // 左转，右轮速度快
+            // 左转，右轮线速度快
             float k = (r - config->width / 2) / (r + config->width / 2);
-            
-            result.left  = physical.speed * k;
-            result.right = physical.speed;
+    
+            result.left  = physical.speed / config->left_radius * k;
+            result.right = physical.speed / config->right_radius;
         }
     }
     
@@ -44,9 +44,12 @@ struct wheels physical_to_wheels(
 }
 
 struct physical wheels_to_physical(
-    const struct wheels wheels,
+    struct wheels wheels,
     const struct chassis_config_t *config) {
     struct physical result;
+    
+    wheels.left *= config->left_radius;
+    wheels.right *= config->right_radius;
     
     float left  = fabsf(wheels.left),
           right = fabsf(wheels.right);
@@ -97,33 +100,33 @@ struct physical wheels_to_physical(
 }
 
 struct velocity physical_to_velocity(
-    const struct physical physical,
+    struct physical physical,
     const struct chassis_config_t *config) {
     return wheels_to_velocity(physical_to_wheels(physical, config), config);
 }
 
 struct physical velocity_to_physical(
-    const struct velocity velocity,
+    struct velocity velocity,
     const struct chassis_config_t *config) {
     return wheels_to_physical(velocity_to_wheels(velocity, config), config);
 }
 
 struct wheels velocity_to_wheels(
-    const struct velocity velocity,
+    struct velocity velocity,
     const struct chassis_config_t *config) {
     struct wheels result = {
-        (velocity.v - config->width / 2 * velocity.w) / config->r_left,
-        (velocity.v + config->width / 2 * velocity.w) / config->r_right
+        (velocity.v - config->width / 2 * velocity.w) / config->left_radius,
+        (velocity.v + config->width / 2 * velocity.w) / config->right_radius
     };
     return result;
 }
 
 struct velocity wheels_to_velocity(
-    const struct wheels wheels,
+    struct wheels wheels,
     const struct chassis_config_t *config) {
     struct velocity result = {
-        config->r_left * (wheels.right + wheels.left) / 2,
-        config->r_right * (wheels.right - wheels.left) / config->width
+        config->left_radius * (wheels.right + wheels.left) / 2,
+        config->right_radius * (wheels.right - wheels.left) / config->width
     };
     return result;
 }

@@ -1,5 +1,5 @@
 ﻿#include <iostream>
-#include <windows.h>
+#include <Windows.h>
 #include "pm1_sdk.h"                 // 头文件
 
 using namespace autolabor::pm1;      // 命名空间

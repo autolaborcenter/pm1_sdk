@@ -11,8 +11,8 @@ autolabor::pm1::wheels_to_odometry(
     double left,
     double right,
     const chassis_config_t &config) {
-    const auto l = config.r_left * left,
-               r = config.r_right * right,
+    const auto l = config.left_radius * left,
+               r = config.right_radius * right,
                s = (r + l) / 2,
                a = (r - l) / config.width;
     double     x, y;

@@ -117,10 +117,10 @@ get_default_parameter(handler_t id) noexcept {
             return default_config.width;
         
         case parameter_id::left_radius:
-            return default_config.r_left;
+            return default_config.left_radius;
         
         case parameter_id::right_radius:
-            return default_config.r_right;
+            return default_config.right_radius;
         
         case parameter_id::max_wheel_speed:
             return chassis::default_max_wheel_speed;
@@ -162,10 +162,10 @@ get_parameter(handler_t id, double &value) noexcept {
                 value = ptr->config.width;
                 break;
             case parameter_id::left_radius:
-                value = ptr->config.r_left;
+                value = ptr->config.left_radius;
                 break;
             case parameter_id::right_radius:
-                value = ptr->config.r_right;
+                value = ptr->config.right_radius;
                 break;
             case parameter_id::max_wheel_speed:
                 value = ptr->max_wheel_speed;
@@ -201,10 +201,10 @@ set_parameter(handler_t id, double value) noexcept {
                 ptr->config.width = temp;
                 break;
             case parameter_id::left_radius:
-                ptr->config.r_left = temp;
+                ptr->config.left_radius = temp;
                 break;
             case parameter_id::right_radius:
-                ptr->config.r_right = temp;
+                ptr->config.right_radius = temp;
                 break;
             case parameter_id::max_wheel_speed:
                 ptr->max_wheel_speed = temp;

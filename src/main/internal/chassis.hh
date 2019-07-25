@@ -122,11 +122,12 @@ namespace autolabor {
             std::atomic<odometry_t<>> _odometry{};
             
             /** 底层线程是否运行 */
-            std::atomic_bool running;
-            
-            std::thread read_thread,
-                        write_thread;
+            std::shared_ptr<bool> running;
     
+            void start_write_loop();
+    
+            std::thread read_thread;
+            
             /** 目标设定锁 */
             std::mutex target_mutex;
             

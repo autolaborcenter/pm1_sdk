@@ -15,8 +15,8 @@
  *                当前后轮转角应当测得，当前速度若不好测量，可使用上一次的目标
  * @return 当前可执行的控制量，速度经过优化，后轮转角等于当前后轮转角
  */
-struct physical optimize(const struct physical *target,
-                         const struct physical *current,
+struct physical optimize(struct physical target,
+                         struct physical current,
                          float optimize_width,
                          float acceleration);
 
