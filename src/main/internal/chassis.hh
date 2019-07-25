@@ -8,7 +8,6 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-#include <shared_mutex>
 
 #include "can_define.h"
 #include "odometry_t.hpp"
@@ -128,9 +127,6 @@ namespace autolabor {
             std::thread read_thread,
                         write_thread;
     
-            /** 托管动作锁 */
-            std::shared_mutex action_mutex;
-            
             /** 目标设定锁 */
             std::mutex target_mutex;
             

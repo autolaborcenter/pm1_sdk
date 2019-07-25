@@ -3,6 +3,7 @@
 //
 
 #include <cmath>
+#include <limits>
 #include "odometry.h"
 
 autolabor::odometry_t<autolabor::odometry_type::delta>

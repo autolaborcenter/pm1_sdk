@@ -11,22 +11,12 @@
 
 #include "can/parser_t.hpp"
 #include "serial_parser/parse_engine.hpp"
-#include "raii/weak_shared_lock.hpp"
 #include "odometry.h"
 
 extern "C" {
 #include "control_model/motor_map.h"
 #include "control_model/optimization.h"
 }
-
-#ifdef _MSC_VER
-
-#include <Windows.h>
-
-#define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
-#else
-#define AVOID_SLEEP
-#endif
 
 using namespace autolabor::pm1;
 
@@ -48,16 +38,16 @@ inline void atomic_plus_assign(std::atomic<t1> &a, const t2 &b) noexcept {
         desired = expected + b;
 }
 
-constexpr unsigned long max_of(unsigned long a, unsigned long b) noexcept {
+constexpr uint64_t max_of(uint64_t a, uint64_t b) noexcept {
     return a > b ? a : b;
 }
 
-constexpr unsigned long gcd(unsigned long a, unsigned long b) noexcept {
+constexpr uint64_t gcd(uint64_t a, uint64_t b) noexcept {
     return a <= 1 || b <= 1 ? 1 : a > b ? gcd(b, a % b) : gcd(a, b % a);
 }
 
 template<class t>
-constexpr unsigned long count_ms(t time) noexcept {
+constexpr uint64_t count_ms(t time) noexcept {
     return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
 }
 
@@ -71,8 +61,13 @@ const float
     chassis::default_acceleration    = default_max_wheel_speed;
 
 #if   defined(WIN32)
+
+#include <Windows.h>
+
+#define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
 constexpr auto timeout = 3;
 #elif defined(linux)
+#define AVOID_SLEEP
 constexpr auto timeout = 20;
 #else
 #error unsupported platform
@@ -129,7 +124,7 @@ chassis::chassis(const std::string &port_name)
         
             std::mutex                   signal_mutex;
             std::unique_lock<std::mutex> own(signal_mutex);
-            if (signal.wait_for(own, 1s, [&] { return temp[0] && temp[1] && temp[2]; }))
+            if (signal.wait_for(own, check_timeout, [&] { return temp[0] && temp[1] && temp[2]; }))
                 return;
         
             abandon = true;
@@ -395,9 +390,6 @@ void chassis::set_enabled_target(bool state) {
 }
 
 void chassis::set_target(double speed, double rudder) {
-    weak_shared_lock l0(action_mutex);
-    if (!l0) throw std::logic_error("an action is invoking.");
-    
     std::lock_guard<decltype(target_mutex)> l1(target_mutex);
     
     request_time = now();
