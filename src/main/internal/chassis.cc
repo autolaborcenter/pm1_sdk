@@ -12,6 +12,7 @@
 #include "can/parser_t.hpp"
 #include "serial_parser/parse_engine.hpp"
 #include "raii/weak_shared_lock.hpp"
+#include "odometry.h"
 
 extern "C" {
 #include "control_model/motor_map.h"
@@ -39,8 +40,8 @@ inline serial_port &operator<<(
     return port;
 }
 
-template<class t>
-inline void atomic_plus_assign(std::atomic<t> &a, const t &b) noexcept {
+template<class t1, class t2>
+inline void atomic_plus_assign(std::atomic<t1> &a, const t2 &b) noexcept {
     auto expected = a.load();
     auto desired  = expected + b;
     while (!a.compare_exchange_strong(expected, desired))
@@ -264,12 +265,10 @@ chassis::chassis(const std::string &port_name)
                 _left.update(_now, value);
                 
                 if (right_ready) {
-                    odometry_t delta = delta_differential_t{
-                        config.width,
-                        config.r_left * delta_left,
-                        config.r_right * delta_right,
-                        _now - time};
-                    atomic_plus_assign(_odometry, delta);
+                    atomic_plus_assign(_odometry,
+                                       wheels_to_odometry(
+                                           delta_left, delta_right, config
+                                       ));
                     right_ready = false;
                     time        = _now;
                 } else
@@ -283,12 +282,10 @@ chassis::chassis(const std::string &port_name)
                 _right.update(_now, value);
                 
                 if (left_ready) {
-                    odometry_t delta = delta_differential_t{
-                        config.width,
-                        config.r_left * delta_left,
-                        config.r_right * delta_right,
-                        _now - time};
-                    atomic_plus_assign(_odometry, delta);
+                    atomic_plus_assign(_odometry,
+                                       wheels_to_odometry(
+                                           delta_left, delta_right, config
+                                       ));
                     left_ready = false;
                     time       = _now;
                 } else
@@ -381,7 +378,7 @@ node_state_t chassis::target_state() const {
            : node_state_t::unknown;
 }
 
-autolabor::odometry_t chassis::odometry() const {
+autolabor::odometry_t<> chassis::odometry() const {
     return _odometry;
 }
 

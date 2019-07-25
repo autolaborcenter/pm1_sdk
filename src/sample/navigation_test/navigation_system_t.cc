@@ -36,11 +36,8 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
 
 autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     pose_t pose{};
-    double ignore;
-    native::get_odometry(
-        ignore, ignore,
-        pose.x, pose.y, pose.theta,
-        ignore, ignore, ignore);
+    double _;
+    native::get_odometry(_, _, pose.x, pose.y, pose.theta);
     locator.push_back_helper({autolabor::now(), {pose.x, pose.y}});
     
     using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;

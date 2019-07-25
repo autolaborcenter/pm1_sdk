@@ -40,7 +40,7 @@ autolabor::exception_engine<handler_t> exceptions; // NOLINT(cert-err58-cpp)
 safe_shared_ptr<autolabor::pm1::chassis> chassis_ptr;
 using ptr_t = decltype(chassis_ptr)::ptr_t;
 
-std::atomic<autolabor::odometry_t>
+std::atomic<autolabor::odometry_t<>>
     odometry_mark{};
 
 // endregion
@@ -332,42 +332,33 @@ handler_t
 STD_CALL
 autolabor::pm1::native::
 get_odometry_c(double *s, double *sa,
-               double *x, double *y, double *theta,
-               double *vx, double *vy, double *w) noexcept {
+               double *x, double *y, double *theta) noexcept {
     return get_odometry(*s, *sa,
-                        *x, *y, *theta,
-                        *vx, *vy, *w);
+                        *x, *y, *theta);
 }
 
 handler_t
 STD_CALL
 autolabor::pm1::native::
-get_odometry(double &s, double &sa,
-             double &x, double &y, double &theta,
-             double &vx, double &vy, double &w) noexcept {
+get_odometry(double &s, double &a,
+             double &x, double &y, double &theta) noexcept {
     handler_t id = ++task_id;
     try {
         chassis_ptr.read<void>([&](ptr_t ptr) {
             auto temp = ptr->odometry() - odometry_mark;
             s     = temp.s;
-            sa    = temp.sa;
+            a     = temp.a;
             x     = temp.x;
             y     = temp.y;
             theta = temp.theta;
-            vx    = temp.vx;
-            vy    = temp.vy;
-            w     = temp.w;
         });
     }
     catch (std::exception &e) {
         s     = NAN;
-        sa    = NAN;
+        a     = NAN;
         x     = NAN;
         y     = NAN;
         theta = NAN;
-        vx    = NAN;
-        vy    = NAN;
-        w     = NAN;
         exceptions.set(id, e.what());
     }
     return id;
@@ -600,7 +591,7 @@ drive_spatial(double v,
     double     width;
     
     try {
-        origin = chassis_ptr.read<odometry_t>([](ptr_t ptr) { return ptr->odometry(); });
+        origin = chassis_ptr.read<odometry_t<>>([](ptr_t ptr) { return ptr->odometry(); });
         width  = chassis_ptr.read<double>([](ptr_t ptr) { return ptr->config.width; });
     } catch (std::exception &e) {
         handler_t id = ++task_id;
@@ -612,7 +603,7 @@ drive_spatial(double v,
                  {0.5, 0.1, 12, 4},
                  [origin, width](ptr_t ptr) {
                      auto odometry = ptr->odometry() - origin;
-                     return calculate_spatium(odometry.s, odometry.sa, width);
+                     return calculate_spatium(odometry.s, odometry.a, width);
                  },
                  progress);
 }

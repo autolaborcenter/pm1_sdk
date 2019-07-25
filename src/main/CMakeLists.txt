@@ -40,6 +40,7 @@ set(UTILITIES
         # --------------------------
         # api
         utilities/time_extensions.h
+        utilities/odometry_t.hpp
 
         utilities/raii/safe_shared_ptr.hpp
         utilities/raii/weak_lock_guard.hpp
@@ -76,11 +77,11 @@ set(NATIVE_LIBRARY
         # pm1 chassis
         internal/can_define.h
 
-        internal/chassis.hh
-        internal/chassis.cc
+        internal/odometry.h
+        internal/odometry.cpp
 
-        internal/odometry_t.hh
-        internal/odometry_t.cc)
+        internal/chassis.hh
+        internal/chassis.cc)
 
 add_library(pm1_sdk_native SHARED
         ${UTILITIES}

@@ -11,7 +11,7 @@
 #include <shared_mutex>
 
 #include "can_define.h"
-#include "odometry_t.hh"
+#include "odometry_t.hpp"
 
 #include "serial_port/serial_port.hh"
 #include "time_extensions.h"
@@ -93,7 +93,7 @@ namespace autolabor {
             node_state_t target_state() const;
             
             /** 读取里程计 */
-            odometry_t odometry() const;
+            odometry_t<> odometry() const;
             
             /** 线程是否正常运行 */
             bool is_threads_running() const;
@@ -120,7 +120,7 @@ namespace autolabor {
                       _rudder{};
             
             /** 里程计 */
-            std::atomic<odometry_t> _odometry{};
+            std::atomic<odometry_t<>> _odometry{};
             
             /** 底层线程是否运行 */
             std::atomic_bool running;

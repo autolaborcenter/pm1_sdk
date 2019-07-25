@@ -84,8 +84,7 @@ autolabor::pm1::get_odometry() {
     odometry temp{};
     
     auto handler = native::get_odometry(_, _,
-                                        temp.x, temp.y, temp.yaw,
-                                        temp.vx, temp.vy, temp.w);
+                                        temp.x, temp.y, temp.yaw);
     auto error   = std::string(native::get_error_info(handler));
     native::remove_error_info(handler);
     return {error, temp};
