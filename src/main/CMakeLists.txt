@@ -51,6 +51,7 @@ set(UTILITIES
 set(NATIVE_LIBRARY
         # --------------------------
         # pm1 sdk
+        pm1_sdk_definitions.h
         pm1_sdk_native.h
         pm1_sdk_native.cpp
         internal/process_controller.hh

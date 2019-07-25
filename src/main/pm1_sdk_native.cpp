@@ -11,6 +11,8 @@
 #include <unordered_set>
 #include <cmath>
 
+#include "pm1_sdk_definitions.h"
+
 #include "raii/safe_shared_ptr.hpp"
 #include "raii/weak_lock_guard.hpp"
 #include "raii/weak_shared_lock.hpp"
@@ -92,18 +94,6 @@ autolabor::pm1::native::
 get_current_port() noexcept {
     return current_port.c_str();
 }
-
-enum class parameter_id : uint32_t {
-    width,           // 宽度（轮间距）
-    length,          // 长度（轴间距）
-    left_radius,     // 左轮半径
-    right_radius,    // 右轮半径
-    max_wheel_speed, // 最大动力轮角速度
-    max_v,           // 最大底盘线速度
-    max_w,           // 最大底盘角速度
-    optimize_width,  // 优化函数半宽度
-    acceleration,    // 最大动力轮角加速度
-};
 
 double
 STD_CALL

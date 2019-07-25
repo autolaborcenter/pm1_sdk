@@ -13,6 +13,7 @@
 
 #include <string>
 #include <vector>
+#include "pm1_sdk_definitions.h"
 
 namespace autolabor {
     namespace pm1 {
@@ -67,36 +68,9 @@ namespace autolabor {
         };
         
         /**
-         * 用于访问底盘参数的标识符
+         * 里程
          */
-        enum class parameter_id : uint32_t {
-            width,           // 宽度（轮间距）
-            length,          // 长度（轴间距）
-            left_radius,     // 左轮半径
-            right_radius,    // 右轮半径
-            max_wheel_speed, // 最大动力轮角速度
-            max_v,           // 最大底盘线速度
-            max_w,           // 最大底盘角速度
-            optimize_width,  // 优化函数半宽度
-            acceleration,    // 最大动力轮角加速度
-        };
-        
-        /**
-         * 表示底盘状态的标识符
-         */
-        enum class chassis_state : uint8_t {
-            offline  = 0x00, // 未知（离线）
-            unlocked = 0x01, // 未锁定
-            error    = 0x7f, // 已连接但异常
-            locked   = 0xff  // 已锁定
-        };
-        
-        /**
-         * 里程，里程计读数
-         */
-        struct odometry {
-            double x, y, yaw, vx, vy, w;
-        };
+        struct odometry { double x, y, yaw; };
         
         /**
          * 初始化

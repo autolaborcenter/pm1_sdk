@@ -125,7 +125,7 @@ namespace autolabor {
             reset_odometry() noexcept;
     
             /**
-             * 设置使能状态
+             * 开关指令发送
              */
             DLL_EXPORT handler_t STD_CALL
             set_command_enabled(bool) noexcept;

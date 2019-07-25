@@ -92,7 +92,7 @@ constexpr auto
 
 chassis::chassis(const std::string &port_name)
     : port(port_name, 115200, timeout),
-      running(std::make_shared<bool>(true)),
+      running(true),
       command_enabled(true),
       config(default_config),
       max_v(default_max_v),
@@ -105,7 +105,7 @@ chassis::chassis(const std::string &port_name)
     using result_t = can::parser_t::result_type_t;
     using engine_t = parse_engine_t<can::parser_t>;
     
-    _left.time = _right.time = _rudder.time = now();
+    _left.time  = _right.time = _rudder.time = now();
     
     port << can::pack<ecu<>::timeout>({2, 0}) // 设置动力超时时间到 200 ms
          << can::pack<unit<>::emergency_stop>();          // 从锁定状态启动
@@ -116,19 +116,17 @@ chassis::chassis(const std::string &port_name)
     {
         std::condition_variable signal;
     
-        volatile bool temp[]{false, false, false},
-                      abandon = false;
-    
+        volatile bool temp[]{false, false, false};
+        
         auto timer = std::thread([&] {
             using namespace std::chrono_literals;
-        
+    
             std::mutex                   signal_mutex;
             std::unique_lock<std::mutex> own(signal_mutex);
-            if (signal.wait_for(own, check_timeout, [&] { return temp[0] && temp[1] && temp[2]; }))
+            if (signal.wait_for(own, check_timeout, [&] { return !running || (temp[0] && temp[1] && temp[2]); }))
                 return;
-        
-            abandon = true;
-            port.break_read();
+    
+            stop_all();
         });
     
         auto parse = [&](const autolabor::can::parser_t::result_t &result) {
@@ -150,15 +148,16 @@ chassis::chassis(const std::string &port_name)
         uint8_t  buffer[64];
         while (!temp[0] || !temp[1] || !temp[2]) {
             try { engine(buffer, buffer + port.read(buffer, sizeof(buffer)), parse); }
-            catch (...) { abandon = true; }
-            if (abandon) {
-                *running = false;
+            catch (...) { stop_all(); }
+            if (!running) {
+                running = false;
                 std::stringstream builder;
                 builder << "it's not a pm1 chassis: [ecu0|ecu1|tcu0] = ["
                         << (temp[0] ? '*' : 'x') << '|'
                         << (temp[1] ? '*' : 'x') << '|'
                         << (temp[2] ? '*' : 'x') << ']';
                 timer.join();
+                write_thread.join();
                 throw std::runtime_error(builder.str());
             }
         }
@@ -187,8 +186,8 @@ chassis::chassis(const std::string &port_name)
                     chassis_state.states[i] = node_state_t::unknown;
             
             auto msg = result.message;
-            
-            if (unit<ecu<0 >>::state_rx::match(msg)) {
+    
+            if (unit<ecu<0>>::state_rx::match(msg)) {
                 reply_time[0] = _now;
                 if (node_state_t::enabled == (chassis_state.ecu0() = parse_state(*msg.data))) {
                     if (!enabled_target)
@@ -197,8 +196,8 @@ chassis::chassis(const std::string &port_name)
                     if (enabled_target)
                         port << pack_value<unit<ecu<0 >>::release_stop, uint8_t>(0xff);
                 }
-                
-            } else if (unit<ecu<1 >>::state_rx::match(msg)) {
+        
+            } else if (unit<ecu<1>>::state_rx::match(msg)) {
                 reply_time[1] = _now;
                 if (node_state_t::enabled == (chassis_state.ecu1() = parse_state(*msg.data))) {
                     if (!enabled_target)
@@ -207,8 +206,8 @@ chassis::chassis(const std::string &port_name)
                     if (enabled_target)
                         port << pack_value<unit<ecu<1 >>::release_stop, uint8_t>(0xff);
                 }
-                
-            } else if (unit<tcu<0 >>::state_rx::match(msg)) {
+        
+            } else if (unit<tcu<0>>::state_rx::match(msg)) {
                 reply_time[2] = _now;
                 if (node_state_t::enabled == (chassis_state.tcu() = parse_state(*msg.data))) {
                     if (!enabled_target)
@@ -217,18 +216,21 @@ chassis::chassis(const std::string &port_name)
                     if (enabled_target)
                         port << pack_value<unit<tcu<0 >>::release_stop, uint8_t>(0xff);
                 }
-                
-            } else if (unit<vcu<0 >>::state_rx::match(msg)) {
+        
+            } else if (unit<vcu<0>>::state_rx::match(msg)) {
                 reply_time[3] = _now;
                 chassis_state.vcu() = parse_state(*msg.data);
-                
+        
+            } else if (vcu<0>::battery_persent_rx::match(msg)) {
+                _battery = *msg.data;
+        
             } else if (ecu<0>::current_position_rx::match(msg)) {
-                
+        
                 auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                 delta_left = value - _left.position;
-                
+        
                 _left.update(_now, value);
-                
+        
                 if (right_ready) {
                     atomic_plus_assign(_odometry,
                                        wheels_to_odometry(
@@ -238,14 +240,14 @@ chassis::chassis(const std::string &port_name)
                     time        = _now;
                 } else
                     left_ready = true;
-                
+        
             } else if (ecu<1>::current_position_rx::match(msg)) {
-                
+        
                 auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
                 delta_right = value - _right.position;
-                
+        
                 _right.update(_now, value);
-                
+        
                 if (left_ready) {
                     atomic_plus_assign(_odometry,
                                        wheels_to_odometry(
@@ -255,26 +257,26 @@ chassis::chassis(const std::string &port_name)
                     time       = _now;
                 } else
                     right_ready = true;
-                
+        
             } else if (tcu<0>::current_position_rx::match(msg)) {
-                
+        
                 auto value = RAD_OF(get_data_value<short>(msg), default_rudder_k);
                 _rudder.update(_now, value);
-                
+        
                 if (std::isnan(target.rudder) || now() - request_time > control_timeout)
                     target = {0, value};
-                
+        
                 constexpr static auto period = duration_seconds<float>(rudder_interval);
-                
+        
                 auto optimized = optimize(target, {speed, value},
                                           optimize_width, acceleration * period);
                 speed = optimized.speed;
-                
+        
                 auto wheels = physical_to_wheels(optimized, &config);
                 auto left   = PULSES_OF(wheels.left, default_wheel_k);
                 auto right  = PULSES_OF(wheels.right, default_wheel_k);
                 auto rudder = static_cast<short>(PULSES_OF(target.rudder, default_rudder_k));
-                
+        
                 if (command_enabled)
                     port << pack_value<ecu<0>::target_speed, int>(left)
                          << pack_value<ecu<1>::target_speed, int>(right)
@@ -284,11 +286,11 @@ chassis::chassis(const std::string &port_name)
         
         engine_t engine;
         uint8_t  buffer[64];
-        while (*running)
+        while (running)
             try {
                 engine(buffer, buffer + port.read(buffer, sizeof(buffer)), parse);
             } catch (...) {
-                *running = false;
+                stop_all();
             }
     });
     // endregion
@@ -306,9 +308,9 @@ chassis::chassis(const std::string &port_name)
 }
 
 chassis::~chassis() {
-    *running = false;
-    port.break_read();
-    read_thread.detach();
+    stop_all();
+    read_thread.join();
+    write_thread.join();
 }
 
 //==============================================================
@@ -343,8 +345,12 @@ autolabor::odometry_t<> chassis::odometry() const {
     return _odometry;
 }
 
+double chassis::battery_persent() const {
+    return _battery / 100.0;
+}
+
 bool chassis::is_threads_running() const {
-    return running && *running;
+    return running;
 }
 
 //==============================================================
@@ -370,27 +376,36 @@ void chassis::reset_rudder() {
 }
 
 void chassis::start_write_loop() {
-    std::thread([flag = running, this] {
-        decltype(now()) _now, task_time[3]{};
+    write_thread = std::thread([this] {
+        decltype(now()) time[3]{};
+        std::mutex      lock;
         
         do {
-            _now = now();
-            
-            if (_now - task_time[0] > odometry_interval) {
+            auto _now = now();
+    
+            if (_now - time[0] > odometry_interval) {
                 port << autolabor::can::pack<ecu<>::current_position_tx>();
-                task_time[0] = _now;
+                time[0] = _now;
             }
-            if (_now - task_time[1] > rudder_interval) {
+            if (_now - time[1] > rudder_interval) {
                 port << autolabor::can::pack<tcu<0>::current_position_tx>();
-                task_time[1] = _now;
+                time[1] = _now;
             }
-            if (_now - task_time[2] > state_interval) {
+            if (_now - time[2] > state_interval) {
                 AVOID_SLEEP;
-                port << autolabor::can::pack<unit<>::state_tx>();
-                task_time[2] = _now;
+                port << autolabor::can::pack<unit<>::state_tx>()
+                     << autolabor::can::pack<vcu<>::battery_persent_tx>();
+                time[2] = _now;
             }
-            
-            std::this_thread::sleep_for(delay_interval);
-        } while (*flag);
-    }).detach();
+    
+            std::unique_lock<decltype(lock)> _(lock);
+            synchronizer.wait_for(_, delay_interval, [this] { return !running; });
+        } while (running);
+    });
+}
+
+void chassis::stop_all() {
+    running = false;
+    synchronizer.notify_all();
+    port.break_read();
 }

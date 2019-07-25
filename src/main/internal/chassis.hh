@@ -8,6 +8,7 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include <condition_variable>
 
 #include "can_define.h"
 #include "odometry_t.hpp"
@@ -93,6 +94,9 @@ namespace autolabor {
             
             /** 读取里程计 */
             odometry_t<> odometry() const;
+    
+            /** 读取电池电量 */
+            double battery_persent() const;
             
             /** 线程是否正常运行 */
             bool is_threads_running() const;
@@ -120,13 +124,25 @@ namespace autolabor {
             
             /** 里程计 */
             std::atomic<odometry_t<>> _odometry{};
+    
+            /** 电池电量 */
+            uint8_t _battery = 0;
             
             /** 底层线程是否运行 */
-            std::shared_ptr<bool> running;
+            std::atomic<bool> running;
     
+            /** 同步器 */
+            std::condition_variable synchronizer;
+    
+            /** 线程资源 */
+            std::thread read_thread,
+                        write_thread;
+    
+            /** 启动查询线程 */
             void start_write_loop();
     
-            std::thread read_thread;
+            /** 终止任务 */
+            void stop_all();
             
             /** 目标设定锁 */
             std::mutex target_mutex;
