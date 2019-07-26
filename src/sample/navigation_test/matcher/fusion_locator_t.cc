@@ -116,9 +116,11 @@ void autolabor::fusion_locator_t::refresh() {
     if (!(state = (0.25 < std::abs(det) && std::abs(det) < 4.0) && std::abs(dot) < 2))
         return;
     
+    auto _now   = now();
     auto _score = std::abs(std::abs(det) - 1) + std::abs(dot);
-    if (_score < score) {
-        score = _score;
+    if (_score < std::min(1.0, score * (1 + duration_seconds<double>(_now - update_time) / 10))) {
+        update_time = _now;
+        score       = _score;
         std::cout << "------------------------" << std::endl
                   << "det   = " << det << std::endl
                   << "dot   = " << dot << std::endl
@@ -144,7 +146,7 @@ void autolabor::fusion_locator_t::refresh() {
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
     if (pairs.empty()) return pose;
     Eigen::Vector2d
-        location  = transformer(Eigen::Vector2d{pose.x, pose.y}),
+        location  = transformer(Eigen::Vector2d{pose.x, pose.y} - pairs.back().source) + pairs.back().target,
         direction = transformer({std::cos(pose.theta), std::sin(pose.theta)});
     return {location[0], location[1], std::atan2(direction[1], direction[0])};
 }

@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <fstream>
+#include <utilities/time_extensions.h>
 
 #include "../pose_t.h"
 #include "matcher_t.hpp"
@@ -32,7 +33,8 @@ namespace autolabor {
         double step;
     
         // 匹配评分
-        double score = 1;
+        double          score       = 1;
+        decltype(now()) update_time = now();
         
         std::ofstream plot;
     
