@@ -6,7 +6,6 @@
 
 #include <numeric>
 #include <filesystem>
-#include <iostream>
 #include <eigen3/Eigen/LU>
 #include <eigen3/Eigen/SVD>
 
@@ -98,13 +97,8 @@ void autolabor::fusion_locator_t::refresh() {
         
         auto matrix = svd.matrixV() * svd.matrixU().transpose();
         auto det    = matrix.determinant();
-        
-        if (det == 1) {
-            auto result = reflect * matrix;
-            std::cout << "--------------------------------" << std::endl
-                      << result << std::endl;
-            transformer.build(cs, ct, result);
-        }
+    
+        if (det == 1) auto result = reflect * matrix;
     }
     
     // 初始化
@@ -140,17 +134,7 @@ void autolabor::fusion_locator_t::refresh() {
     
     if (!(state = (0.25 < std::abs(det) && std::abs(det) < 4.0) && std::abs(dot) < 2))
         return;
-    
-    //    if (state)
-    //        std::cout << solve[0] << ' '
-    //                  << solve[2] << ' '
-    //                  << solve[1] << ' '
-    //                  << solve[3] << std::endl;
-    
-    //    std::cout << "x0 y0 x1 y1" << std::endl;
-    //    for (const auto &pair : pairs)
-    //        std::cout << pair.target.transpose() << ' '
-    //                  << transformer(pair.source).transpose() << std::endl;
+    transformer.build(cs, ct, a);
 }
 
 autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
