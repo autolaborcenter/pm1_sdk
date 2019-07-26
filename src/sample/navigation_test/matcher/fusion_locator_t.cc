@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <iostream>
 #include <eigen3/Eigen/LU>
+#include <eigen3/Eigen/SVD>
 
 autolabor::fusion_locator_t::fusion_locator_t(
     size_t queue_size,
@@ -58,10 +59,10 @@ void autolabor::fusion_locator_t::push_back_pair(
 }
 
 void autolabor::fusion_locator_t::refresh() {
-    if (!update_queue()) {
-        state = false;
-        return;
-    }
+    //    if (!update_queue()) {
+    //        state = false;
+    //        return;
+    //    }
     if (pairs.size() > queue_size)
         pairs.erase(pairs.begin(), pairs.end() - queue_size);
     
@@ -81,6 +82,30 @@ void autolabor::fusion_locator_t::refresh() {
     
     auto ct = centres.target / size,
          cs = centres.source / size;
+    
+    {
+        using namespace Eigen;
+        Matrix2d reflect, h;
+        reflect << 0, 1, 1, 0;
+        h << 0, 0, 0, 0;
+        for (const auto &pair : pairs) {
+            Vector2d target = reflect * (pair.target - ct),
+                     source = pair.source - cs;
+            h += source * target.transpose();
+        }
+        
+        JacobiSVD<Matrix2d> svd(h, ComputeFullU | ComputeFullV);
+        
+        auto matrix = svd.matrixV() * svd.matrixU().transpose();
+        auto det    = matrix.determinant();
+        
+        if (det == 1) {
+            auto result = reflect * matrix;
+            std::cout << "--------------------------------" << std::endl
+                      << result << std::endl;
+            transformer.build(cs, ct, result);
+        }
+    }
     
     // 初始化
     Eigen::MatrixXd p;
@@ -128,7 +153,6 @@ void autolabor::fusion_locator_t::refresh() {
                   << "------------------------" << std::endl
                   << a << std::endl
                   << "------------------------" << std::endl;
-        transformer.build(cs, ct, a);
     }
     
     //    if (state)
