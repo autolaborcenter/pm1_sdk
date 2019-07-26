@@ -227,6 +227,13 @@ reset_parameter(handler_t id) noexcept {
 handler_t
 STD_CALL
 autolabor::pm1::native::
+get_battery_percent(double &battery_percent) noexcept {
+    return use_ptr([&](ptr_t ptr) { battery_percent = ptr->battery_percent(); });
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
 initialize_c(const char *port,
              double *progress) noexcept {
     const static auto serial_ports = [] {

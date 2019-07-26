@@ -11,18 +11,15 @@
 #include "utilities/serial_port/serial.h"
 #include "utilities/time_extensions.h"
 
-extern "C"
-{
-#include "internal/control_model/chassis_config_t.h"
-}
-
-autolabor::pm1::result<void>
-on_native(autolabor::pm1::native::handler_t handler) {
-    using namespace autolabor::pm1;
-    
-    auto error = std::string(native::get_error_info(handler));
-    native::remove_error_info(handler);
-    return {error};
+namespace autolabor {
+    namespace pm1 {
+        autolabor::pm1::result<void>
+        on_native(autolabor::pm1::native::handler_t handler) {
+            auto error = std::string(native::get_error_info(handler));
+            native::remove_error_info(handler);
+            return {error};
+        }
+    }
 }
 
 std::vector<std::string> autolabor::pm1::serial_ports() {

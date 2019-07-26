@@ -74,8 +74,8 @@ namespace autolabor {
             constexpr static uint8_t node_index = _node_index;
             
             // 电池
-            using battery_persent_tx  = typename dialog<vcu, 0x1>::tx;
-            using battery_persent_rx  = typename dialog<vcu, 0x1>::rx;
+            using battery_percent_tx  = typename dialog<vcu, 0x1>::tx;
+            using battery_percent_rx  = typename dialog<vcu, 0x1>::rx;
             using battery_time_tx     = typename dialog<vcu, 0x2>::tx;
             using battery_time_rx     = typename dialog<vcu, 0x2>::rx;
             using battery_quantity_tx = typename dialog<vcu, 0x3>::tx;

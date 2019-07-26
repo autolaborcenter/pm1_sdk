@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <sstream>
 #include <condition_variable>
 
 #include "can/parser_t.hpp"
@@ -63,6 +62,7 @@ const float
 #if   defined(WIN32)
 
 #include <Windows.h>
+#include <iostream>
 
 #define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
 constexpr auto timeout = 3;
@@ -221,7 +221,7 @@ chassis::chassis(const std::string &port_name)
                 reply_time[3] = _now;
                 chassis_state.vcu() = parse_state(*msg.data);
         
-            } else if (vcu<0>::battery_persent_rx::match(msg)) {
+            } else if (vcu<0>::battery_percent_rx::match(msg)) {
                 _battery = *msg.data;
         
             } else if (ecu<0>::current_position_rx::match(msg)) {
@@ -345,7 +345,7 @@ autolabor::odometry_t<> chassis::odometry() const {
     return _odometry;
 }
 
-double chassis::battery_persent() const {
+double chassis::battery_percent() const {
     return _battery / 100.0;
 }
 
@@ -394,7 +394,7 @@ void chassis::start_write_loop() {
             if (_now - time[2] > state_interval) {
                 AVOID_SLEEP;
                 port << autolabor::can::pack<unit<>::state_tx>()
-                     << autolabor::can::pack<vcu<>::battery_persent_tx>();
+                     << autolabor::can::pack<vcu<>::battery_percent_tx>();
                 time[2] = _now;
             }
     

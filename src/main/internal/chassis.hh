@@ -96,7 +96,7 @@ namespace autolabor {
             odometry_t<> odometry() const;
     
             /** 读取电池电量 */
-            double battery_persent() const;
+            double battery_percent() const;
             
             /** 线程是否正常运行 */
             bool is_threads_running() const;

@@ -93,6 +93,12 @@ namespace autolabor {
             reset_parameter(handler_t id) noexcept;
     
             /**
+             * 获取电池电量百分比
+             */
+            DLL_EXPORT handler_t STD_CALL
+            get_battery_percent(double &battery_percent) noexcept;
+            
+            /**
              * 获取后轮转角（指针版）
              */
             DLL_EXPORT handler_t STD_CALL
