@@ -20,9 +20,9 @@ namespace autolabor {
      */
     template<class master_t, class helper_t>
     class matcher_t {
-        std::deque<stamped_t < master_t>> queue1;
-        std::deque<stamped_t < helper_t>> queue2;
-    
+        std::deque<stamped_t<master_t>> queue1;
+        std::deque<stamped_t<helper_t>> queue2;
+        
         seconds_floating max_error;
     public:
         /**
@@ -33,11 +33,11 @@ namespace autolabor {
             : max_error(max_error) {}
         
         /** 向主配队列添加元素 */
-        void push_back_master(const stamped_t <master_t> &data) { queue1.push_back(data); }
-    
+        void push_back_master(const stamped_t<master_t> &data) { queue1.push_back(data); }
+        
         /** 向匹配队列增加元素 */
-        void push_back_helper(const stamped_t <helper_t> &data) { queue2.push_back(data); }
-    
+        void push_back_helper(const stamped_t<helper_t> &data) { queue2.push_back(data); }
+        
         /**
          * 执行一次匹配
          * 找到一对匹配项或无法找到匹配项时退出

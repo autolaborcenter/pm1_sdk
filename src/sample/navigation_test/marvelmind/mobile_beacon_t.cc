@@ -20,7 +20,7 @@ mobile_beacon_t(const std::string &port_name, int delay_ms)
       running(std::make_shared<bool>(true)) {
     std::condition_variable signal;
     
-    std::thread([&, _running = running] {
+    std::thread([_running = running, this, delay_ms, &signal] {
         auto       first_time = true;
         const auto function   =
                        [&](const typename engine_t::result_t &result) {
