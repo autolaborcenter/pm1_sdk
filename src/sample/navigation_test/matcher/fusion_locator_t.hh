@@ -26,12 +26,17 @@ namespace autolabor {
         
         matcher_t<Eigen::Vector2d, Eigen::Vector2d> matcher;
         transformer_t<>                             transformer;
-        
+    
+        // 匹配参数
         size_t queue_size;
         double step;
+    
+        // 匹配评分
+        double score = 1;
         
         std::ofstream plot;
     
+        // 匹配状态
         bool state = false;
         
         // 更新队列
