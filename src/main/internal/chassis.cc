@@ -108,7 +108,7 @@ chassis::chassis(const std::string &port_name)
     _left.time  = _right.time = _rudder.time = now();
     
     port << can::pack<ecu<>::timeout>({2, 0}) // 设置动力超时时间到 200 ms
-         << can::pack<unit<>::emergency_stop>();          // 从锁定状态启动
+         << can::pack<unit<>::emergency_stop>();           // 从锁定状态启动
     
     start_write_loop();
     
@@ -296,7 +296,7 @@ chassis::chassis(const std::string &port_name)
     // endregion
     // region wait state
     for (const auto time = now();
-         now() - time < check_state_timeout;) {
+         now() - time < state_interval + check_state_timeout;) {
         auto &states = chassis_state.states;
         if (states.end() == std::find(states.begin(),
                                       states.end(),
