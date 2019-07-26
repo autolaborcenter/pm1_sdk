@@ -59,10 +59,10 @@ void autolabor::fusion_locator_t::push_back_pair(
 }
 
 void autolabor::fusion_locator_t::refresh() {
-    //    if (!update_queue()) {
-    //        state = false;
-    //        return;
-    //    }
+    if (!update_queue()) {
+        state = false;
+        return;
+    }
     if (pairs.size() > queue_size)
         pairs.erase(pairs.begin(), pairs.end() - queue_size);
     
@@ -103,7 +103,6 @@ void autolabor::fusion_locator_t::refresh() {
             auto result = reflect * matrix;
             std::cout << "--------------------------------" << std::endl
                       << result << std::endl;
-            transformer.build(cs, ct, result);
         }
     }
     
@@ -141,19 +140,7 @@ void autolabor::fusion_locator_t::refresh() {
     if (!(state = (0.25 < std::abs(det) && std::abs(det) < 4.0) && std::abs(dot) < 2))
         return;
     
-    auto _now   = now();
-    auto _score = std::abs(std::abs(det) - 1) + std::abs(dot);
-    if (_score < std::min(1.0, score * (1 + duration_seconds<double>(_now - update_time) / 10))) {
-        update_time = _now;
-        score       = _score;
-        std::cout << "------------------------" << std::endl
-                  << "det   = " << det << std::endl
-                  << "dot   = " << dot << std::endl
-                  << "score = " << score << std::endl
-                  << "------------------------" << std::endl
-                  << a << std::endl
-                  << "------------------------" << std::endl;
-    }
+    transformer.build(cs, ct, a);
     
     //    if (state)
     //        std::cout << solve[0] << ' '
