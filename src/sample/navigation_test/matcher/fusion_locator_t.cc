@@ -103,6 +103,7 @@ void autolabor::fusion_locator_t::refresh() {
             auto result = reflect * matrix;
             std::cout << "--------------------------------" << std::endl
                       << result << std::endl;
+            transformer.build(cs, ct, result);
         }
     }
     
@@ -139,8 +140,6 @@ void autolabor::fusion_locator_t::refresh() {
     
     if (!(state = (0.25 < std::abs(det) && std::abs(det) < 4.0) && std::abs(dot) < 2))
         return;
-    
-    transformer.build(cs, ct, a);
     
     //    if (state)
     //        std::cout << solve[0] << ' '

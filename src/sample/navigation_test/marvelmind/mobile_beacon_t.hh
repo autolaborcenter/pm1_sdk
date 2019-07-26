@@ -57,7 +57,7 @@ namespace marvelmind {
     
     std::shared_ptr<mobile_beacon_t> find_beacon(
         const std::string &port_name = "",
-        int delay_ms = 300);
+        int delay_ms = 0);
 }
 
 
