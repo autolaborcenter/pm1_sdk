@@ -6,6 +6,8 @@
 #define PM1_SDK_ODOMETRY_T_HPP
 
 
+#include <cmath>
+
 namespace autolabor {
     enum class odometry_type : bool { state, delta };
     

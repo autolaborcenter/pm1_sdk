@@ -16,8 +16,8 @@ autolabor::fusion_locator_t::fusion_locator_t(
     step(step),
     plot("locator.txt", std::ios::out) {
     if (step < 0.01) throw std::logic_error("step is too short.");
-    std::error_code _noexcept;
-    std::filesystem::remove("locator.txt", _noexcept);
+    std::error_code _;
+    std::filesystem::remove("locator.txt", _);
 }
 
 bool autolabor::fusion_locator_t::update_queue() {

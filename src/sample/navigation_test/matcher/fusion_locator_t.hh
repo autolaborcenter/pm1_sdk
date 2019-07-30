@@ -31,10 +31,6 @@ namespace autolabor {
         // 匹配参数
         size_t queue_size;
         double step;
-    
-        // 匹配评分
-        double          score       = 1;
-        decltype(now()) update_time = now();
         
         std::ofstream plot;
     

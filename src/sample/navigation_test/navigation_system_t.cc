@@ -4,13 +4,20 @@
 
 #include "navigation_system_t.hh"
 
+#include <filesystem>
 #include "pm1_sdk_native.h"
 
 autolabor::pm1::navigation_system_t::navigation_system_t(
     size_t locator_queue_size,
     double step)
     : locator(locator_queue_size, step),
-      beacon(marvelmind::find_beacon()) {
+      beacon(marvelmind::find_beacon()),
+      particle_filter(16),
+      plot("particle_filter.txt", std::ios::out) {
+    std::error_code _;
+    std::filesystem::remove("particle_filter.txt", _);
+    plot << "x y theta" << std::endl;
+    
     // native sdk 连接串口
     double progress;
     auto   handler = native::initialize("", progress);
@@ -35,16 +42,29 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
 }
 
 autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
-    pose_t pose{};
-    double _;
-    native::get_odometry(_, _, pose.x, pose.y, pose.theta);
-    locator.push_back_helper({autolabor::now(), {pose.x, pose.y}});
+    odometry_t<> odometry{};
+    native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
+    locator.push_back_helper({autolabor::now(), {odometry.x, odometry.y}});
+    matcher.push_back_helper({autolabor::now(), odometry});
     
     using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
     std::vector<data_t> temp;
     beacon->fetch(temp);
-    for (const auto &item : temp) locator.push_back_master(item);
+    for (const auto &item : temp) {
+        locator.push_back_master(item);
+        matcher.push_back_master(item);
+    }
     locator.refresh();
     
-    return locator[pose];
+    odometry_t<>    source{};
+    Eigen::Vector2d target;
+    while (matcher.match(target, source))
+        particle_filter.update(source, target);
+    
+    auto result = particle_filter(odometry);
+    plot << result.x << ' '
+         << result.y << ' '
+         << result.theta << std::endl;
+    
+    return locator[{odometry.x, odometry.y, odometry.theta}];
 }
