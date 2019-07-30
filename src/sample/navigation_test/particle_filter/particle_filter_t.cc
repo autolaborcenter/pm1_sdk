@@ -111,11 +111,11 @@ update(const odometry_t<> &state,
     std::cout << "remain = " << remain << ", D[θ] = " << d_theta << std::endl;
     
     // 重采样
-    if (max_size > remain) {
+    if (remain < max_size) {
         // 生成正态分布随机数
         std::normal_distribution<> spreader(e.theta, std::sqrt(d_theta));
         
-        for (size_t i = 0; i < max_size - remain; ++i)
+        for (auto i = static_cast<long>(max_size - remain); i > 0; --i)
             states.push_back({0, 0, e.x, e.y, spreader(engine)});
     }
     
