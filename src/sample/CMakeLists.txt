@@ -2,7 +2,6 @@
 set(CMAKE_CXX_STANDARD 17)
 
 include_directories(../main)
-include_directories(../main/utilities)
 
 # navigation
 add_subdirectory(navigation_test)

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <numeric>
 
-#include "serial_parser/memory.hpp"
+#include <utilities/serial_parser/memory.hpp>
 
 namespace autolabor {
     namespace can {

@@ -8,8 +8,9 @@
 #include <cmath>
 #include <condition_variable>
 
+#include <utilities/serial_parser/parse_engine.hpp>
+
 #include "can/parser_t.hpp"
-#include "serial_parser/parse_engine.hpp"
 #include "odometry.h"
 
 extern "C" {
@@ -191,30 +192,30 @@ chassis::chassis(const std::string &port_name)
                 reply_time[0] = _now;
                 if (node_state_t::enabled == (chassis_state.ecu0() = parse_state(*msg.data))) {
                     if (!enabled_target)
-                        port << can::pack<unit<ecu<0 >>::emergency_stop>();
+                        port << can::pack<unit<ecu<0>>::emergency_stop>();
                 } else {
                     if (enabled_target)
-                        port << pack_value<unit<ecu<0 >>::release_stop, uint8_t>(0xff);
+                        port << pack_value<unit<ecu<0>>::release_stop, uint8_t>(0xff);
                 }
         
             } else if (unit<ecu<1>>::state_rx::match(msg)) {
                 reply_time[1] = _now;
                 if (node_state_t::enabled == (chassis_state.ecu1() = parse_state(*msg.data))) {
                     if (!enabled_target)
-                        port << can::pack<unit<ecu<1 >>::emergency_stop>();
+                        port << can::pack<unit<ecu<1>>::emergency_stop>();
                 } else {
                     if (enabled_target)
-                        port << pack_value<unit<ecu<1 >>::release_stop, uint8_t>(0xff);
+                        port << pack_value<unit<ecu<1>>::release_stop, uint8_t>(0xff);
                 }
         
             } else if (unit<tcu<0>>::state_rx::match(msg)) {
                 reply_time[2] = _now;
                 if (node_state_t::enabled == (chassis_state.tcu() = parse_state(*msg.data))) {
                     if (!enabled_target)
-                        port << can::pack<unit<tcu<0 >>::emergency_stop>();
+                        port << can::pack<unit<tcu<0>>::emergency_stop>();
                 } else {
                     if (enabled_target)
-                        port << pack_value<unit<tcu<0 >>::release_stop, uint8_t>(0xff);
+                        port << pack_value<unit<tcu<0>>::release_stop, uint8_t>(0xff);
                 }
         
             } else if (unit<vcu<0>>::state_rx::match(msg)) {

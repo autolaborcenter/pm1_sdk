@@ -13,12 +13,12 @@
 
 #include "pm1_sdk_definitions.h"
 
-#include "raii/safe_shared_ptr.hpp"
-#include "raii/weak_lock_guard.hpp"
-#include "raii/weak_shared_lock.hpp"
-#include "raii/exception_engine.hpp"
+#include <utilities/raii/safe_shared_ptr.hpp>
+#include <utilities/raii/weak_lock_guard.hpp>
+#include <utilities/raii/weak_shared_lock.hpp>
+#include <utilities/raii/exception_engine.hpp>
 
-#include "serial_port/serial.h"
+#include <utilities/serial_port/serial.h>
 
 #include "internal/chassis.hh"
 #include "internal/process_controller.hh"

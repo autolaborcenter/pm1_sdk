@@ -66,8 +66,8 @@ namespace autolabor {
             auto temp = *this;
             return temp -= delta;
         }
-        
-        odometry_t operator-(
+    
+        odometry_t<odometry_type::delta> operator-(
             const odometry_t<odometry_type::state> &mark
         ) const {
             const auto sin = std::sin(-mark.theta),

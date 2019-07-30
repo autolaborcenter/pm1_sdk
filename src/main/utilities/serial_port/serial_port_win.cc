@@ -12,7 +12,7 @@
 #include <Windows.h>
 
 #include "macros.h"
-#include "raii/weak_lock_guard.hpp"
+#include <utilities/raii/weak_lock_guard.hpp>
 
 #define TRY(OPERATION) if(!OPERATION) THROW(#OPERATION, GetLastError())
 

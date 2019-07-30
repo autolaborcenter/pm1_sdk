@@ -6,7 +6,7 @@
 #define PM1_SDK_ODOMETRY_H
 
 
-#include <odometry_t.hpp>
+#include <utilities/odometry_t.hpp>
 #include "control_model/chassis_config_t.h"
 
 namespace autolabor {

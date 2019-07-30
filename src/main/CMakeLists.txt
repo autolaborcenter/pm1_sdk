@@ -18,7 +18,7 @@ set(ARCH ${PLATFORM}_${BITS})
 set(CMAKE_DEBUG_POSTFIX "_debug")
 message("${ARCH} selected")
 
-include_directories(utilities)
+include_directories(./)
 
 set(UTILITIES
         # --------------------------

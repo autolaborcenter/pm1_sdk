@@ -11,10 +11,10 @@
 #include <condition_variable>
 
 #include "can_define.h"
-#include "odometry_t.hpp"
+#include <utilities/odometry_t.hpp>
 
-#include "serial_port/serial_port.hh"
-#include "time_extensions.h"
+#include <utilities/serial_port/serial_port.hh>
+#include <utilities/time_extensions.h>
 
 extern "C" {
 #include "control_model/model.h"

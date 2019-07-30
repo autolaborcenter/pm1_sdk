@@ -23,6 +23,9 @@ add_executable(navigation
         matcher/fusion_locator_t.hh
         matcher/fusion_locator_t.cc
 
+        particle_filter/particle_filter_t.hh
+        particle_filter/particle_filter_t.cc
+
         pose_t.h
         navigation_system_t.hh
         navigation_system_t.cc
