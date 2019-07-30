@@ -59,6 +59,10 @@ update(const odometry_t<> &state,
        const Eigen::Vector2d &measure) {
     // 计算控制量
     auto delta = state - save;
+    
+    // 过滤
+    if (Eigen::Vector2d{delta.x, delta.y}.norm() < 0.02)
+        return operator()(state);
     save = state;
     
     // 按控制量更新粒子群
@@ -103,6 +107,8 @@ update(const odometry_t<> &state,
         e_y     = (e_y + 5 * measure[1]) / (remain + 5);
         e_theta /= states.size();
     }
+    
+    std::cout << "max - min = " << max - min << std::endl;
     
     // 重采样
     if (max_size > remain) {
