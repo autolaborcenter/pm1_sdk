@@ -50,9 +50,6 @@ operator()(const odometry_t<> &state) const {
     return {0, 0, e_x, e_y, max - min > M_PI / 3 ? NAN : e_theta};
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "bugprone-narrowing-conversions"
-
 autolabor::odometry_t<>
 autolabor::particle_filter_t::
 update(const odometry_t<> &state,
@@ -61,7 +58,7 @@ update(const odometry_t<> &state,
     auto delta = state - save;
     
     // 过滤
-    if (Eigen::Vector2d{delta.x, delta.y}.norm() < 0.02)
+    if (Eigen::Vector2d{delta.x, delta.y}.norm() < update_step)
         return operator()(state);
     save = state;
     
@@ -70,7 +67,8 @@ update(const odometry_t<> &state,
     
     // 排除所有异常粒子
     states.remove_if([&](const odometry_t<> &state) {
-        return (Eigen::Vector2d{state.x, state.y} - measure).norm() > 0.1;
+        std::cout << (Eigen::Vector2d{state.x, state.y} - measure).transpose() << std::endl;
+        return (Eigen::Vector2d{state.x, state.y} - measure).norm() > accept_range;
     });
     
     // 剩余粒子数量
@@ -103,9 +101,11 @@ update(const odometry_t<> &state,
             e_y += item.y;
             e_theta += item.theta;
         }
-        e_x     = (e_x + 5 * measure[0]) / (remain + 5);
-        e_y     = (e_y + 5 * measure[1]) / (remain + 5);
-        e_theta /= states.size();
+    
+        auto n = static_cast<double>(remain + measure_vote);
+        e_x = (e_x + measure_vote * measure[0]) / n;
+        e_y = (e_y + measure_vote * measure[1]) / n;
+        e_theta /= remain;
     }
     
     std::cout << "max - min = " << max - min << std::endl;
@@ -120,5 +120,3 @@ update(const odometry_t<> &state,
     
     return {0, 0, e_x, e_y, max - min > M_PI / 3 ? NAN : e_theta};
 }
-
-#pragma clang diagnostic pop

@@ -29,7 +29,8 @@ namespace autolabor {
          * @param delta 里程计增量
          * @return 综合位姿
          */
-        [[nodiscard]] odometry_t<> operator()(const odometry_t<> &) const;
+        [[nodiscard]] odometry_t<>
+        operator()(const odometry_t<> &) const;
         
         /**
          * 更新联合定位
@@ -37,12 +38,19 @@ namespace autolabor {
          * @param measure 绝对测量值
          * @return 综合位姿
          */
-        odometry_t<> update(const odometry_t<> &,
-                            const Eigen::Vector2d &measure);
+        odometry_t<>
+        update(const odometry_t<> &, const Eigen::Vector2d &);
     
     private:
         size_t       max_size;
         odometry_t<> save{};
+    
+        constexpr static auto
+            measure_vote = 5;
+    
+        constexpr static auto
+            update_step  = 0.02,
+            accept_range = 0.1;
     };
 }
 
