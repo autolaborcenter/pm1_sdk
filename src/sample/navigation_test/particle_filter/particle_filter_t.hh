@@ -42,15 +42,12 @@ namespace autolabor {
         update(const odometry_t<> &, const Eigen::Vector2d &);
     
     private:
-        size_t       max_size;
+        size_t       max_size, measure_vote;
         odometry_t<> save{};
     
         constexpr static auto
-            measure_vote = 5;
-    
-        constexpr static auto
             update_step  = 0.02,
-            accept_range = 0.1;
+            accept_range = 0.05;
     };
 }
 

@@ -10,7 +10,9 @@
 
 
 autolabor::particle_filter_t::
-particle_filter_t(size_t size) : max_size(size) {}
+particle_filter_t(size_t size)
+    : max_size(size),
+      measure_vote(std::max(static_cast<size_t>(1), size / 4)) {}
 
 autolabor::odometry_t<>
 autolabor::particle_filter_t::
@@ -66,9 +68,8 @@ update(const odometry_t<> &state,
     for (auto &item : states) item += delta;
     
     // 排除所有异常粒子
-    states.remove_if([&](const odometry_t<> &state) {
-        std::cout << (Eigen::Vector2d{state.x, state.y} - measure).transpose() << std::endl;
-        return (Eigen::Vector2d{state.x, state.y} - measure).norm() > accept_range;
+    states.remove_if([measure](const odometry_t<> &item) {
+        return (Eigen::Vector2d{item.x, item.y} - measure).norm() > accept_range;
     });
     
     // 剩余粒子数量
@@ -108,14 +109,15 @@ update(const odometry_t<> &state,
         e_theta /= remain;
     }
     
-    std::cout << "max - min = " << max - min << std::endl;
+    std::cout << "remain = " << remain << ", max - min = " << max - min << std::endl;
     
     // 重采样
     if (max_size > remain) {
-        auto step  = (max - min) / (max_size - remain),
-             value = min - step;
-        while (value < max)
-            states.push_back({0, 0, e_x, e_y, value += step});
+        auto count = max_size - remain;
+        auto step  = (max - min) / count;
+    
+        for (size_t i = 0; i < count; ++i)
+            states.push_back({0, 0, e_x, e_y, min + i * step});
     }
     
     return {0, 0, e_x, e_y, max - min > M_PI / 3 ? NAN : e_theta};
