@@ -7,6 +7,7 @@
 
 
 #include <list>
+#include <random>
 #include <eigen3/Eigen/Core>
 #include <utilities/odometry_t.hpp>
 
@@ -42,9 +43,14 @@ namespace autolabor {
         update(const odometry_t<> &, const Eigen::Vector2d &);
     
     private:
-        size_t       max_size, measure_vote;
-        odometry_t<> save{};
+        size_t       max_size,
+                     measure_vote;
+        odometry_t<> save{},
+                     e{};
     
+        std::random_device random;
+        std::mt19937       engine;
+        
         constexpr static auto
             update_step  = 0.02,
             accept_range = 0.05;
