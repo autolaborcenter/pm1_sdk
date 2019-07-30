@@ -59,7 +59,7 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     odometry_t<>    source{};
     Eigen::Vector2d target;
     while (matcher.match(target, source))
-        particle_filter.update(source, target);
+        particle_filter.update(source, {target[1], target[0]});
     
     auto result = particle_filter(odometry);
     plot << result.x << ' '

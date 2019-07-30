@@ -105,14 +105,12 @@ update(const odometry_t<> &state,
     }
     
     // 重采样
-    if (max_size > remain)
-        for (auto step  = (max - min) / (max_size - remain),
-                  value = min;
-             value < max;
-             value += step) { // NOLINT(cert-flp30-c)
-            std::cout << "max - value = " << max - value << std::endl;
-            states.push_back({0, 0, e_x, e_y, value});
-        }
+    if (max_size > remain) {
+        auto step  = (max - min) / (max_size - remain),
+             value = min - step;
+        while (value < max)
+            states.push_back({0, 0, e_x, e_y, value += step});
+    }
     
     return {0, 0, e_x, e_y, max - min > M_PI / 3 ? NAN : e_theta};
 }
