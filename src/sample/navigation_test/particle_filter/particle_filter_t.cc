@@ -6,6 +6,7 @@
 
 #include <internal/control_model/pi.h>
 #include <vector>
+#include <iostream>
 
 
 autolabor::particle_filter_t::
@@ -35,11 +36,11 @@ operator()(const odometry_t<> &state) const {
          e_theta = .0;
     
     for (const auto &item : copy) {
+        if (item.theta < min) min = item.theta;
+        if (item.theta > max) max = item.theta;
         e_x += item.x;
         e_y += item.y;
         e_theta += item.theta;
-        if (item.theta < min) min = item.theta;
-        if (item.theta > max) max = item.theta;
     }
     
     e_x /= states.size();
@@ -48,6 +49,9 @@ operator()(const odometry_t<> &state) const {
     
     return {0, 0, e_x, e_y, max - min > M_PI / 3 ? NAN : e_theta};
 }
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "bugprone-narrowing-conversions"
 
 autolabor::odometry_t<>
 autolabor::particle_filter_t::
@@ -62,12 +66,11 @@ update(const odometry_t<> &state,
     
     // 排除所有异常粒子
     states.remove_if([&](const odometry_t<> &state) {
-        return Eigen::Vector2d{state.x - measure[0], state.y - measure[1]}.norm() < 0.1;
+        return (Eigen::Vector2d{state.x, state.y} - measure).norm() > 0.1;
     });
     
-    // 计算
-    const auto remain = states.size(),
-               size   = max_size - remain;
+    // 剩余粒子数量
+    const auto remain = states.size();
     
     // 计算粒子共性
     double min, max, e_x, e_y, e_theta;
@@ -86,6 +89,10 @@ update(const odometry_t<> &state,
         e_y     = 0;
         e_theta = 0;
         for (const auto &item : states) {
+            if (std::isnan(item.theta)) {
+                std::cout << "look!" << std::endl;
+                continue;
+            }
             if (item.theta < min) min = item.theta;
             if (item.theta > max) max = item.theta;
             e_x += item.x;
@@ -98,13 +105,16 @@ update(const odometry_t<> &state,
     }
     
     // 重采样
-    if (size > 0)
-        for (auto step  = (max - min) / size,
+    if (max_size > remain)
+        for (auto step  = (max - min) / (max_size - remain),
                   value = min;
              value < max;
-             value += step) // NOLINT(cert-flp30-c)
+             value += step) { // NOLINT(cert-flp30-c)
+            std::cout << "max - value = " << max - value << std::endl;
             states.push_back({0, 0, e_x, e_y, value});
+        }
     
     return {0, 0, e_x, e_y, max - min > M_PI / 3 ? NAN : e_theta};
 }
 
+#pragma clang diagnostic pop
