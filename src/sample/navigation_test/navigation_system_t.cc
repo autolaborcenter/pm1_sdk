@@ -12,12 +12,7 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     double step)
     : locator(locator_queue_size, step),
       beacon(marvelmind::find_beacon()),
-      particle_filter(16),
-      plot("particle_filter.txt", std::ios::out) {
-    std::error_code _;
-    std::filesystem::remove("particle_filter.txt", _);
-    plot << "x y theta" << std::endl;
-    
+      particle_filter(16) {
     // native sdk 连接串口
     double progress;
     auto   handler = native::initialize("", progress);
@@ -62,9 +57,5 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
         particle_filter.update(source, {target[1], target[0]});
     
     auto result = particle_filter(odometry);
-    plot << result.x << ' '
-         << result.y << ' '
-         << result.theta << std::endl;
-    
     return locator[{odometry.x, odometry.y, odometry.theta}];
 }

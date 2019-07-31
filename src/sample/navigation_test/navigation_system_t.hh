@@ -19,7 +19,6 @@ namespace autolabor {
     
             matcher_t<Eigen::Vector2d, odometry_t<>> matcher;
             particle_filter_t                        particle_filter;
-            std::ofstream                            plot;
         
         public:
             explicit navigation_system_t(
