@@ -53,6 +53,8 @@ namespace autolabor {
         size_t max_size,
                measure_vote;
     
+        Eigen::Vector2d measure_save;
+        
         odometry_t<> match_save,
                      e_save,
                      e;

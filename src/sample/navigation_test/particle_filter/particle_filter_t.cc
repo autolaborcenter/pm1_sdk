@@ -43,11 +43,14 @@ update(const odometry_t<> &state,
     
     // 计算控制量
     auto delta = state - match_save;
+    plot << Eigen::Vector2d{delta.x, delta.y}.norm() << ' '
+         << (measure - measure_save).norm();
     
     // 过滤
     if (Eigen::Vector2d{delta.x, delta.y}.norm() < update_step)
         return operator()(state);
-    match_save = state;
+    match_save   = state;
+    measure_save = measure;
     
     // 按控制量更新粒子群
     for (auto &item : states) item += delta;
@@ -113,15 +116,15 @@ update(const odometry_t<> &state,
               << ", D[θ] = " << d_theta
               << std::endl;
     
-    plot << state.x << ' '
-         << state.y << ' '
-         << measure[0] << ' '
-         << measure[1] << ' '
-         << remain << ' '
-         << d_theta << ' '
-         << result.x << ' '
-         << result.y << ' '
-         << result.theta << ' ';
+    //    plot << state.x << ' '
+    //         << state.y << ' '
+    //         << measure[0] << ' '
+    //         << measure[1] << ' '
+    //         << remain << ' '
+    //         << d_theta << ' '
+    //         << result.x << ' '
+    //         << result.y << ' '
+    //         << result.theta << ' ';
     
     //    for (const auto &item : states) {
     //        plot << item.x << ' ' << item.y << ' ' << item.theta;
@@ -138,7 +141,8 @@ void
 autolabor::particle_filter_t::
 initialize(const autolabor::odometry_t<> &state,
            const Eigen::Vector2d &measure) {
-    match_save = state;
+    measure_save = measure;
+    match_save   = state;
     auto        step = 2 * M_PI / max_size;
     for (size_t i    = 0; i < max_size; ++i)
         states.push_back({0, 0, measure[0], measure[1], i * step - M_PI});
