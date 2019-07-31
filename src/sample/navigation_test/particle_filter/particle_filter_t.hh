@@ -55,6 +55,8 @@ namespace autolabor {
         
         std::random_device random;
         std::mt19937       engine;
+    
+        void initialize(const odometry_t<> &, const Eigen::Vector2d &);
         
         constexpr static auto
             update_step  = 0.02,

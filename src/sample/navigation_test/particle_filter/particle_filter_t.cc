@@ -37,11 +37,8 @@ update(const odometry_t<> &state,
        const Eigen::Vector2d &measure) {
     // 追踪丢失，重新初始化
     if (states.empty()) {
-        match_save = state;
-        auto        step = 2 * M_PI / max_size;
-        for (size_t i    = 0; i < max_size; ++i)
-            states.push_back({0, 0, measure[0], measure[1], i * step});
-        return {0, 0, measure[0], measure[1], NAN};
+        initialize(state, measure);
+        return {0, 0, NAN, NAN, NAN};
     }
     
     // 计算控制量
@@ -61,13 +58,17 @@ update(const odometry_t<> &state,
     });
     
     // 剩余粒子数量
-    const auto remain = states.size();
+    if (states.empty()) {
+        initialize(state, measure);
+        return {0, 0, NAN, NAN, NAN};
+    }
     
     // 计算方差
-    auto e_x      = .0,
-         e_y      = .0,
-         e_theta  = .0,
-         e_theta2 = .0;
+    const auto remain   = states.size();
+    auto       e_x      = .0,
+               e_y      = .0,
+               e_theta  = .0,
+               e_theta2 = .0;
     
     for (const auto &item : states) {
         if (std::isnan(item.theta)) {
@@ -87,12 +88,12 @@ update(const odometry_t<> &state,
     e_theta2 /= remain;
     
     const auto d_theta = e_theta2 - e_theta * e_theta;
-    std::cout << "remain = " << remain << ", D[θ] = " << d_theta << std::endl;
     
     // 重采样
     if (remain < max_size) {
         // 生成正态分布随机数
-        std::normal_distribution<> spreader(e_theta, std::sqrt(d_theta));
+        std::normal_distribution<>
+            spreader(e_theta, std::sqrt(std::max(d_range, d_theta)));
         
         for (auto i = static_cast<long>(max_size - remain); i > 0; --i)
             states.push_back({0, 0, e_x, e_y, spreader(engine)});
@@ -108,6 +109,10 @@ update(const odometry_t<> &state,
     else
         result = {0, 0, NAN, NAN, NAN};
     
+    std::cout << "remain = " << remain
+              << ", D[θ] = " << d_theta
+              << std::endl;
+    
     plot << remain << ' '
          << d_theta << ' '
          << result.x << ' '
@@ -115,4 +120,14 @@ update(const odometry_t<> &state,
          << result.theta << std::endl;
     
     return result;
+}
+
+void
+autolabor::particle_filter_t::
+initialize(const autolabor::odometry_t<> &state,
+           const Eigen::Vector2d &measure) {
+    match_save = state;
+    auto        step = 2 * M_PI / max_size;
+    for (size_t i    = 0; i < max_size; ++i)
+        states.push_back({0, 0, measure[0], measure[1], i * step});
 }
