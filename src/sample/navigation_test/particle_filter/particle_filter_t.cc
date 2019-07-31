@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <random>
+#include <algorithm>
 #include <iostream>
 #include <filesystem>
 
@@ -22,7 +23,7 @@ particle_filter_t(size_t size)
       plot("particle_filter.txt", std::ios::out) {
     std::error_code _;
     std::filesystem::remove("particle_filter.txt", _);
-    plot << "x y theta remain d[θ]" << std::endl;
+    plot << "rx ry x y remain d_theta ex ey theta" << std::endl;
 }
 
 autolabor::odometry_t<>
@@ -93,7 +94,7 @@ update(const odometry_t<> &state,
     if (remain < max_size) {
         // 生成正态分布随机数
         std::normal_distribution<>
-            spreader(e_theta, std::sqrt(std::max(d_range, d_theta)));
+            spreader(e_theta, std::clamp(d_theta, d_range, 4.0));
         
         for (auto i = static_cast<long>(max_size - remain); i > 0; --i)
             states.push_back({0, 0, e_x, e_y, spreader(engine)});
@@ -113,7 +114,11 @@ update(const odometry_t<> &state,
               << ", D[θ] = " << d_theta
               << std::endl;
     
-    plot << remain << ' '
+    plot << state.x << ' '
+         << state.y << ' '
+         << measure[0] << ' '
+         << measure[1] << ' '
+         << remain << ' '
          << d_theta << ' '
          << result.x << ' '
          << result.y << ' '
