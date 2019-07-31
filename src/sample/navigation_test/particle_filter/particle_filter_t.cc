@@ -18,10 +18,10 @@ particle_filter_t(size_t size)
       engine(random()),
       match_save({}),
       e_save({0, 0, NAN, NAN, NAN}),
-      e({}),
-      plot("particle_filter.txt", std::ios::out) {
+      e({}) {
     std::error_code _;
     std::filesystem::remove("particle_filter.txt", _);
+    plot = std::ofstream("particle_filter.txt", std::ios::out);
 }
 
 autolabor::odometry_t<>
@@ -122,10 +122,14 @@ update(const odometry_t<> &state,
          << result.x << ' '
          << result.y << ' '
          << result.theta << ' ';
+    plot.flush();
     
-    for (const auto &item : states)
+    for (const auto &item : states) {
         plot << item.x << ' ' << item.y << ' ' << item.theta;
+        std::cout << item.x << ' ' << item.y << ' ' << item.theta << std::endl;
+    }
     plot << std::endl;
+    std::cout << std::endl;
     
     return result;
 }
@@ -137,5 +141,5 @@ initialize(const autolabor::odometry_t<> &state,
     match_save = state;
     auto        step = 2 * M_PI / max_size;
     for (size_t i    = 0; i < max_size; ++i)
-        states.push_back({0, 0, measure[0], measure[1], i * step});
+        states.push_back({0, 0, measure[0], measure[1], i * step - M_PI});
 }

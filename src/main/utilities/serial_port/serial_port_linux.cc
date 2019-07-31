@@ -15,7 +15,7 @@
 #include <cstring>
 
 #include "macros.h"
-#include "raii/weak_lock_guard.hpp"
+#include <utilities/raii/weak_lock_guard.hpp>
 
 #define TRY(OPERATION) if(!OPERATION) THROW(#OPERATION, std::strerror(errno))
 

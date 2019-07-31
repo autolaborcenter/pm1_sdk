@@ -4,7 +4,7 @@
 
 #include "navigation_system_t.hh"
 
-#include <filesystem>
+#include <thread>
 #include "pm1_sdk_native.h"
 
 autolabor::pm1::navigation_system_t::navigation_system_t(
@@ -30,7 +30,7 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     native::set_command_enabled(false);
     
     using namespace std::chrono_literals;
-    while (!locator.get_state()) {
+    while (true) {
         locate();
         std::this_thread::sleep_for(50ms);
     }
@@ -54,7 +54,7 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     odometry_t<>    source{};
     Eigen::Vector2d target;
     while (matcher.match(target, source))
-        particle_filter.update(source, {target[1], target[0]});
+        particle_filter.update(source, target);
     
     auto result = particle_filter(odometry);
     return locator[{odometry.x, odometry.y, odometry.theta}];
