@@ -8,9 +8,11 @@
 
 #include <list>
 #include <random>
-#include <eigen3/Eigen/Core>
-#include <utilities/odometry_t.hpp>
 #include <fstream>
+
+#include <eigen3/Eigen/Core>
+
+#include <utilities/odometry_t.hpp>
 
 namespace autolabor {
     /**
@@ -44,6 +46,8 @@ namespace autolabor {
         update(const odometry_t<> &, const Eigen::Vector2d &);
     
     private:
+        void initialize(const odometry_t<> &, const Eigen::Vector2d &);
+        
         std::ofstream plot;
     
         size_t max_size,
@@ -55,8 +59,6 @@ namespace autolabor {
         
         std::random_device random;
         std::mt19937       engine;
-    
-        void initialize(const odometry_t<> &, const Eigen::Vector2d &);
         
         constexpr static auto
             update_step  = 0.02,

@@ -4,7 +4,6 @@
 
 #include "particle_filter_t.hh"
 
-#include <vector>
 #include <random>
 #include <algorithm>
 #include <iostream>
@@ -23,13 +22,13 @@ particle_filter_t(size_t size)
       plot("particle_filter.txt", std::ios::out) {
     std::error_code _;
     std::filesystem::remove("particle_filter.txt", _);
-    plot << "rx ry x y remain d_theta ex ey theta" << std::endl;
 }
 
 autolabor::odometry_t<>
 autolabor::particle_filter_t::
 operator()(const odometry_t<> &state) const {
     if (!std::isnan(e_save.theta)) return e + (state - e_save);
+    return {0, 0, NAN, NAN, NAN};
 }
 
 autolabor::odometry_t<>
@@ -122,7 +121,11 @@ update(const odometry_t<> &state,
          << d_theta << ' '
          << result.x << ' '
          << result.y << ' '
-         << result.theta << std::endl;
+         << result.theta << ' ';
+    
+    for (const auto &item : states)
+        plot << item.x << ' ' << item.y << ' ' << item.theta;
+    plot << std::endl;
     
     return result;
 }
