@@ -53,17 +53,19 @@ namespace autolabor {
             result_t operator()(iterator_t &begin, iterator_t &end) const {
                 // 找到一个帧头
                 do {
-                    if (begin + sizeof(pack_no_data) > end)
+                    if (end - begin < sizeof(pack_no_data))
                         return {result_type_t::nothing};
                 } while (*begin++ != 0xfe);
                 // 初始化帧结构
                 result_t result{result_type_t::nothing, {0xfe, *begin--}};
                 // 确定帧长度
-                auto     frame_end = begin + (result.message.payload
-                                              ? sizeof(pack_with_data)
-                                              : sizeof(pack_no_data));
+                auto     size = result.message.payload
+                                ? sizeof(pack_with_data)
+                                : sizeof(pack_no_data);
                 // 尚未接收完，退出
-                if (frame_end > end) return result;
+                if (end - begin < size) return result;
+                // 帧结尾
+                auto frame_end = begin + size;
                 // crc 校验，限定返回值类型并准备查找下一个帧头
                 if (crc_check(begin + 1, frame_end)) {
                     // 成功，拷贝到返回值

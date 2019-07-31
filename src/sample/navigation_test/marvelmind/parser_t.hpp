@@ -53,10 +53,10 @@ namespace marvelmind {
             
             // 初始化帧结构
             auto payload_length = payload_length_of(begin);
+            // 尚未接收完，退出
+            if (end - begin < payload_length + 7)return {result_type_t::nothing};
             // 确定帧长度
             auto frame_end      = begin + payload_length + 7;
-            // 尚未接收完，退出
-            if (frame_end > end) return {result_type_t::nothing};
             // 准备返回值
             result_t result{result_type_t::nothing,
                             std::vector<word_t>(payload_length + 7)};
