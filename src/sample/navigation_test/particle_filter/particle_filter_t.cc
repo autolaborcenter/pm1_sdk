@@ -123,10 +123,10 @@ update(const odometry_t<> &state,
          << result.y << ' '
          << result.theta << ' ';
     
-    for (const auto &item : states) {
-        //            plot << item.x << ' ' << item.y << ' ' << item.theta;
-        std::cout << item.x << ' ' << item.y << ' ' << item.theta << std::endl;
-    }
+    //    for (const auto &item : states) {
+    //        plot << item.x << ' ' << item.y << ' ' << item.theta;
+    //        std::cout << item.x << ' ' << item.y << ' ' << item.theta << std::endl;
+    //    }
     plot << std::endl;
     std::cout << std::endl;
     
