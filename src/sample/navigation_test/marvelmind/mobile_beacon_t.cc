@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <thread>
 #include <condition_variable>
-#include <iostream>
 
 #include "utilities/serial_port/serial.h"
 #include "utilities/serial_parser/parse_engine.hpp"
@@ -39,7 +38,6 @@ mobile_beacon_t(const std::string &port_name, int delay_ms)
                                                 {x(begin) / 1000.0, y(begin) / 1000.0}
                                             });
     
-                           std::cout << "received marvelmind, delay = " << delay + delay_ms << std::endl;
                            if (first_time) {
                                first_time = false;
                                signal.notify_all();

@@ -5,6 +5,7 @@
 #include "navigation_system_t.hh"
 
 #include <thread>
+#include <iostream>
 #include "pm1_sdk_native.h"
 
 autolabor::pm1::navigation_system_t::navigation_system_t(
@@ -29,30 +30,43 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     native::set_enabled(true);
     native::set_command_enabled(false);
     
-    using namespace std::chrono_literals;
-    while (true) {
-        locate();
-        std::this_thread::sleep_for(50ms);
-    }
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wmissing-noreturn"
+    while (true) locate();
+    #pragma clang diagnostic pop
 }
 
 autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
+    //    using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
+    //    std::vector<data_t> temp;
+    //    beacon->fetch(temp);
+    //    for (const auto &item : temp) {
+    //        locator.push_back_master(item);
+    //        matcher.push_back_master(item);
+    //    }
+    //
+    //    auto _now = now();
+    //
+    //    odometry_t<> odometry{};
+    //    native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
+    //    locator.push_back_helper({_now, {odometry.x, odometry.y}});
+    //    matcher.push_back_helper({_now, odometry});
+    //    locator.refresh();
+    //
+    //    odometry_t<>    source{};
+    //    Eigen::Vector2d target;
+    //    while (matcher.match(target, source)) {
+    //        std::cout << duration_seconds<double>(_now.time_since_epoch()) << std::endl;
+    //        particle_filter.update(source, target);
+    //    }
+    
     odometry_t<> odometry{};
     native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
-    locator.push_back_helper({autolabor::now(), {odometry.x, odometry.y}});
-    matcher.push_back_helper({autolabor::now(), odometry});
+    std::cout << duration_seconds<double>(now().time_since_epoch()) << ' '
+              << odometry.x << ' '
+              << odometry.y << ' '
+              << odometry.theta << ' '
+              << std::endl;
     
-    using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
-    std::vector<data_t> temp;
-    beacon->fetch(temp);
-    for (const auto &item : temp) {
-        locator.push_back_master(item);
-        matcher.push_back_master(item);
-    }
-    locator.refresh();
-    
-    if (!temp.empty()) particle_filter.update(odometry, temp.back().value);
-    
-    auto result = particle_filter(odometry);
-    return locator[{odometry.x, odometry.y, odometry.theta}];
+    return pose_t();
 }

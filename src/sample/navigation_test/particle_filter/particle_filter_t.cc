@@ -6,7 +6,6 @@
 
 #include <random>
 #include <algorithm>
-#include <iostream>
 #include <filesystem>
 
 #include <internal/control_model/pi.h>
@@ -78,10 +77,7 @@ update(const odometry_t<> &state,
                e_theta2 = .0;
     
     for (const auto &item : states) {
-        if (std::isnan(item.theta)) {
-            std::cout << "look!" << std::endl;
-            continue;
-        }
+        if (std::isnan(item.theta)) continue;
         e_x += item.x;
         e_y += item.y;
         e_theta += item.theta;
@@ -116,10 +112,6 @@ update(const odometry_t<> &state,
     else
         result = {0, 0, NAN, NAN, NAN};
     
-    std::cout << "remain = " << remain
-              << ", D[θ] = " << d_theta
-              << std::endl;
-    
     //    plot << state.x << ' '
     //         << state.y << ' '
     //         << measure[0] << ' '
@@ -134,8 +126,6 @@ update(const odometry_t<> &state,
     //        plot << item.x << ' ' << item.y << ' ' << item.theta;
     //        std::cout << item.x << ' ' << item.y << ' ' << item.theta << std::endl;
     //    }
-    std::cout << std::endl;
-    
     plot.flush();
     return result;
 }
