@@ -8,6 +8,9 @@
 #include <iostream>
 #include "pm1_sdk_native.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+
 autolabor::pm1::navigation_system_t::navigation_system_t(
     size_t locator_queue_size,
     double step)
@@ -30,10 +33,26 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     native::set_enabled(true);
     native::set_command_enabled(false);
     
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wmissing-noreturn"
-    while (true) locate();
-    #pragma clang diagnostic pop
+    std::thread([this] {
+        odometry_t<> save{};
+        while (true) {
+            auto _now = now();
+            
+            odometry_t<> odometry{};
+            native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
+            if (std::abs(odometry.s - save.s) < 0.05) continue;
+            
+            save = odometry;
+            
+            using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
+            std::vector<data_t> temp;
+            beacon->fetch(temp);
+            
+            if (temp.empty()) continue;
+            particle_filter.update(odometry, temp.back().value);
+            std::cout << "update!" << std::endl;
+        }
+    }).detach();
 }
 
 autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
@@ -70,3 +89,5 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     
     return pose_t();
 }
+
+#pragma clang diagnostic pop

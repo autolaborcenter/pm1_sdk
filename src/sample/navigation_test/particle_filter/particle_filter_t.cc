@@ -112,20 +112,6 @@ update(const odometry_t<> &state,
     else
         result = {0, 0, NAN, NAN, NAN};
     
-    //    plot << state.x << ' '
-    //         << state.y << ' '
-    //         << measure[0] << ' '
-    //         << measure[1] << ' '
-    //         << remain << ' '
-    //         << d_theta << ' '
-    //         << result.x << ' '
-    //         << result.y << ' '
-    //         << result.theta << ' ';
-    
-    //    for (const auto &item : states) {
-    //        plot << item.x << ' ' << item.y << ' ' << item.theta;
-    //        std::cout << item.x << ' ' << item.y << ' ' << item.theta << std::endl;
-    //    }
     plot.flush();
     return result;
 }
