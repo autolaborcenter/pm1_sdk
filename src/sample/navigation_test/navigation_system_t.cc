@@ -6,6 +6,7 @@
 
 #include <thread>
 #include <iostream>
+#include <filesystem>
 #include "pm1_sdk_native.h"
 
 using namespace std::chrono_literals;
@@ -36,6 +37,10 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     native::set_enabled(true);
     native::set_command_enabled(false);
     
+    std::error_code _;
+    std::filesystem::remove("locator.txt", _);
+    plot = std::ofstream("locator.txt", std::ios::out);
+    
     std::thread([this] {
         while (true) {
             auto _now = now();
@@ -58,6 +63,8 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
                         odometry_t<>{0, 0, source[0], source[1], source[2]},
                         Eigen::Vector2d{target[1], target[0]}
                     );
+                    plot << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
+                    plot.flush();
                     std::cout << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
                 }
             });
