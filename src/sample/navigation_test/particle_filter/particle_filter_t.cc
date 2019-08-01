@@ -10,6 +10,7 @@
 
 #include <internal/control_model/pi.h>
 #include <numeric>
+#include <iostream>
 
 autolabor::particle_filter_t::
 particle_filter_t(size_t size)
@@ -78,11 +79,10 @@ update(const odometry_t<> &state,
     }
     
     // 计算方差
-    const auto remain   = states.size();
-    auto       e_x      = .0,
-               e_y      = .0,
-               e_theta  = .0,
-               e_theta2 = .0;
+    auto e_x      = .0,
+         e_y      = .0,
+         e_theta  = .0,
+         e_theta2 = .0;
     
     auto            weight = weights.begin();
     for (const auto &item : states) {
@@ -99,6 +99,7 @@ update(const odometry_t<> &state,
     e_theta2 /= sum;
     
     const auto d_theta = e_theta2 - e_theta * e_theta;
+    std::cout << "sum = " << sum << ", d = " << d_theta << std::endl;
     
     // 生成正态分布随机数
     std::normal_distribution<>
