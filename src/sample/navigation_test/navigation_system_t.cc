@@ -43,12 +43,15 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
             if (std::abs(odometry.s - save.s) < 0.05) continue;
             
             save = odometry;
+            matcher.push_back_helper({_now, odometry});
             
             using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
             std::vector<data_t> temp;
             beacon->fetch(temp);
-            
-            if (temp.empty()) continue;
+    
+            Eigen::Vector2d target;
+            for (const auto &item:temp) matcher.push_back_master(item);
+            while (matcher.match(target, odometry));
             auto result = particle_filter.update(odometry, temp.back().value);
             std::cout << result.x << ' '
                       << result.y << ' '
