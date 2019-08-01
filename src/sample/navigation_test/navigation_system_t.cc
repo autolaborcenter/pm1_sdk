@@ -51,10 +51,7 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     }
     locator.refresh();
     
-    odometry_t<>    source{};
-    Eigen::Vector2d target;
-    while (matcher.match(target, source))
-        particle_filter.update(source, target);
+    if (!temp.empty()) particle_filter.update(odometry, temp.back().value);
     
     auto result = particle_filter(odometry);
     return locator[{odometry.x, odometry.y, odometry.theta}];
