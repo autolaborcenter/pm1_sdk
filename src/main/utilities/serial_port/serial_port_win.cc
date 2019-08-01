@@ -100,9 +100,10 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
     DWORD      event = 0,
                error = ERROR_SUCCESS;
     OVERLAPPED overlapped{};
+    overlapped.hEvent = CreateEventA(nullptr, true, false, nullptr);
     
     do {
-        overlapped.hEvent = CreateEventA(nullptr, true, false, nullptr);
+        ResetEvent(overlapped.hEvent);
         if (!WaitCommEvent(handle, &event, &overlapped)
             && (error = GetLastError()) != ERROR_IO_PENDING)
             THROW("WaitCommEvent", error);
