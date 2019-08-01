@@ -43,8 +43,12 @@ update(const odometry_t<> &state,
     
     // 计算控制量
     auto delta = state - match_save;
-    plot << Eigen::Vector2d{delta.x, delta.y}.norm() << ' '
-         << (measure - measure_save).norm();
+    plot << state.x << ' '
+         << state.y << ' '
+         << measure[0] << ' '
+         << measure[1] << ' '
+         << Eigen::Vector2d{delta.x, delta.y}.norm() << ' '
+         << (measure - measure_save).norm() << std::endl;
     
     // 过滤
     if (Eigen::Vector2d{delta.x, delta.y}.norm() < update_step)

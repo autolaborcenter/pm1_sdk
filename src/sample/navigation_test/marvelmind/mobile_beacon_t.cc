@@ -31,7 +31,7 @@ mobile_beacon_t(const std::string &port_name, int delay_ms)
                            using namespace marvelmind::resolution_coordinate;
                            auto begin = result.bytes.data() + 5;
                            auto delay = time_passed(begin);
-                           if (delay > 400) return;
+                           if (delay == 0 || delay > 400) return;
                 
                            std::lock_guard<decltype(buffer_mutex)> lk(buffer_mutex);
                            buffer.push_back({
