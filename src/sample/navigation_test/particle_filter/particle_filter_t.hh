@@ -6,7 +6,7 @@
 #define PM1_SDK_PARTICLE_FILTER_T_HH
 
 
-#include <list>
+#include <vector>
 #include <random>
 #include <fstream>
 
@@ -24,7 +24,7 @@ namespace autolabor {
         /**
          * 粒子群
          */
-        std::list<odometry_t<>> states;
+        std::vector<odometry_t<>> states;
         
         explicit particle_filter_t(size_t size);
         
@@ -50,9 +50,6 @@ namespace autolabor {
         
         std::ofstream plot;
     
-        size_t max_size,
-               measure_vote;
-    
         Eigen::Vector2d measure_save;
         
         odometry_t<> match_save,
@@ -63,9 +60,10 @@ namespace autolabor {
         std::mt19937       engine;
         
         constexpr static auto
-            update_step  = 0.02,
-            accept_range = 0.05,
-            d_range      = 0.1;
+            update_step    = 0.02,
+            accept_range   = 0.05,
+            measure_weight = 0.25,
+            d_range        = 0.1;
     };
 }
 

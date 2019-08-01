@@ -5,7 +5,6 @@
 #include "navigation_system_t.hh"
 
 #include <thread>
-#include <iostream>
 #include "pm1_sdk_native.h"
 
 #pragma clang diagnostic push
@@ -16,7 +15,7 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     double step)
     : locator(locator_queue_size, step),
       beacon(marvelmind::find_beacon()),
-      particle_filter(16) {
+      particle_filter(32) {
     // native sdk 连接串口
     double progress;
     auto   handler = native::initialize("", progress);
@@ -53,9 +52,6 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
             for (const auto &item:temp) matcher.push_back_master(item);
             while (matcher.match(target, odometry));
             auto result = particle_filter.update(odometry, temp.back().value);
-            std::cout << result.x << ' '
-                      << result.y << ' '
-                      << result.theta << std::endl;
         }
     }).detach();
 }
@@ -83,14 +79,6 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     //        std::cout << duration_seconds<double>(_now.time_since_epoch()) << std::endl;
     //        particle_filter.update(source, target);
     //    }
-    
-    odometry_t<> odometry{};
-    native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
-    std::cout << duration_seconds<double>(now().time_since_epoch()) << ' '
-              << odometry.x << ' '
-              << odometry.y << ' '
-              << odometry.theta << ' '
-              << std::endl;
     
     return pose_t();
 }

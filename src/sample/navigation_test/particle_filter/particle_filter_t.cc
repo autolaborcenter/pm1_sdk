@@ -9,11 +9,11 @@
 #include <filesystem>
 
 #include <internal/control_model/pi.h>
+#include <numeric>
 
 autolabor::particle_filter_t::
 particle_filter_t(size_t size)
-    : max_size(size),
-      measure_vote(std::max(static_cast<size_t>(1), size / 4)),
+    : states(size),
       engine(random()),
       match_save({}),
       e_save({0, 0, NAN, NAN, NAN}),
@@ -29,6 +29,8 @@ operator()(const odometry_t<> &state) const {
     if (!std::isnan(e_save.theta)) return e + (state - e_save);
     return {0, 0, NAN, NAN, NAN};
 }
+
+constexpr auto epsilon = std::numeric_limits<float>::epsilon();
 
 autolabor::odometry_t<>
 autolabor::particle_filter_t::
@@ -58,13 +60,19 @@ update(const odometry_t<> &state,
     // 按控制量更新粒子群
     for (auto &item : states) item += delta;
     
-    // 排除所有异常粒子
-    states.remove_if([measure](const odometry_t<> &item) {
-        return (Eigen::Vector2d{item.x, item.y} - measure).norm() > accept_range;
-    });
+    // 计算权重
+    std::vector<double> weights(states.size());
+    std::transform(states.begin(), states.end(),
+                   weights.begin(),
+                   [measure](const odometry_t<> &item) {
+                       const auto distance = (Eigen::Vector2d{item.x, item.y} - measure).norm();
+                       return std::clamp(1 - distance / accept_range, 0.0, 1.0);
+                   });
+    
+    auto sum = std::accumulate(weights.begin(), weights.end(), .0);
     
     // 剩余粒子数量
-    if (states.empty()) {
+    if (sum < epsilon) {
         initialize(state, measure);
         return {0, 0, NAN, NAN, NAN};
     }
@@ -76,34 +84,32 @@ update(const odometry_t<> &state,
                e_theta  = .0,
                e_theta2 = .0;
     
+    auto            weight = weights.begin();
     for (const auto &item : states) {
-        if (std::isnan(item.theta)) continue;
-        e_x += item.x;
-        e_y += item.y;
-        e_theta += item.theta;
-        e_theta2 += item.theta * item.theta;
+        auto k = *weight++;
+        e_x += k * item.x;
+        e_y += k * item.y;
+        e_theta += k * item.theta;
+        e_theta2 += k * item.theta * item.theta;
     }
     
-    const auto n = static_cast<double>(remain + measure_vote);
-    e_x = (e_x + measure_vote * measure[0]) / n;
-    e_y = (e_y + measure_vote * measure[1]) / n;
-    e_theta /= remain;
-    e_theta2 /= remain;
+    e_x = (e_x + measure_weight * measure[0]) / (sum + measure_weight);
+    e_y = (e_x + measure_weight * measure[0]) / (sum + measure_weight);
+    e_theta /= sum;
+    e_theta2 /= sum;
     
     const auto d_theta = e_theta2 - e_theta * e_theta;
     
+    // 生成正态分布随机数
+    std::normal_distribution<>
+        spreader(e_theta, std::clamp(d_theta, d_range, 4.0));
+    
     // 重采样
-    if (remain < max_size) {
-        // 生成正态分布随机数
-        std::normal_distribution<>
-            spreader(e_theta, std::clamp(d_theta, d_range, 4.0));
-        
-        for (auto i = static_cast<long>(max_size - remain); i > 0; --i)
-            states.push_back({0, 0, e_x, e_y, spreader(engine)});
-    }
+    for (size_t i = states.size() - 1; i >= 0; --i)
+        if (weights[i] < epsilon) states[i] = {0, 0, e_x, e_y, spreader(engine)};
     
+    // 计算位姿
     odometry_t<> result{};
-    
     if (d_theta < d_range) {
         e_save = state;
         result = e = {0, 0, e_x, e_y, e_theta};
@@ -122,7 +128,7 @@ initialize(const autolabor::odometry_t<> &state,
            const Eigen::Vector2d &measure) {
     measure_save = measure;
     match_save   = state;
-    auto        step = 2 * M_PI / max_size;
-    for (size_t i    = 0; i < max_size; ++i)
-        states.push_back({0, 0, measure[0], measure[1], i * step - M_PI});
+    const auto  step = 2 * M_PI / states.size();
+    for (size_t i    = states.size() - 1; i >= 0; --i)
+        states[i] = {0, 0, measure[0], measure[1], i * step - M_PI};
 }
