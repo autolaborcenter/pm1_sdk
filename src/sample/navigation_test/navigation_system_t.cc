@@ -8,6 +8,8 @@
 #include <iostream>
 #include "pm1_sdk_native.h"
 
+using namespace std::chrono_literals;
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
@@ -16,7 +18,7 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     double step)
     : locator(locator_queue_size, step),
       beacon(marvelmind::find_beacon()),
-      matcher(std::chrono::milliseconds(250)),
+      matcher(250ms),
       particle_filter(32) {
     // native sdk 连接串口
     double progress;
@@ -35,15 +37,11 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     native::set_command_enabled(false);
     
     std::thread([this] {
-        odometry_t<> save{};
         while (true) {
             auto _now = now();
             
             odometry_t<> odometry{};
             native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
-            if (std::abs(odometry.s - save.s) < 0.05) continue;
-            
-            save = odometry;
             matcher.push_back_helper({_now, Eigen::Vector3d{odometry.x, odometry.y, odometry.theta}});
             
             using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
@@ -52,14 +50,21 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     
             for (const auto &item : buffer) matcher.push_back_master(item);
     
-            Eigen::Vector2d target;
-            Eigen::Vector3d source;
-            while (matcher.match(target, source)) {
-                particle_filter.update(
-                    odometry_t<>{0, 0, source[0], source[1], source[2]},
-                    Eigen::Vector2d{target[1], target[0]}
-                );
-            }
+            auto time = measure_time([&] {
+                Eigen::Vector2d target;
+                Eigen::Vector3d source;
+                while (matcher.match(target, source)) {
+                    auto result = particle_filter.update(
+                        odometry_t<>{0, 0, source[0], source[1], source[2]},
+                        Eigen::Vector2d{target[1], target[0]}
+                    );
+                    std::cout << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
+                }
+            });
+    
+            if (time > 1ms)
+                std::cout << "time = " << 1000 * duration_seconds<double>(time) << std::endl
+                          << "----------------------------------------------" << std::endl;
         }
     }).detach();
 }
