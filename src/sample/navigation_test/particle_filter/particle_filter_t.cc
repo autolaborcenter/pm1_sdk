@@ -84,7 +84,7 @@ update(const odometry_t<> &state,
          e_theta  = .0,
          e_theta2 = .0;
     
-    auto            weight = weights.begin();
+    auto            weight = weights.cbegin();
     for (const auto &item : states) {
         auto k = *weight++;
         e_x += k * item.x;
@@ -106,8 +106,9 @@ update(const odometry_t<> &state,
         spreader(e_theta, std::clamp(d_theta, d_range, 4.0));
     
     // 重采样
-    for (size_t i = states.size() - 1; i >= 0; --i)
-        if (weights[i] < epsilon) states[i] = {0, 0, e_x, e_y, spreader(engine)};
+    weight = weights.cbegin();
+    for (auto &item : states)
+        if (*weight++ < epsilon) item = {0, 0, e_x, e_y, spreader(engine)};
     
     // 计算位姿
     odometry_t<> result{};
@@ -129,7 +130,8 @@ initialize(const autolabor::odometry_t<> &state,
            const Eigen::Vector2d &measure) {
     measure_save = measure;
     match_save   = state;
-    const auto  step = 2 * M_PI / states.size();
-    for (size_t i    = states.size() - 1; i >= 0; --i)
-        states[i] = {0, 0, measure[0], measure[1], i * step - M_PI};
+    const auto step  = 2 * M_PI / states.size();
+    auto       value = -M_PI;
+    for (auto  &item : states)
+        item = {0, 0, measure[0], measure[1], value += step};
 }

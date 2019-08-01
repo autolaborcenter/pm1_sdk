@@ -48,7 +48,8 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
             beacon->fetch(temp);
     
             if (temp.empty()) continue;
-            auto result = particle_filter.update(odometry, temp.back().value);
+            auto xxxx   = temp.back().value;
+            auto result = particle_filter.update(odometry, Eigen::Vector2d{xxxx[1], xxxx[0]});
         }
     }).detach();
 }
