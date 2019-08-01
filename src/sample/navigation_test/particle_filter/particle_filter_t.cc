@@ -91,10 +91,11 @@ update(const odometry_t<> &state,
         e_y += k * item.y;
         e_theta += k * item.theta;
         e_theta2 += k * item.theta * item.theta;
+        std::cout << item.theta << std::endl;
     }
     
     e_x = (e_x + measure_weight * measure[0]) / (sum + measure_weight);
-    e_y = (e_x + measure_weight * measure[0]) / (sum + measure_weight);
+    e_y = (e_y + measure_weight * measure[1]) / (sum + measure_weight);
     e_theta /= sum;
     e_theta2 /= sum;
     
@@ -103,12 +104,14 @@ update(const odometry_t<> &state,
     
     // 生成正态分布随机数
     std::normal_distribution<>
-        spreader(e_theta, std::clamp(d_theta, d_range, 4.0));
+        spreader(e_theta, std::sqrt(std::clamp(d_theta, d_range, 4.0)));
     
     // 重采样
     weight = weights.cbegin();
-    for (auto &item : states)
-        if (*weight++ < epsilon) item = {0, 0, e_x, e_y, spreader(engine)};
+    for (auto &item : states) {
+        auto theta = spreader(engine);
+        if (*weight++ < 0.5) item = {0, 0, e_x, e_y, theta};
+    }
     
     // 计算位姿
     odometry_t<> result{};

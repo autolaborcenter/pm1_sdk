@@ -61,8 +61,8 @@ namespace autolabor {
         
         constexpr static auto
             update_step    = 0.02,
-            accept_range   = 0.05,
-            measure_weight = 0.25,
+            accept_range   = 0.2,
+            measure_weight = 1.0,
             d_range        = 0.1;
     };
 }
