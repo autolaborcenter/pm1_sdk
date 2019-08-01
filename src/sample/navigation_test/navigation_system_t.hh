@@ -17,8 +17,8 @@ namespace autolabor {
             decltype(marvelmind::find_beacon()) beacon;
             autolabor::fusion_locator_t         locator;
     
-            matcher_t<Eigen::Vector2d, odometry_t<>> matcher;
-            particle_filter_t                        particle_filter;
+            matcher_t<Eigen::Vector2d, Eigen::Vector3d> matcher;
+            particle_filter_t                           particle_filter;
         
         public:
             explicit navigation_system_t(

@@ -10,7 +10,6 @@
 
 #include <internal/control_model/pi.h>
 #include <numeric>
-#include <iostream>
 
 autolabor::particle_filter_t::
 particle_filter_t(size_t size)
@@ -91,7 +90,6 @@ update(const odometry_t<> &state,
         e_y += k * item.y;
         e_theta += k * item.theta;
         e_theta2 += k * item.theta * item.theta;
-        std::cout << item.theta << std::endl;
     }
     
     e_x = (e_x + measure_weight * measure[0]) / (sum + measure_weight);
@@ -100,7 +98,6 @@ update(const odometry_t<> &state,
     e_theta2 /= sum;
     
     const auto d_theta = e_theta2 - e_theta * e_theta;
-    std::cout << "sum = " << sum << ", d = " << d_theta << std::endl;
     
     // 生成正态分布随机数
     std::normal_distribution<>
@@ -108,10 +105,7 @@ update(const odometry_t<> &state,
     
     // 重采样
     weight = weights.cbegin();
-    for (auto &item : states) {
-        auto theta = spreader(engine);
-        if (*weight++ < 0.5) item = {0, 0, e_x, e_y, theta};
-    }
+    for (auto &item : states) if (*weight++ < 0.2) item = {0, 0, e_x, e_y, spreader(engine)};
     
     // 计算位姿
     odometry_t<> result{};

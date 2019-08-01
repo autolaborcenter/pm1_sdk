@@ -46,6 +46,14 @@ namespace autolabor {
          * * 匹配元素在整个匹配列表中与主配元素最接近
          */
         bool match(master_t &master, helper_t &helper) {
+            //            std::cout << "masters:" << std::endl;
+            //            for (const auto &item : queue1)
+            //                std::cout << duration_seconds<double>(item.time.time_since_epoch()) << std::endl;
+            //
+            //            std::cout << "helpers:" << std::endl;
+            //            for (const auto &item : queue2)
+            //                std::cout << duration_seconds<double>(item.time.time_since_epoch()) << std::endl;
+            
             auto _master = queue1.begin();     // 主配元素迭代器，每一个都能匹配
             auto _helper = queue2.begin() + 1; // 匹配元素迭代器，至少要有两个
             auto result  = false;
@@ -57,12 +65,13 @@ namespace autolabor {
                 else {
                     auto duration0 = _master->time - (_helper - 1)->time,
                          duration1 = _helper->time - _master->time;
-                    if ((result = duration0 < max_error || duration1 < max_error)) {
+                    if ((result = duration0 < max_error && duration1 < max_error)) {
+                        auto t0 = duration_seconds<double>(duration0),
+                             t1 = duration_seconds<double>(duration1);
+                        
                         // 主配元素一旦使用就要被消耗掉，绝不反复出现
                         master = _master++->value;
-                        helper = duration0 < duration1
-                                 ? (_helper - 1)->value
-                                 : _helper->value;
+                        helper = (t1 * (_helper - 1)->value + t0 * _helper->value) / (t0 + t1);
                         break;
                     } else
                         ++_master;

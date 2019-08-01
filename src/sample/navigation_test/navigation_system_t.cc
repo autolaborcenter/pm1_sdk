@@ -5,6 +5,7 @@
 #include "navigation_system_t.hh"
 
 #include <thread>
+#include <iostream>
 #include "pm1_sdk_native.h"
 
 #pragma clang diagnostic push
@@ -15,6 +16,7 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     double step)
     : locator(locator_queue_size, step),
       beacon(marvelmind::find_beacon()),
+      matcher(std::chrono::milliseconds(250)),
       particle_filter(32) {
     // native sdk 连接串口
     double progress;
@@ -42,14 +44,22 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
             if (std::abs(odometry.s - save.s) < 0.05) continue;
             
             save = odometry;
+            matcher.push_back_helper({_now, Eigen::Vector3d{odometry.x, odometry.y, odometry.theta}});
             
             using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
-            std::vector<data_t> temp;
-            beacon->fetch(temp);
+            std::vector<data_t> buffer;
+            beacon->fetch(buffer);
     
-            if (temp.empty()) continue;
-            auto xxxx   = temp.back().value;
-            auto result = particle_filter.update(odometry, Eigen::Vector2d{xxxx[1], xxxx[0]});
+            for (const auto &item : buffer) matcher.push_back_master(item);
+    
+            Eigen::Vector2d target;
+            Eigen::Vector3d source;
+            while (matcher.match(target, source)) {
+                particle_filter.update(
+                    odometry_t<>{0, 0, source[0], source[1], source[2]},
+                    Eigen::Vector2d{target[1], target[0]}
+                );
+            }
         }
     }).detach();
 }
