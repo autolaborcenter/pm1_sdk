@@ -49,8 +49,10 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
             beacon->fetch(temp);
             
             if (temp.empty()) continue;
-            particle_filter.update(odometry, temp.back().value);
-            std::cout << "update!" << std::endl;
+            auto result = particle_filter.update(odometry, temp.back().value);
+            std::cout << result.x << ' '
+                      << result.y << ' '
+                      << result.theta << std::endl;
         }
     }).detach();
 }
