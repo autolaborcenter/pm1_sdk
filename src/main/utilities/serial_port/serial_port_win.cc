@@ -97,19 +97,18 @@ size_t serial_port::read(uint8_t *buffer, size_t size) {
     weak_lock_guard<std::mutex> lock(read_mutex);
     if (!lock) return 0;
     
-    DWORD      event = 0,
-               error = ERROR_SUCCESS;
+    DWORD      event = 0, error;
     OVERLAPPED overlapped{};
     overlapped.hEvent = CreateEventA(nullptr, true, false, nullptr);
     
     do {
         ResetEvent(overlapped.hEvent);
-        if (!WaitCommEvent(handle, &event, &overlapped)
-            && (error = GetLastError()) != ERROR_IO_PENDING)
-            THROW("WaitCommEvent", error);
-        
-        DWORD progress = 0;
-        GetOverlappedResult(handle, &overlapped, &progress, true);
+        if (!WaitCommEvent(handle, &event, &overlapped)) {
+            if ((error = GetLastError()) != ERROR_IO_PENDING)
+                THROW("WaitCommEvent", error);
+            DWORD progress = 0;
+            GetOverlappedResult(handle, &overlapped, &progress, true);
+        }
         if (event == 0) return 0;
     } while (!(event & EV_RXCHAR));
     
