@@ -94,8 +94,8 @@ namespace autolabor {
             node_state_t target_state() const;
             
             /** 读取里程计 */
-            odometry_t<> odometry() const;
-    
+            stamped_t<odometry_t<>> odometry() const;
+            
             /** 读取电池电量 */
             double battery_percent() const;
             
@@ -126,8 +126,8 @@ namespace autolabor {
             std::atomic_ulong wheels_seq;
             
             /** 里程计 */
-            std::atomic<odometry_t<>> _odometry{};
-    
+            std::atomic<stamped_t<odometry_t<>>> _odometry{};
+            
             /** 电池电量 */
             uint8_t _battery = 0;
             

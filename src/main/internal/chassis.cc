@@ -31,11 +31,26 @@ inline serial_port &operator<<(
 }
 
 template<class t1, class t2>
-inline void atomic_plus_assign(std::atomic<t1> &a, const t2 &b) noexcept {
-    auto expected = a.load();
-    auto desired  = expected + b;
+inline void atomic_plus_assign(
+    std::atomic<t1> &a,
+    const t2 &b
+) noexcept {
+    auto expected = a.load(),
+         desired  = expected + b;
     while (!a.compare_exchange_strong(expected, desired))
         desired = expected + b;
+}
+
+template<class t1, class t2>
+inline void atomic_plus_assign_stamped(
+    std::atomic<autolabor::stamped_t<t1>> &a,
+    const autolabor::stamped_t<t2> &b
+) noexcept {
+    autolabor::stamped_t<t1>
+        expected = a.load(),
+        desired{b.time, expected.value + b.value};
+    while (!a.compare_exchange_strong(expected, desired))
+        desired = {b.time, expected.value + b.value};
 }
 
 constexpr uint64_t max_of(uint64_t a, uint64_t b) noexcept {
@@ -234,7 +249,7 @@ chassis::chassis(const std::string &port_name)
                 _left.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
                 l = {wheels_seq.load(), l.last, _left.position};
                 if (l.seq == r.seq) {
-                    atomic_plus_assign(_odometry, wheels_to_odometry(l.current - l.last, r.current - r.last, config));
+                    atomic_plus_assign_stamped(_odometry, make_stamped(wheels_to_odometry(l.current - l.last, r.current - r.last, config), _now));
                     l.last = l.current;
                     r.last = r.current;
                 }
@@ -244,7 +259,7 @@ chassis::chassis(const std::string &port_name)
                 _right.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
                 r = {wheels_seq.load(), r.last, _right.position};
                 if (l.seq == r.seq) {
-                    atomic_plus_assign(_odometry, wheels_to_odometry(l.current - l.last, r.current - r.last, config));
+                    atomic_plus_assign_stamped(_odometry, make_stamped(wheels_to_odometry(l.current - l.last, r.current - r.last, config), _now));
                     l.last = l.current;
                     r.last = r.current;
                 }
@@ -332,7 +347,8 @@ node_state_t chassis::target_state() const {
            : node_state_t::unknown;
 }
 
-autolabor::odometry_t<> chassis::odometry() const {
+autolabor::stamped_t<autolabor::odometry_t<>>
+chassis::odometry() const {
     return _odometry;
 }
 

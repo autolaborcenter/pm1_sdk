@@ -18,6 +18,11 @@ namespace autolabor {
         decltype(now()) time;
         t               value;
     };
+    
+    template<class time_t, class t>
+    stamped_t<t> make_stamped(const t &value, time_t time = now()) {
+        return {time, value};
+    }
 }
 
 

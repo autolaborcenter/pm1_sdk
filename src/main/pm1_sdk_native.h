@@ -123,6 +123,14 @@ namespace autolabor {
             DLL_EXPORT handler_t STD_CALL
             get_odometry(double &s, double &a,
                          double &x, double &y, double &theta) noexcept;
+    
+            /**
+             * 获取里程计值
+             */
+            DLL_EXPORT handler_t STD_CALL
+            get_odometry_stamped(double &stamp,
+                                 double &s, double &a,
+                                 double &x, double &y, double &theta) noexcept;
             
             /**
              * 清除里程计累计值

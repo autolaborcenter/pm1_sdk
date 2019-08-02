@@ -262,7 +262,7 @@ initialize_c(const char *port,
                 
                 chassis_ptr(ptr);
                 builder.str("");
-                odometry_mark = ptr->odometry();
+                odometry_mark = ptr->odometry().value;
                 current_port  = *i;
                 pause_flag    = false;
                 cancel_flag   = false;
@@ -339,10 +339,22 @@ STD_CALL
 autolabor::pm1::native::
 get_odometry(double &s, double &a,
              double &x, double &y, double &theta) noexcept {
+    double _;
+    return get_odometry_stamped(_, s, a, x, y, theta);
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
+get_odometry_stamped(double &stamp,
+                     double &s, double &a,
+                     double &x, double &y, double &theta) noexcept {
     handler_t id = ++task_id;
     try {
         chassis_ptr.read<void>([&](ptr_t ptr) {
-            auto temp = ptr->odometry() - odometry_mark;
+            auto value = ptr->odometry();
+            auto temp  = value.value - odometry_mark;
+            stamp = duration_seconds<>(value.time.time_since_epoch());
             s     = temp.s;
             a     = temp.a;
             x     = temp.x;
@@ -351,6 +363,7 @@ get_odometry(double &s, double &a,
         });
     }
     catch (std::exception &e) {
+        stamp = NAN;
         s     = NAN;
         a     = NAN;
         x     = NAN;
@@ -366,7 +379,7 @@ STD_CALL
 autolabor::pm1::native::
 reset_odometry() noexcept {
     return use_ptr([](ptr_t ptr) {
-        odometry_mark = ptr->odometry();
+        odometry_mark = ptr->odometry().value;
     });
 }
 
@@ -588,7 +601,7 @@ drive_spatial(double v,
     double     width;
     
     try {
-        origin = chassis_ptr.read<odometry_t<>>([](ptr_t ptr) { return ptr->odometry(); });
+        origin = chassis_ptr.read<odometry_t<>>([](ptr_t ptr) { return ptr->odometry().value; });
         width  = chassis_ptr.read<double>([](ptr_t ptr) { return ptr->config.width; });
     } catch (std::exception &e) {
         handler_t id = ++task_id;
@@ -599,7 +612,7 @@ drive_spatial(double v,
     return block(v, w, calculate_spatium(spatium, angle, width),
                  {0.5, 0.1, 12, 4},
                  [origin, width](ptr_t ptr) {
-                     auto odometry = ptr->odometry() - origin;
+                     auto odometry = ptr->odometry().value - origin;
                      return calculate_spatium(odometry.s, odometry.a, width);
                  },
                  progress);

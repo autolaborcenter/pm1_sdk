@@ -43,11 +43,15 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     
     std::thread([this] {
         while (true) {
-            auto _now = now();
-            
+            double       time_stamp;
             odometry_t<> odometry{};
-            native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
-            matcher.push_back_helper({_now, Eigen::Vector3d{odometry.x, odometry.y, odometry.theta}});
+            native::get_odometry_stamped(time_stamp,
+                                         odometry.s, odometry.a,
+                                         odometry.x, odometry.y, odometry.theta);
+    
+            decltype(now()) _time_stamp{};
+            _time_stamp += std::chrono::duration_cast<std::chrono::milliseconds>(seconds_duration(time_stamp));
+            matcher.push_back_helper({_time_stamp, Eigen::Vector3d{odometry.x, odometry.y, odometry.theta}});
             
             using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
             std::vector<data_t> buffer;
