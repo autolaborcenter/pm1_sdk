@@ -14,7 +14,8 @@
 #include <utilities/odometry_t.hpp>
 
 #include <utilities/serial_port/serial_port.hh>
-#include <utilities/time_extensions.h>
+#include <utilities/time/time_extensions.h>
+#include <utilities/time/matcher_t.hpp>
 
 extern "C" {
 #include "control_model/model.h"
@@ -121,6 +122,8 @@ namespace autolabor {
             motor_t<> _left{},
                       _right{},
                       _rudder{};
+    
+            std::atomic_ulong wheels_seq;
             
             /** 里程计 */
             std::atomic<odometry_t<>> _odometry{};

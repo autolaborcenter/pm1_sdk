@@ -39,7 +39,10 @@ set(UTILITIES
         utilities/serial_parser/parse_engine.hpp
         # --------------------------
         # api
-        utilities/time_extensions.h
+        utilities/time/time_extensions.h
+        utilities/time/stamped_t.h
+        utilities/time/matcher_t.hpp
+
         utilities/odometry_t.hpp
 
         utilities/raii/safe_shared_ptr.hpp

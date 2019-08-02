@@ -17,8 +17,6 @@ add_executable(navigation
         marvelmind/mobile_beacon_t.hh
         marvelmind/mobile_beacon_t.cc
 
-        matcher/stamped_t.h
-        matcher/matcher_t.hpp
         matcher/transformer_t.hpp
         matcher/fusion_locator_t.hh
         matcher/fusion_locator_t.cc
@@ -33,8 +31,6 @@ add_executable(navigation
 target_link_libraries(navigation pm1_sdk)
 
 add_executable(test
-        matcher/stamped_t.h
-        matcher/matcher_t.hpp
         matcher/transformer_t.hpp
         matcher/fusion_locator_t.hh
         matcher/fusion_locator_t.cc

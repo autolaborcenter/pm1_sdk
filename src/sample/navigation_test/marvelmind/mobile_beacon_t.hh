@@ -9,7 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <deque>
-#include <utilities/time_extensions.h>
+#include <utilities/time/time_extensions.h>
 #include <eigen3/Eigen/Core>
 
 #include "utilities/serial_port/serial_port.hh"
@@ -17,7 +17,7 @@
 #include "parser_t.hpp"
 
 #include "../pose_t.h"
-#include "../matcher/stamped_t.h"
+#include "utilities/time/stamped_t.h"
 
 namespace marvelmind {
     /**

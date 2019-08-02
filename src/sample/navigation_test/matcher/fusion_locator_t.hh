@@ -7,10 +7,10 @@
 
 #include <deque>
 #include <fstream>
-#include <utilities/time_extensions.h>
+#include <utilities/time/time_extensions.h>
 
 #include "../pose_t.h"
-#include "matcher_t.hpp"
+#include "utilities/time/matcher_t.hpp"
 #include "transformer_t.hpp"
 
 namespace autolabor {
