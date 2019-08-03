@@ -44,6 +44,7 @@ set(UTILITIES
         utilities/time/matcher_t.hpp
 
         utilities/odometry_t.hpp
+        utilities/differentiator_t.hpp
 
         utilities/raii/safe_shared_ptr.hpp
         utilities/raii/weak_lock_guard.hpp

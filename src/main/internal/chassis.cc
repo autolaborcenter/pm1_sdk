@@ -31,17 +31,6 @@ inline serial_port &operator<<(
 }
 
 template<class t1, class t2>
-inline void atomic_plus_assign(
-    std::atomic<t1> &a,
-    const t2 &b
-) noexcept {
-    auto expected = a.load(),
-         desired  = expected + b;
-    while (!a.compare_exchange_strong(expected, desired))
-        desired = expected + b;
-}
-
-template<class t1, class t2>
 inline void atomic_plus_assign_stamped(
     std::atomic<autolabor::stamped_t<t1>> &a,
     const autolabor::stamped_t<t2> &b
@@ -79,6 +68,7 @@ const float
 
 #include <Windows.h>
 #include <iostream>
+#include <utilities/differentiator_t.hpp>
 
 #define AVOID_SLEEP SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)
 constexpr auto timeout = 3;
@@ -104,7 +94,7 @@ constexpr auto
                               gcd(count_ms(odometry_interval),
                                   count_ms(rudder_interval)));
 constexpr auto
-    delay_interval      = std::chrono::milliseconds(max_of(1, timeout_gcd - 1));
+    delay_interval      = std::chrono::milliseconds(max_of(5, timeout_gcd - 1));
 
 struct wheel_mark_t {
     unsigned long seq;
@@ -384,30 +374,38 @@ void chassis::reset_rudder() {
 
 void chassis::start_write_loop() {
     write_thread = std::thread([this] {
+        using t = decltype(now());
+    
+        differentiator_t<t>
+            odometry_time{{}, [](const t &t0, const t &t1) { return t1 - t0 > odometry_interval; }},
+            rudder_time{{}, [](const t &t0, const t &t1) { return t1 - t0 > rudder_interval; }},
+            state_time{{}, [](const t &t0, const t &t1) { return t1 - t0 > state_interval; }};
+        
         decltype(now()) time[3]{};
         std::mutex      lock;
         
         do {
             auto _now = now();
+            t    _;
     
-            if (_now - time[0] > odometry_interval) {
+            if (odometry_time.update(_now, _)) {
                 port << autolabor::can::pack<ecu<>::current_position_tx>();
                 ++wheels_seq;
-                time[0] = _now;
-            }
-            if (_now - time[1] > rudder_interval) {
-                port << autolabor::can::pack<tcu<0>::current_position_tx>();
-                time[1] = _now;
-            }
-            if (_now - time[2] > state_interval) {
-                AVOID_SLEEP;
-                port << autolabor::can::pack<unit<>::state_tx>()
-                     << autolabor::can::pack<vcu<>::battery_percent_tx>();
-                time[2] = _now;
             }
     
-            std::unique_lock<decltype(lock)> _(lock);
-            synchronizer.wait_for(_, delay_interval, [this] { return !running; });
+            if (rudder_time.update(_now, _)) {
+                port << autolabor::can::pack<tcu<0>::current_position_tx>();
+            }
+    
+            if (state_time.update(_now, _)) {
+                port << autolabor::can::pack<unit<>::state_tx>()
+                     << autolabor::can::pack<vcu<>::battery_percent_tx>();
+                AVOID_SLEEP;
+            }
+    
+            std::unique_lock<decltype(lock)> _lk(lock);
+            if (synchronizer.wait_for(_lk, delay_interval, [this] { return !running; }))
+                return;
         } while (running);
     });
 }

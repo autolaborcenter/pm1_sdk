@@ -34,8 +34,12 @@ namespace marvelmind {
         std::deque<stamped_data_t> buffer;
         std::mutex                 buffer_mutex;
     public:
-        explicit mobile_beacon_t(const std::string &port_name,
-                                 int delay_ms);
+        /**
+         * 构造器
+         * @param port_name 串口名
+         * @param delay_ms  已知固定延时
+         */
+        mobile_beacon_t(const std::string &port_name, int delay_ms);
         
         ~mobile_beacon_t();
         
@@ -55,6 +59,12 @@ namespace marvelmind {
         }
     };
     
+    /**
+     * 查找并构造定位标签对象
+     * @param port_name 串口名
+     * @param delay_ms  已知固定时延
+     * @return 
+     */
     std::shared_ptr<mobile_beacon_t> find_beacon(
         const std::string &port_name = "",
         int delay_ms = 0);

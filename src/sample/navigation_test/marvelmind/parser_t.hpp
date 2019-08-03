@@ -9,7 +9,7 @@
 #include "protocol.h"
 
 namespace marvelmind {
-    /** 解析器 */
+    /** marvelmind 串口协议解析器 */
     struct parser_t {
         /** 字类型（作为解析器） */
         using word_t = uint8_t;
@@ -56,7 +56,7 @@ namespace marvelmind {
             // 尚未接收完，退出
             if (end - begin < payload_length + 7)return {result_type_t::nothing};
             // 确定帧长度
-            auto frame_end      = begin + payload_length + 7;
+            auto     frame_end = begin + payload_length + 7;
             // 准备返回值
             result_t result{result_type_t::nothing,
                             std::vector<word_t>(payload_length + 7)};

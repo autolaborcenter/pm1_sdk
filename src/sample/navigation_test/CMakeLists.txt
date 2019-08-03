@@ -17,9 +17,9 @@ add_executable(navigation
         marvelmind/mobile_beacon_t.hh
         marvelmind/mobile_beacon_t.cc
 
-        matcher/transformer_t.hpp
-        matcher/fusion_locator_t.hh
-        matcher/fusion_locator_t.cc
+        fusion_loacator/transformer_t.hpp
+        fusion_loacator/fusion_locator_t.hh
+        fusion_loacator/fusion_locator_t.cc
 
         particle_filter/particle_filter_t.hh
         particle_filter/particle_filter_t.cc
@@ -31,7 +31,7 @@ add_executable(navigation
 target_link_libraries(navigation pm1_sdk)
 
 add_executable(test
-        matcher/transformer_t.hpp
-        matcher/fusion_locator_t.hh
-        matcher/fusion_locator_t.cc
-        matcher/test.cpp)
+        fusion_loacator/transformer_t.hpp
+        fusion_loacator/fusion_locator_t.hh
+        fusion_loacator/fusion_locator_t.cc
+        fusion_loacator/test.cpp)

@@ -86,7 +86,7 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     //    beacon->fetch(temp);
     //    for (const auto &item : temp) {
     //        locator.push_back_master(item);
-    //        matcher.push_back_master(item);
+    //        fusion_loacator.push_back_master(item);
     //    }
     //
     //    auto _now = now();
@@ -94,12 +94,12 @@ autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
     //    odometry_t<> odometry{};
     //    native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
     //    locator.push_back_helper({_now, {odometry.x, odometry.y}});
-    //    matcher.push_back_helper({_now, odometry});
+    //    fusion_loacator.push_back_helper({_now, odometry});
     //    locator.refresh();
     //
     //    odometry_t<>    source{};
     //    Eigen::Vector2d target;
-    //    while (matcher.match(target, source)) {
+    //    while (fusion_loacator.match(target, source)) {
     //        std::cout << duration_seconds<double>(_now.time_since_epoch()) << std::endl;
     //        particle_filter.update(source, target);
     //    }

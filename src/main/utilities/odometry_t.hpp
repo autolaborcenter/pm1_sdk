@@ -14,6 +14,8 @@ namespace autolabor {
     template<odometry_type type = odometry_type::state>
     struct odometry_t;
     
+    #define ODOMETRY_INIT {0,0,NAN,NAN,NAN}
+    
     /** 里程计增量 */
     template<>
     struct odometry_t<odometry_type::delta> {

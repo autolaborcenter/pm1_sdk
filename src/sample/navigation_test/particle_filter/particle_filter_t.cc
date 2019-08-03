@@ -16,7 +16,7 @@ particle_filter_t(size_t size)
     : states(size),
       engine(random()),
       match_save({}),
-      e_save({0, 0, NAN, NAN, NAN}),
+      e_save(ODOMETRY_INIT),
       e({}) {
     std::error_code _;
     std::filesystem::remove("particle_filter.txt", _);
@@ -27,7 +27,7 @@ autolabor::odometry_t<>
 autolabor::particle_filter_t::
 operator()(const odometry_t<> &state) const {
     if (!std::isnan(e_save.theta)) return e + (state - e_save);
-    return {0, 0, NAN, NAN, NAN};
+    return ODOMETRY_INIT;
 }
 
 constexpr auto epsilon = std::numeric_limits<float>::epsilon();
@@ -39,7 +39,7 @@ update(const odometry_t<> &state,
     // 追踪丢失，重新初始化
     if (states.empty()) {
         initialize(state, measure);
-        return {0, 0, NAN, NAN, NAN};
+        return ODOMETRY_INIT;
     }
     
     // 计算控制量
@@ -74,7 +74,7 @@ update(const odometry_t<> &state,
     // 剩余粒子数量
     if (sum < epsilon) {
         initialize(state, measure);
-        return {0, 0, NAN, NAN, NAN};
+        return ODOMETRY_INIT;
     }
     
     // 计算方差
@@ -115,7 +115,7 @@ update(const odometry_t<> &state,
     } else if (!std::isnan(e_save.theta))
         result = e + (state - e_save);
     else
-        result = {0, 0, NAN, NAN, NAN};
+        result = ODOMETRY_INIT;
     
     plot.flush();
     return result;

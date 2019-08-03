@@ -65,19 +65,19 @@ marvelmind::mobile_beacon_t::~mobile_beacon_t() {
     *running = false;
 }
 
+std::vector<std::string> serial_ports() {
+    auto                     info = serial::list_ports();
+    std::vector<std::string> result(info.size());
+    std::transform(info.begin(), info.end(), result.begin(),
+                   [](const serial::PortInfo &it) { return it.port; });
+    return result;
+}
+
 std::shared_ptr<marvelmind::mobile_beacon_t>
 marvelmind::find_beacon(const std::string &port_name, int delay_ms) {
-    const static auto serial_ports = [] {
-        auto                     info = serial::list_ports();
-        std::vector<std::string> result(info.size());
-        std::transform(info.begin(), info.end(), result.begin(),
-                       [](const serial::PortInfo &it) { return it.port; });
-        return result;
-    };
-    
-    auto list = port_name.empty()
-                ? serial_ports()
-                : std::vector<std::string>{port_name};
+    const auto list = port_name.empty()
+                      ? serial_ports()
+                      : std::vector<std::string>{port_name};
     
     if (list.empty())
         throw std::runtime_error("no available port");
