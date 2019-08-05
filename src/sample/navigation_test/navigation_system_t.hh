@@ -8,8 +8,8 @@
 
 #include <utilities/odometry_t.hpp>
 #include "marvelmind/mobile_beacon_t.hh"
-#include "matcher/fusion_locator_t.hh"
 #include "particle_filter/particle_filter_t.hh"
+#include "fusion_loacator/fusion_locator_t.hh"
 
 namespace autolabor {
     namespace pm1 {

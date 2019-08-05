@@ -106,7 +106,6 @@ chassis::chassis(const std::string &port_name)
     : port(port_name, 115200, timeout),
       running(true),
       command_enabled(true),
-      wheels_seq(0),
       config(default_config),
       max_v(default_max_v),
       max_w(default_max_w),
@@ -143,15 +142,22 @@ chassis::chassis(const std::string &port_name)
         auto parse = [&](const autolabor::can::parser_t::result_t &result) {
             if (result.type != result_t::message) return;
         
-            if (ecu<0>::current_position_rx::match(result.message)) {
-                _left.update(now(), RAD_OF(get_data_value<int>(result.message), default_wheel_k));
-                temp[0] = true;
-            } else if (ecu<1>::current_position_rx::match(result.message)) {
-                _right.update(now(), RAD_OF(get_data_value<int>(result.message), default_wheel_k));
-                temp[1] = true;
-            } else if (tcu<0>::current_position_rx::match(result.message)) {
-                _rudder.update(now(), RAD_OF(get_data_value<short>(result.message), default_rudder_k));
-                temp[2] = true;
+            const auto _now = now();
+        
+            switch (_odometry.try_parse(_now, result.message, config)) {
+                case pm1_odometry_t::result_type::left:
+                    temp[0] = true;
+                    break;
+                case pm1_odometry_t::result_type::right:
+                    temp[1] = true;
+                    break;
+                case pm1_odometry_t::result_type::none: {
+                    const auto last  = _rudder;
+                    const auto value = RAD_OF(get_data_value<int>(result.message), default_wheel_k);
+                    _rudder = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
+                }
+                    temp[2] = true;
+                    break;
             }
         };
     
@@ -178,13 +184,10 @@ chassis::chassis(const std::string &port_name)
     // endregion
     // region receive
     read_thread = std::thread([=] {
-        auto time  = now();
-        auto speed = .0f;
+        const auto t0    = now();
+        auto       speed = .0f;
     
-        wheel_mark_t l{wheels_seq.load(), _left.position},
-                     r{wheels_seq.load(), _right.position};
-        
-        std::array<decltype(now()), 4> reply_time{time, time, time, time};
+        std::array<decltype(now()), 4> reply_time{t0, t0, t0, t0};
         
         auto parse = [&](const autolabor::can::parser_t::result_t &result) {
             if (result.type != result_t::message) return;
@@ -234,31 +237,14 @@ chassis::chassis(const std::string &port_name)
             } else if (vcu<0>::battery_percent_rx::match(msg)) {
                 _battery = *msg.data;
         
-            } else if (ecu<0>::current_position_rx::match(msg)) {
-        
-                _left.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
-                l = {wheels_seq.load(), l.last, _left.position};
-                if (l.seq == r.seq) {
-                    atomic_plus_assign_stamped(_odometry, make_stamped(wheels_to_odometry(l.current - l.last, r.current - r.last, config), _now));
-                    l.last = l.current;
-                    r.last = r.current;
-                }
-                
-            } else if (ecu<1>::current_position_rx::match(msg)) {
-        
-                _right.update(_now, RAD_OF(get_data_value<int>(msg), default_wheel_k));
-                r = {wheels_seq.load(), r.last, _right.position};
-                if (l.seq == r.seq) {
-                    atomic_plus_assign_stamped(_odometry, make_stamped(wheels_to_odometry(l.current - l.last, r.current - r.last, config), _now));
-                    l.last = l.current;
-                    r.last = r.current;
-                }
-                
+            } else if (_odometry.try_parse(_now, msg, config) == pm1_odometry_t::result_type::none) {
+            
             } else if (tcu<0>::current_position_rx::match(msg)) {
         
-                auto value = RAD_OF(get_data_value<short>(msg), default_rudder_k);
-                _rudder.update(_now, value);
-        
+                const auto last  = _rudder;
+                const auto value = RAD_OF(get_data_value<int>(result.message), default_wheel_k);
+                _rudder = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
+                
                 if (std::isnan(target.rudder) || now() - request_time > control_timeout)
                     target = {0, value};
         
@@ -311,16 +297,16 @@ chassis::~chassis() {
 
 //==============================================================
 
-autolabor::motor_t<> chassis::left() const {
-    return _left;
+autolabor::pm1::motor_t chassis::left() const {
+    return _odometry._left.value;
 }
 
-autolabor::motor_t<> chassis::right() const {
-    return _right;
+autolabor::pm1::motor_t chassis::right() const {
+    return _odometry._right.value;
 }
 
-autolabor::motor_t<> chassis::rudder() const {
-    return _rudder;
+autolabor::pm1::motor_t chassis::rudder() const {
+    return _rudder.value;
 }
 
 chassis_state_t chassis::state() const {
@@ -339,7 +325,7 @@ node_state_t chassis::target_state() const {
 
 autolabor::stamped_t<autolabor::odometry_t<>>
 chassis::odometry() const {
-    return _odometry;
+    return _odometry.value();
 }
 
 double chassis::battery_percent() const {
@@ -380,22 +366,18 @@ void chassis::start_write_loop() {
             odometry_time{{}, [](const t &t0, const t &t1) { return t1 - t0 > odometry_interval; }},
             rudder_time{{}, [](const t &t0, const t &t1) { return t1 - t0 > rudder_interval; }},
             state_time{{}, [](const t &t0, const t &t1) { return t1 - t0 > state_interval; }};
-        
-        decltype(now()) time[3]{};
-        std::mutex      lock;
+    
+        std::mutex lock;
         
         do {
             auto _now = now();
             t    _;
     
-            if (odometry_time.update(_now, _)) {
-                port << autolabor::can::pack<ecu<>::current_position_tx>();
-                ++wheels_seq;
-            }
+            if (odometry_time.update(_now, _))
+                _odometry.ask(port);
     
-            if (rudder_time.update(_now, _)) {
+            if (rudder_time.update(_now, _))
                 port << autolabor::can::pack<tcu<0>::current_position_tx>();
-            }
     
             if (state_time.update(_now, _)) {
                 port << autolabor::can::pack<unit<>::state_tx>()

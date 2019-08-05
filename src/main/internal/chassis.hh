@@ -11,6 +11,8 @@
 #include <condition_variable>
 
 #include "can_define.h"
+#include "odometry.h"
+
 #include <utilities/odometry_t.hpp>
 
 #include <utilities/serial_port/serial_port.hh>
@@ -22,22 +24,6 @@ extern "C" {
 }
 
 namespace autolabor {
-    /** 电机信息 */
-    template<class time_t = decltype(now())>
-    struct motor_t {
-        double position, speed;
-        time_t time;
-        
-        void update(time_t _now, double value) {
-            auto delta = value - position;
-            
-            autolabor::seconds_floating dt = _now - time;
-            speed    = delta / dt.count();
-            position = value;
-            time     = _now;
-        }
-    };
-    
     namespace pm1 {
         /** 底盘 */
         class chassis final {
@@ -79,13 +65,13 @@ namespace autolabor {
             chassis(chassis &&) = delete;
             
             /** 左轮状态 */
-            motor_t<> left() const;
+            motor_t left() const;
             
             /** 右轮状态 */
-            motor_t<> right() const;
+            motor_t right() const;
             
             /** 舵轮状态 */
-            motor_t<> rudder() const;
+            motor_t rudder() const;
             
             /** 检查状态 */
             chassis_state_t state() const;
@@ -119,14 +105,9 @@ namespace autolabor {
             chassis_state_t chassis_state{};
             
             /** 电机数据 */
-            motor_t<> _left{},
-                      _right{},
-                      _rudder{};
+            stamped_t<motor_t> _rudder{};
     
-            std::atomic_ulong wheels_seq;
-            
-            /** 里程计 */
-            std::atomic<stamped_t<odometry_t<>>> _odometry{};
+            pm1_odometry_t _odometry{};
             
             /** 电池电量 */
             uint8_t _battery = 0;
