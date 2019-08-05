@@ -82,8 +82,8 @@ set(NATIVE_LIBRARY
         # pm1 chassis
         internal/can_define.h
 
-        internal/odometry.h
-        internal/odometry.cpp
+        internal/pm1_odometry_t.h
+        internal/pm1_odometry_t.cpp
 
         internal/chassis.hh
         internal/chassis.cc)

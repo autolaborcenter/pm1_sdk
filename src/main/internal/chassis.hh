@@ -11,7 +11,7 @@
 #include <condition_variable>
 
 #include "can_define.h"
-#include "odometry.h"
+#include "pm1_odometry_t.h"
 
 #include <utilities/odometry_t.hpp>
 

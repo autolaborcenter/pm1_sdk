@@ -2,9 +2,11 @@
 // Created by User on 2019/7/25.
 //
 
-#ifndef PM1_SDK_ODOMETRY_H
-#define PM1_SDK_ODOMETRY_H
+#ifndef PM1_SDK_PM1_ODOMETRY_T_H
+#define PM1_SDK_PM1_ODOMETRY_T_H
 
+
+#include <fstream>
 
 #include <utilities/odometry_t.hpp>
 #include <utilities/serial_port/serial_port.hh>
@@ -17,18 +19,6 @@ extern "C" {
 
 namespace autolabor {
     namespace pm1 {
-        /**
-         * 推算里程增量
-         * @param left   左轮转角增量
-         * @param right  右轮转角增量
-         * @param config 底盘结构参数
-         * @return 里程增量
-         */
-        odometry_t<odometry_type::delta> wheels_to_odometry(
-            double left,
-            double right,
-            const chassis_config_t &config);
-    
         /** 电机信息 */
         struct motor_t { double position, speed; };
     
@@ -40,18 +30,23 @@ namespace autolabor {
             /** 电机状态缓存 */
             stamped_t<motor_t> _left{}, _right{};
     
+            pm1_odometry_t();
+            
             /** 向串口发送里程询问帧 */
-            void ask(serial_port &port);
-    
+            void ask(serial_port &);
+            
             /** 解析帧 */
-            result_type try_parse(decltype(now()) _now,
-                                  const pack_with_data &msg,
-                                  const chassis_config_t &config);
-    
+            result_type try_parse(decltype(now()),
+                                  const pack_with_data &,
+                                  const chassis_config_t &);
+            
             /** 获取当前里程计 */
             stamped_t<odometry_t<>> value() const;
 
         private:
+            decltype(now()) origin;
+            std::ofstream   plot;
+            
             // 电机通信应答序号
             std::atomic_ulong
                 wheels_seq;
@@ -71,13 +66,12 @@ namespace autolabor {
     
             // 进行更新
             void update(bool left,
-                        decltype(now()) _now,
-                        const pack_with_data &msg,
-                        const chassis_config_t &config);
+                        decltype(now()),
+                        const pack_with_data &,
+                        const chassis_config_t &);
         };
-        
     } // namespace pm1
 } // namespace autolabor
 
 
-#endif //PM1_SDK_ODOMETRY_H
+#endif //PM1_SDK_PM1_ODOMETRY_T_H

@@ -11,7 +11,7 @@
 #include <utilities/differentiator_t.hpp>
 
 #include "can/parser_t.hpp"
-#include "odometry.h"
+#include "pm1_odometry_t.h"
 
 extern "C" {
 #include "control_model/motor_map.h"
