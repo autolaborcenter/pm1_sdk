@@ -8,7 +8,7 @@
 #include <limits>
 
 extern "C" {
-#include <internal/control_model/motor_map.h>
+#include "control_model/motor_map.h"
 }
 
 autolabor::odometry_t<autolabor::odometry_type::delta>
