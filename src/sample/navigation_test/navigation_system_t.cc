@@ -68,6 +68,8 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
                 auto result = particle_filter.update(
                     odometry_t<>{0, 0, source[0], source[1], source[2]},
                     Eigen::Vector2d{target[1], target[0]});
+                if (first_time)
+                    std::cout << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
                 if (std::isnan(result.theta)) continue;
                 plot << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
                 if (first_time) {
@@ -76,7 +78,7 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
                 }
             }
     
-            std::this_thread::sleep_for(50ms);
+            std::this_thread::sleep_for(2ms);
         }
     }).detach();
     

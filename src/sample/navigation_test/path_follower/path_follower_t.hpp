@@ -29,7 +29,7 @@ namespace path_follower {
             local_end;
     
     public:
-        double speed = 0.5;
+        double speed = 0.2;
         
         /**
          * 构造器

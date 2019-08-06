@@ -101,7 +101,7 @@ update(const odometry_t<> &state,
     
     // 生成正态分布随机数
     std::normal_distribution<>
-        spreader(e_theta, std::sqrt(std::clamp(d_theta, d_range, 4.0)));
+        spreader(e_theta, std::sqrt(std::clamp(d_theta, d_range, 0.8)));
     
     // 重采样
     weight = weights.cbegin();

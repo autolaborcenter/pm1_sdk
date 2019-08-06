@@ -29,9 +29,9 @@ int main() {
     try {
         using namespace autolabor;
         using namespace autolabor::pm1;
-        
-        navigation_system_t system;
+    
         std::cout << "Hello world!" << std::endl;
+        navigation_system_t system;
         
         { // 读取指令
             std::string command;
@@ -103,12 +103,12 @@ int main() {
                     using namespace std::chrono_literals;
                     
                     auto pose = system.locate();
-                    std::cout << pose.x << ' ' << pose.y << std::endl;
                     
                     auto result = controller(pose.x, pose.y, pose.theta);
                     
                     switch (result.type()) {
                         case state_t::following:
+                            std::cout << "following: " << result.speed << std::endl;
                             native::drive_physical(result.speed, result.rudder);
                             break;
                         case state_t::turning:
@@ -117,10 +117,9 @@ int main() {
                             std::this_thread::sleep_for(100ms);
                             {
                                 double ignore;
-                                native::drive_spatial(0, result.rudder > 0 ? 1 : -1,
-                                                      0, result.rudder,
+                                native::drive_spatial(0, result.rudder > 0 ? 0.6 : -0.6,
+                                                      0, 0.9 * result.rudder,
                                                       ignore);
-                                native::adjust_rudder(0, ignore);
                             }
                             break;
                         case state_t::failed:

@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <eigen3/Eigen/Core>
 
 namespace path_follower {
     /**
@@ -29,11 +30,12 @@ namespace path_follower {
         for (auto item = begin + order; item < end - order; ++item) {
             if (item->tip_order < order)
                 continue;
-            auto dx0 = item->x - (item - order)->x,
-                 dy0 = item->y - (item - order)->y,
-                 dx1 = (item + order)->x - item->x,
-                 dy1 = (item + order)->y - item->y;
-            if (dx0 * dx1 + dy0 * dy1 < 0)
+            Eigen::Vector2d p0{(item - order)->x, (item - order)->y},
+                            p1{item->x, item->y},
+                            p2{(item + order)->x, (item + order)->y},
+                            v0 = p1 - p0,
+                            v1 = p2 - p1;
+            if (v0.dot(v1) < 0.5 * v0.norm() * v1.norm())
                 item->tip_order = order;
         }
     }
