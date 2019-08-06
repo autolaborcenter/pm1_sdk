@@ -19,15 +19,13 @@ namespace autolabor {
     
             matcher_t<Eigen::Vector2d, Eigen::Vector3d> matcher;
             particle_filter_t                           particle_filter;
-    
-            std::ofstream plot;
 
         public:
             explicit navigation_system_t(
                 size_t locator_queue_size = 50,
                 double step = 0.02);
-            
-            pose_t locate();
+    
+            odometry_t<> locate();
         };
     }
 }

@@ -16,7 +16,6 @@
 
 #include "parser_t.hpp"
 
-#include "../pose_t.h"
 #include "utilities/time/stamped_t.h"
 
 namespace marvelmind {

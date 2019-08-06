@@ -137,12 +137,13 @@ void autolabor::fusion_locator_t::refresh() {
     transformer.build(cs, ct, a);
 }
 
-autolabor::pose_t autolabor::fusion_locator_t::operator[](autolabor::pose_t pose) const {
+autolabor::odometry_t<>
+autolabor::fusion_locator_t::operator[](autolabor::odometry_t<> pose) const {
     if (pairs.empty()) return pose;
     Eigen::Vector2d
         location  = transformer(Eigen::Vector2d{pose.x, pose.y}),
         direction = transformer({std::cos(pose.theta), std::sin(pose.theta)});
-    return {location[0], location[1], std::atan2(direction[1], direction[0])};
+    return {0, 0, location[0], location[1], std::atan2(direction[1], direction[0])};
 }
 
 bool autolabor::fusion_locator_t::get_state() {

@@ -10,7 +10,6 @@
 #include "pm1_sdk_native.h"
 #include "path_follower/path_manage.hpp"
 #include "path_follower/path_follower_t.hpp"
-#include "pose_t.h"
 
 #include "navigation_system_t.hh"
 
@@ -51,8 +50,8 @@ int main() {
                     std::error_code _noexcept;
                     std::filesystem::remove(path_file, _noexcept);
                     std::fstream recorder(path_file, std::ios::out);
-                    
-                    auto memory = invalid_pose;
+    
+                    odometry_t<> memory = ODOMETRY_INIT;
                     while (flag) {
                         auto location = system.locate();
                         bool next;

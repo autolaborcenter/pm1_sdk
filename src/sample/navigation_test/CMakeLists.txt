@@ -24,7 +24,6 @@ add_executable(navigation
         particle_filter/particle_filter_t.hh
         particle_filter/particle_filter_t.cc
 
-        pose_t.h
         navigation_system_t.hh
         navigation_system_t.cc
         main.cpp)

@@ -27,8 +27,9 @@ particle_filter_t(size_t size)
 autolabor::odometry_t<>
 autolabor::particle_filter_t::
 operator()(const odometry_t<> &state) const {
-    if (!std::isnan(e_save.theta)) return e + (state - e_save);
-    return ODOMETRY_INIT;
+    return !std::isnan(e_save.theta)
+           ? e + (state - e_save)
+           : odometry_t<>(ODOMETRY_INIT);
 }
 
 constexpr auto epsilon = std::numeric_limits<float>::epsilon();
@@ -68,7 +69,7 @@ update(const odometry_t<> &state,
                        return std::clamp(1 - distance / accept_range, 0.0, 1.0);
                    });
     
-    auto sum = std::accumulate(weights.begin(), weights.end(), .0);
+    const auto sum = std::accumulate(weights.begin(), weights.end(), .0);
     
     // 剩余粒子数量
     if (sum < epsilon) {
@@ -107,16 +108,9 @@ update(const odometry_t<> &state,
     for (auto &item : states) if (*weight++ < 0.2) item = {0, 0, e_x, e_y, spreader(engine)};
     
     // 计算位姿
-    odometry_t<> result{};
-    if (d_theta < d_range) {
-        e_save = state;
-        result = e = {0, 0, e_x, e_y, e_theta};
-    } else if (!std::isnan(e_save.theta))
-        result = e + (state - e_save);
-    else
-        result = ODOMETRY_INIT;
-    
-    return result;
+    return d_theta < d_range
+           ? e_save = state, e = {0, 0, e_x, e_y, e_theta}
+           : operator()(state);
 }
 
 void

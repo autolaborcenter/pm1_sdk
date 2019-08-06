@@ -62,7 +62,6 @@ namespace autolabor {
         std::mt19937       engine;
         
         constexpr static auto
-            update_step    = 0.05,
             accept_range   = 0.2,
             measure_weight = 1.0,
             d_range        = 0.1;

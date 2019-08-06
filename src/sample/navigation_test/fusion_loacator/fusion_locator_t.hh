@@ -8,8 +8,8 @@
 #include <deque>
 #include <fstream>
 #include <utilities/time/time_extensions.h>
+#include <utilities/odometry_t.hpp>
 
-#include "../pose_t.h"
 #include "utilities/time/matcher_t.hpp"
 #include "transformer_t.hpp"
 
@@ -60,7 +60,7 @@ namespace autolabor {
         bool get_state();
         
         /** 变换一个坐标 */
-        [[nodiscard]] pose_t operator[](pose_t pose) const;
+        [[nodiscard]] odometry_t<> operator[](odometry_t<> pose) const;
     };
 } // namespace autolabor
 

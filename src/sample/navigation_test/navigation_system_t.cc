@@ -37,11 +37,14 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
     native::set_enabled(true);
     native::set_command_enabled(false);
     
-    std::error_code _;
-    std::filesystem::remove("locator.txt", _);
-    plot = std::ofstream("locator.txt", std::ios::out);
+    std::condition_variable signal;
     
-    std::thread([this] {
+    std::thread([&, this] {
+        std::error_code _;
+        std::filesystem::remove("locator.txt", _);
+        auto plot       = std::ofstream("locator.txt", std::ios::out);
+        auto first_time = true;
+        
         while (true) {
             double       time_stamp;
             odometry_t<> odometry{};
@@ -52,59 +55,43 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
             decltype(now()) _time_stamp{};
             _time_stamp += std::chrono::duration_cast<std::chrono::milliseconds>(seconds_duration(time_stamp));
             matcher.push_back_helper({_time_stamp, Eigen::Vector3d{odometry.x, odometry.y, odometry.theta}});
-            
-            using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
+    
+            using data_t = marvelmind::mobile_beacon_t::stamped_data_t;
             std::vector<data_t> buffer;
             beacon->fetch(buffer);
     
             for (const auto &item : buffer) matcher.push_back_master(item);
     
-            auto time = measure_time([&] {
-                Eigen::Vector2d target;
-                Eigen::Vector3d source;
-                while (matcher.match(target, source)) {
-                    auto result = particle_filter.update(
-                        odometry_t<>{0, 0, source[0], source[1], source[2]},
-                        Eigen::Vector2d{target[1], target[0]}
-                    );
-                    plot << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
-                    plot.flush();
-                    std::cout << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
+            Eigen::Vector2d target;
+            Eigen::Vector3d source;
+            while (matcher.match(target, source)) {
+                auto result = particle_filter.update(
+                    odometry_t<>{0, 0, source[0], source[1], source[2]},
+                    Eigen::Vector2d{target[1], target[0]});
+                if (std::isnan(result.theta)) continue;
+                plot << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
+                if (first_time) {
+                    signal.notify_all();
+                    first_time = false;
                 }
-            });
+            }
     
-            if (time > 1ms)
-                std::cout << "time = " << 1000 * duration_seconds<double>(time) << std::endl
-                          << "----------------------------------------------" << std::endl;
+            std::this_thread::sleep_for(50ms);
         }
     }).detach();
+    
+    std::mutex                      _lk;
+    std::unique_lock<decltype(_lk)> ulk(_lk);
+    signal.wait(ulk);
 }
 
-autolabor::pose_t autolabor::pm1::navigation_system_t::locate() {
-    //    using data_t = typename marvelmind::mobile_beacon_t::stamped_data_t;
-    //    std::vector<data_t> temp;
-    //    beacon->fetch(temp);
-    //    for (const auto &item : temp) {
-    //        locator.push_back_master(item);
-    //        fusion_loacator.push_back_master(item);
-    //    }
-    //
-    //    auto _now = now();
-    //
-    //    odometry_t<> odometry{};
-    //    native::get_odometry(odometry.s, odometry.a, odometry.x, odometry.y, odometry.theta);
-    //    locator.push_back_helper({_now, {odometry.x, odometry.y}});
-    //    fusion_loacator.push_back_helper({_now, odometry});
-    //    locator.refresh();
-    //
-    //    odometry_t<>    source{};
-    //    Eigen::Vector2d target;
-    //    while (fusion_loacator.match(target, source)) {
-    //        std::cout << duration_seconds<double>(_now.time_since_epoch()) << std::endl;
-    //        particle_filter.update(source, target);
-    //    }
-    
-    return pose_t();
+autolabor::odometry_t<> autolabor::pm1::navigation_system_t::locate() {
+    double       _;
+    odometry_t<> odometry{};
+    native::get_odometry_stamped(_,
+                                 odometry.s, odometry.a,
+                                 odometry.x, odometry.y, odometry.theta);
+    return particle_filter(odometry);
 }
 
 #pragma clang diagnostic pop
