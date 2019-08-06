@@ -1,4 +1,4 @@
-﻿//
+//
 // Created by User on 2019/7/29.
 //
 
@@ -101,7 +101,7 @@ update(const odometry_t<> &state,
     
     // 生成正态分布随机数
     std::normal_distribution<>
-        spreader(e_theta, std::sqrt(std::clamp(d_theta, d_range, 0.8)));
+        spreader(e_theta, std::sqrt(std::clamp(d_theta, d_range, 0.49)));
     
     // 重采样
     weight = weights.cbegin();

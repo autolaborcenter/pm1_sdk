@@ -46,14 +46,7 @@ namespace autolabor {
          * * 匹配元素在整个匹配列表中与主配元素最接近
          */
         bool match(master_t &master, helper_t &helper) {
-            //            std::cout << "masters:" << std::endl;
-            //            for (const auto &item : queue1)
-            //                std::cout << duration_seconds<double>(item.time.time_since_epoch()) << std::endl;
-            //
-            //            std::cout << "helpers:" << std::endl;
-            //            for (const auto &item : queue2)
-            //                std::cout << duration_seconds<double>(item.time.time_since_epoch()) << std::endl;
-            
+            if (queue1.empty() || queue2.empty()) return false;
             auto _master = queue1.begin();     // 主配元素迭代器，每一个都能匹配
             auto _helper = queue2.begin() + 1; // 匹配元素迭代器，至少要有两个
             auto result  = false;
