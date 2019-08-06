@@ -2,8 +2,8 @@
 // Created by User on 2019/4/2.
 //
 
-#ifndef PM1_SDK_PROCESS_CONTROLLER_HH
-#define PM1_SDK_PROCESS_CONTROLLER_HH
+#ifndef PM1_SDK_PROCESS_CONTROLLER_HPP
+#define PM1_SDK_PROCESS_CONTROLLER_HPP
 
 #include <algorithm>
 
@@ -42,4 +42,4 @@ namespace autolabor {
 }
 
 
-#endif //PM1_SDK_PROCESS_CONTROLLER_HH
+#endif //PM1_SDK_PROCESS_CONTROLLER_HPP

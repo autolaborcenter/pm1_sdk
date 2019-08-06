@@ -58,7 +58,7 @@ set(NATIVE_LIBRARY
         pm1_sdk_definitions.h
         pm1_sdk_native.h
         pm1_sdk_native.cpp
-        internal/process_controller.hh
+        internal/process_controller.hpp
         # --------------------------
         # can hub
         internal/can/protocol.hpp
@@ -82,8 +82,8 @@ set(NATIVE_LIBRARY
         # pm1 chassis
         internal/can_define.h
 
-        internal/pm1_odometry_t.h
-        internal/pm1_odometry_t.cpp
+        internal/pm1_odometry_t.hh
+        internal/pm1_odometry_t.cc
 
         internal/chassis.hh
         internal/chassis.cc)

@@ -2,7 +2,7 @@
 // Created by User on 2019/7/25.
 //
 
-#include "pm1_odometry_t.h"
+#include "pm1_odometry_t.hh"
 
 #include <cmath>
 #include <limits>
@@ -85,17 +85,27 @@ autolabor::pm1::pm1_odometry_t::update(
     const pack_with_data &msg,
     const chassis_config_t &config
 ) {
-    auto &motor = left ? _left : _right;
-    auto &mark  = left ? l_mark : r_mark;
+    auto             &motor = left ? _left : _right;
+    decltype(l_mark) *mark,
+                     *other;
+    if (left) {
+        mark  = &l_mark;
+        other = &r_mark;
+    } else {
+        mark  = &r_mark;
+        other = &l_mark;
+    }
     
-    const auto last  = motor;
-    const auto value = RAD_OF(get_data_value<int>(msg), default_wheel_k);
+    const auto last     = motor;
+    const auto value    = RAD_OF(get_data_value<int>(msg), default_wheel_k);
+    const auto sequence = wheels_seq.load();
+    
     motor = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
-    mark.seq = wheels_seq.load();
+    mark->seq = sequence;
     
-    if (l_mark.seq == 0 && r_mark.seq == 0)
-        mark.last = value;
-    else if (l_mark.seq == r_mark.seq) {
+    if (sequence == 0 || other->seq == 0)
+        mark->last = value;
+    else if (other->seq == sequence) {
         std::lock_guard<decltype(update_lock)> lock(update_lock);
         _odometry.value += wheels_to_odometry(_left.value.position - l_mark.last,
                                               _right.value.position - r_mark.last,
@@ -103,8 +113,9 @@ autolabor::pm1::pm1_odometry_t::update(
         _odometry.time = _now;
         l_mark.last    = _left.value.position;
         r_mark.last    = _right.value.position;
-    
-        plot << duration_seconds(_now - origin) << ' '
+        
+        plot << sequence << ' '
+             << duration_seconds(_now - origin) << ' '
              << _odometry.value.x << ' '
              << _odometry.value.y << std::endl;
         plot.flush();

@@ -21,7 +21,7 @@
 #include <utilities/serial_port/serial.h>
 
 #include "internal/chassis.hh"
-#include "internal/process_controller.hh"
+#include "internal/process_controller.hpp"
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "performance-unnecessary-value-param"
