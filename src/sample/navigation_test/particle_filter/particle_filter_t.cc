@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by User on 2019/7/29.
 //
 
@@ -10,6 +10,7 @@
 
 #include <internal/control_model/pi.h>
 #include <numeric>
+#include <iostream>
 
 autolabor::particle_filter_t::
 particle_filter_t(size_t size)
