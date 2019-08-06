@@ -63,7 +63,7 @@ const float
     chassis::default_max_v           = default_max_wheel_speed,
     chassis::default_max_w           = pi_f / 4,
     chassis::default_optimize_width  = pi_f / 4,
-    chassis::default_acceleration    = 10;
+    chassis::default_acceleration    = 1;
 
 #if   defined(WIN32)
 
@@ -148,7 +148,7 @@ chassis::chassis(const std::string &port_name)
                     break;
                 case pm1_odometry_t::result_type::none: {
                     const auto last  = _rudder;
-                    const auto value = RAD_OF(get_data_value<short>(result.message), default_wheel_k);
+                    const auto value = RAD_OF(get_data_value<short>(result.message), default_rudder_k);
                     _rudder = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
                 }
                     temp[2] = true;
@@ -242,7 +242,7 @@ chassis::chassis(const std::string &port_name)
             } else if (tcu<0>::current_position_rx::match(msg)) {
         
                 const auto last  = _rudder;
-                const auto value = RAD_OF(get_data_value<short>(result.message), default_wheel_k);
+                const auto value = RAD_OF(get_data_value<short>(result.message), default_rudder_k);
                 _rudder = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
                 
                 if (std::isnan(target.rudder) || now() - request_time > control_timeout)
