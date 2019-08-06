@@ -16,12 +16,17 @@ autolabor::pm1::pm1_odometry_t::pm1_odometry_t()
     : wheels_seq(0),
       origin(now()) {
     std::error_code _;
-    std::filesystem::remove("odometry.txt", _);
-    plot = std::ofstream("odometry.txt", std::ios::out);
+    
+    std::filesystem::remove("odometry1.txt", _);
+    std::filesystem::remove("odometry2.txt", _);
+    
+    plot1 = std::ofstream("odometry1.txt", std::ios::out);
+    plot2 = std::ofstream("odometry2.txt", std::ios::out);
 }
 
 void
 autolabor::pm1::pm1_odometry_t::ask(serial_port &port) {
+    plot2 << duration_seconds(now() - origin) << std::endl;
     const auto msg = autolabor::can::pack<ecu<>::current_position_tx>();
     port.send(bytes_begin(msg), sizeof(decltype(msg)));
     ++wheels_seq;
@@ -113,11 +118,10 @@ autolabor::pm1::pm1_odometry_t::update(
         _odometry.time = _now;
         l_mark.last    = _left.value.position;
         r_mark.last    = _right.value.position;
-        
-        plot << sequence << ' '
-             << duration_seconds(_now - origin) << ' '
-             << _odometry.value.x << ' '
-             << _odometry.value.y << std::endl;
-        plot.flush();
+    
+        plot1 << sequence
+              << ' ' << duration_seconds(_now - origin)
+              << ' ' << _odometry.value.x
+              << ' ' << _odometry.value.y << std::endl;
     }
 }

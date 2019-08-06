@@ -47,7 +47,7 @@ namespace autolabor {
         private:
             // 日志
             decltype(now()) origin;
-            std::ofstream   plot;
+            std::ofstream   plot1, plot2;
             
             // 电机通信应答序号
             std::atomic_ulong

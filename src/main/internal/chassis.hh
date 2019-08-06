@@ -107,6 +107,7 @@ namespace autolabor {
             /** 电机数据 */
             stamped_t<motor_t> _rudder{};
     
+            /** 里程计 */
             pm1_odometry_t _odometry{};
             
             /** 电池电量 */

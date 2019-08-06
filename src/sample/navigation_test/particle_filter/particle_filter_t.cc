@@ -18,6 +18,7 @@ particle_filter_t(size_t size)
       match_save({}),
       e_save(ODOMETRY_INIT),
       e({}) {
+    origin = now();
     std::error_code _;
     std::filesystem::remove("particle_filter.txt", _);
     plot = std::ofstream("particle_filter.txt", std::ios::out);
@@ -44,16 +45,14 @@ update(const odometry_t<> &state,
     
     // 计算控制量
     auto delta = state - match_save;
-    plot << state.x << ' '
+    plot << duration_seconds(now() - origin) << ' '
+         << state.x << ' '
          << state.y << ' '
          << measure[0] << ' '
          << measure[1] << ' '
          << Eigen::Vector2d{delta.x, delta.y}.norm() << ' '
          << (measure - measure_save).norm() << std::endl;
     
-    // 过滤
-    if (Eigen::Vector2d{delta.x, delta.y}.norm() < update_step)
-        return operator()(state);
     match_save   = state;
     measure_save = measure;
     
@@ -117,7 +116,6 @@ update(const odometry_t<> &state,
     else
         result = ODOMETRY_INIT;
     
-    plot.flush();
     return result;
 }
 

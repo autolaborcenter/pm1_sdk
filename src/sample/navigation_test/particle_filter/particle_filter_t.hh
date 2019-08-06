@@ -13,6 +13,7 @@
 #include <eigen3/Eigen/Core>
 
 #include <utilities/odometry_t.hpp>
+#include <utilities/time/time_extensions.h>
 
 namespace autolabor {
     /**
@@ -47,9 +48,10 @@ namespace autolabor {
     
     private:
         void initialize(const odometry_t<> &, const Eigen::Vector2d &);
-        
-        std::ofstream plot;
     
+        decltype(now()) origin;
+        std::ofstream   plot;
+        
         Eigen::Vector2d measure_save;
         
         odometry_t<> match_save,

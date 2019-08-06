@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <condition_variable>
+#include <filesystem>
 
 #include <utilities/serial_parser/parse_engine.hpp>
 #include <utilities/differentiator_t.hpp>
@@ -188,6 +189,13 @@ chassis::chassis(const std::string &port_name)
         auto       speed = .0f;
     
         std::array<decltype(now()), 4> reply_time{t0, t0, t0, t0};
+    
+        std::ofstream   left_time, right_time;
+        std::error_code _;
+        std::filesystem::remove("left.txt", _);
+        std::filesystem::remove("right.txt", _);
+        left_time  = std::ofstream("left.txt", std::ios::out);
+        right_time = std::ofstream("right.txt", std::ios::out);
         
         auto parse = [&](const autolabor::can::parser_t::result_t &result) {
             if (result.type != result_t::message) return;
@@ -237,8 +245,6 @@ chassis::chassis(const std::string &port_name)
             } else if (vcu<0>::battery_percent_rx::match(msg)) {
                 _battery = *msg.data;
         
-            } else if (_odometry.try_parse(_now, msg, config) == pm1_odometry_t::result_type::none) {
-            
             } else if (tcu<0>::current_position_rx::match(msg)) {
         
                 const auto last  = _rudder;
@@ -263,6 +269,17 @@ chassis::chassis(const std::string &port_name)
                     port << pack_value<ecu<0>::target_speed, int>(left)
                          << pack_value<ecu<1>::target_speed, int>(right)
                          << pack_value<tcu<0>::target_position, short>(rudder);
+            } else {
+                switch (_odometry.try_parse(_now, msg, config)) {
+                    case pm1_odometry_t::result_type::none:
+                        break;
+                    case pm1_odometry_t::result_type::left:
+                        left_time << duration_seconds(_now - t0) << std::endl;
+                        break;
+                    case pm1_odometry_t::result_type::right:
+                        right_time << duration_seconds(_now - t0) << std::endl;
+                        break;
+                }
             }
         };
         

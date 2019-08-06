@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories($ENV{EIGEN_INCLUDE_DIR})
+include_directories($ENV{EIGEN_ROOT}/include)
 
 # navigation
 add_executable(navigation
