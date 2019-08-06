@@ -97,12 +97,6 @@ constexpr auto
 constexpr auto
     delay_interval      = std::chrono::milliseconds(max_of(5, timeout_gcd - 1));
 
-struct wheel_mark_t {
-    unsigned long seq;
-    double        last,
-                  current;
-};
-
 chassis::chassis(const std::string &port_name)
     : port(port_name, 115200, timeout),
       running(true),
@@ -154,7 +148,7 @@ chassis::chassis(const std::string &port_name)
                     break;
                 case pm1_odometry_t::result_type::none: {
                     const auto last  = _rudder;
-                    const auto value = RAD_OF(get_data_value<int>(result.message), default_wheel_k);
+                    const auto value = RAD_OF(get_data_value<short>(result.message), default_wheel_k);
                     _rudder = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
                 }
                     temp[2] = true;
@@ -248,7 +242,7 @@ chassis::chassis(const std::string &port_name)
             } else if (tcu<0>::current_position_rx::match(msg)) {
         
                 const auto last  = _rudder;
-                const auto value = RAD_OF(get_data_value<int>(result.message), default_wheel_k);
+                const auto value = RAD_OF(get_data_value<short>(result.message), default_wheel_k);
                 _rudder = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
                 
                 if (std::isnan(target.rudder) || now() - request_time > control_timeout)
