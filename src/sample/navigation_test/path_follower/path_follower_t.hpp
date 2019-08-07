@@ -9,6 +9,7 @@
 #include "virtual_light_sensor_t.hpp"
 
 #include <algorithm>
+#include <internal/control_model/pi.h>
 
 namespace path_follower {
     /**
@@ -27,8 +28,6 @@ namespace path_follower {
         path_iterator_t
             local_begin,
             local_end;
-    
-        double d = 0;
     
     public:
         double speed = 0.25;
@@ -92,13 +91,9 @@ namespace path_follower {
             if (result.local_count == 0)
                 return {NAN, NAN};
             // 正常情况
-            if (result.tip_order == 255) {
-                auto dd = result.error - d;
-                d = result.error;
-                
+            if (result.tip_order == 255)
                 return {std::max(0.06, speed - 20 * result.local_size),
-                        std::clamp(-PI * 5 / 12 * result.error + d, -PI / 2, PI / 2)};
-            }
+                        std::clamp(-M_PI / 10 * result.error, -M_PI / 2.0, M_PI / 2.0)};
             
             auto direction = local_begin + result.tip_order;
             // 到达路径终点
@@ -107,8 +102,8 @@ namespace path_follower {
             // 遭遇尖点
             auto error = std::atan2(direction->y - local_begin->y,
                                     direction->x - local_begin->x) - theta;
-            while (error > +PI) error -= 2 * PI;
-            while (error < -PI) error += 2 * PI;
+            while (error > +M_PI) error -= 2 * M_PI;
+            while (error < -M_PI) error += 2 * M_PI;
             ++local_begin;
             return {NAN, error};
         }
