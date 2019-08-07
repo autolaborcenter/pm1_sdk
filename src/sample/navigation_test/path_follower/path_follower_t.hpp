@@ -28,6 +28,8 @@ namespace path_follower {
             local_begin,
             local_end;
     
+        double d = 0;
+    
     public:
         double speed = 0.25;
         
@@ -90,9 +92,13 @@ namespace path_follower {
             if (result.local_count == 0)
                 return {NAN, NAN};
             // 正常情况
-            if (result.tip_order == 255)
+            if (result.tip_order == 255) {
+                auto dd = result.error - d;
+                d = result.error;
+                
                 return {std::max(0.06, speed - 20 * result.local_size),
-                        -PI / 2 * result.error};
+                        std::clamp(-PI * 5 / 12 * result.error + d, -PI / 2, PI / 2)};
+            }
             
             auto direction = local_begin + result.tip_order;
             // 到达路径终点
