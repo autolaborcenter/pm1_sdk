@@ -124,6 +124,10 @@ int main() {
                             break;
                         case state_t::failed:
                             std::cerr << "following failed" << std::endl;
+                            std::cerr << "current: "
+                                      << pose.x << ' '
+                                      << pose.y << ' '
+                                      << pose.theta << std::endl;
                         case state_t::finish:
                             std::cout << "stopped" << std::endl;
                             finish = true;

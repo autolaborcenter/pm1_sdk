@@ -67,7 +67,7 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
             while (matcher.match(target, source)) {
                 auto result = particle_filter.update(
                     odometry_t<>{0, 0, source[0], source[1], source[2]},
-                    Eigen::Vector2d{target[1], target[0]});
+                    Eigen::Vector2d{target[0], target[1]});
                 if (first_time)
                     std::cout << result.x << ' ' << result.y << ' ' << result.theta << std::endl;
                 if (std::isnan(result.theta)) continue;
