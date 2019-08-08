@@ -91,7 +91,7 @@ int main() {
                 
                 // 加载控制器
                 path_follower::path_follower_t<decltype(path)>
-                    controller(.3, .0, .25);
+                    controller(.25, .0, .25);
                 using state_t = typename decltype(controller)::following_state_t;
                 
                 // 初始化
@@ -117,9 +117,11 @@ int main() {
                             std::this_thread::sleep_for(100ms);
                             {
                                 double ignore;
-                                native::drive_spatial(0, result.rudder > 0 ? 0.4 : -0.4,
-                                                      0, result.rudder,
-                                                      ignore);
+                                native::drive_spatial(
+                                    0,
+                                    result.rudder > 0 ? 0.4 : -0.4,
+                                    0, result.rudder,
+                                    ignore);
                             }
                             break;
                         case state_t::failed:

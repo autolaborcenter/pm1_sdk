@@ -12,6 +12,7 @@
 #include <vector>
 #include <fstream>
 #include <eigen3/Eigen/Core>
+#include <internal/control_model/pi.h>
 
 namespace path_follower {
     /**
@@ -23,9 +24,14 @@ namespace path_follower {
      * @param order 阶数
      */
     template<class iterator_t>
-    void check_tip(iterator_t begin, iterator_t end, uint8_t order) {
+    void check_tip(iterator_t begin,
+                   iterator_t end,
+                   uint8_t order,
+                   double tip_range) {
         if (order > 1)
-            check_tip(begin, end, order - 1);
+            check_tip(begin, end, order - 1, tip_range);
+        if (end - begin < 2 * order + 1)
+            return;
         
         for (auto item = begin + order; item < end - order; ++item) {
             if (item->tip_order < order)
@@ -35,7 +41,7 @@ namespace path_follower {
                             p2{(item + order)->x, (item + order)->y},
                             v0 = p1 - p0,
                             v1 = p2 - p1;
-            if (v0.dot(v1) < 0.5 * v0.norm() * v1.norm())
+            if (v0.dot(v1) < std::cos(tip_range) * v0.norm() * v1.norm())
                 item->tip_order = order;
         }
     }
@@ -46,12 +52,16 @@ namespace path_follower {
      * @param filename 文件名
      * @return 路径
      */
-    std::vector<point_t> load_path(const std::string &filename) {
+    std::vector<point_t> load_path(
+        const std::string &filename,
+        uint8_t tip_order = 2,
+        double tip_range = M_PI * 5 / 12
+    ) {
         std::vector<point_t> path{};
         
         // 读取
         std::fstream file(filename, std::ios::in);
-        for (size_t  i = 0;; ++i) {
+        while (true) {
             point_t temp{};
             if (!(file >> temp.x >> temp.y)) break;
             path.push_back(temp);
@@ -61,7 +71,7 @@ namespace path_follower {
         path.shrink_to_fit();
         path.back().tip_order = 1;
         // 尖点检测
-        check_tip(path.begin(), path.end(), 2);
+        check_tip(path.begin(), path.end(), tip_order, tip_range);
         return path;
     }
 }
