@@ -65,6 +65,7 @@ int main() {
                         if (next) {
                             memory = location;
                             recorder << memory.x << ' ' << memory.y << std::endl;
+                            std::cout << memory.x << ' ' << memory.y << std::endl;
                         }
                         
                         recorder.flush();
@@ -82,8 +83,8 @@ int main() {
                 break;
             case operation_t::navigate: { // 进行导航
                 std::error_code _noexcept;
-                std::filesystem::remove(navigation_file, _noexcept);
-                std::fstream plot(navigation_file, std::ios::out);
+                //                std::filesystem::remove(navigation_file, _noexcept);
+                std::fstream    plot(navigation_file, std::ios::app);
                 
                 // 加载路径
                 auto path = path_follower::load_path(path_file);
@@ -91,7 +92,7 @@ int main() {
                 
                 // 加载控制器
                 path_follower::path_follower_t<decltype(path)>
-                    controller(.25, .0, .25);
+                    controller(.40, .0, .45);
                 using state_t = typename decltype(controller)::following_state_t;
                 
                 // 初始化
@@ -101,15 +102,16 @@ int main() {
                 auto finish = false;
                 while (!finish) {
                     using namespace std::chrono_literals;
-                    
-                    auto pose = system.locate();
-                    
-                    auto result = controller(pose.x, pose.y, pose.theta);
+    
+                    auto   pose = system.locate();
+                    double rudder;
+                    native::get_rudder(rudder);
+    
+                    auto result = controller(pose.x, pose.y, pose.theta, rudder);
                     
                     switch (result.type()) {
                         case state_t::following:
-                            std::cout << "following: " << result.speed << std::endl;
-                            native::drive_physical(result.speed, result.rudder);
+                            native::drive_velocity(result.speed, result.rudder);
                             break;
                         case state_t::turning:
                             std::cout << "turning" << std::endl;
