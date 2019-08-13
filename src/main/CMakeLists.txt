@@ -112,12 +112,14 @@ if (UNIX)
     target_link_libraries(pm1_sdk_native pthread atomic)
 endif ()
 
+set(INSTALL_DIR build)
+
 # 指定安装路径
-install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
-install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/native)
+install(TARGETS pm1_sdk_native DESTINATION ${PROJECT_SOURCE_DIR}/${INSTALL_DIR}/${ARCH}/native)
+install(FILES pm1_sdk_native.h DESTINATION ${PROJECT_SOURCE_DIR}/${INSTALL_DIR}/${ARCH}/native)
 
-install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)
-install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/lib)
+install(TARGETS pm1_sdk DESTINATION ${PROJECT_SOURCE_DIR}/${INSTALL_DIR}/${ARCH}/lib)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/${INSTALL_DIR}/${ARCH}/lib)
 
-install(TARGETS pm1_sdk_shared DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/shared)
-install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/out/${ARCH}/shared)
+install(TARGETS pm1_sdk_shared DESTINATION ${PROJECT_SOURCE_DIR}/${INSTALL_DIR}/${ARCH}/shared)
+install(FILES pm1_sdk.h DESTINATION ${PROJECT_SOURCE_DIR}/${INSTALL_DIR}/${ARCH}/shared)
