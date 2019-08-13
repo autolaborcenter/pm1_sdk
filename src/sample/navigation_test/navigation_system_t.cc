@@ -5,6 +5,7 @@
 #include "navigation_system_t.hh"
 
 #include <thread>
+#include <condition_variable>
 #include <iostream>
 #include <filesystem>
 #include "pm1_sdk_native.h"

@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <conio.h>
 #include <eigen3/Eigen/Core>
 #include "fusion_locator_t.hh"
 

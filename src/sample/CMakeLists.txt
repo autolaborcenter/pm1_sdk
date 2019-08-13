@@ -8,5 +8,5 @@ add_subdirectory(faselase_test)
 add_subdirectory(test_sample)
 
 # test
-add_executable(pm1_sdk_sample user_sample/continuous_control.cpp)
+add_executable(pm1_sdk_sample user_sample/initialization.cpp)
 target_link_libraries(pm1_sdk_sample pm1_sdk)
