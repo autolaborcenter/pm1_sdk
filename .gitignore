@@ -8,7 +8,7 @@
 # cmake
 out/
 build/
-cmake-build-*/
+cmake-build*/
 
 # vs
 vs_project/pm1_sdk/Debug/
