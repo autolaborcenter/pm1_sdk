@@ -6,8 +6,6 @@
 #define PM1_SDK_PM1_ODOMETRY_T_HH
 
 
-#include <fstream>
-
 #include <utilities/odometry_t.hpp>
 #include <utilities/serial_port/serial_port.hh>
 #include <utilities/time/stamped_t.h>
@@ -47,7 +45,6 @@ namespace autolabor {
         private:
             // 日志
             decltype(now()) origin;
-            std::ofstream   plot1, plot2;
             
             // 电机通信应答序号
             std::atomic_ulong

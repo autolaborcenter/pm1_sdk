@@ -6,7 +6,6 @@
 
 #include <cmath>
 #include <condition_variable>
-#include <filesystem>
 
 #include <utilities/serial_parser/parse_engine.hpp>
 #include <utilities/differentiator_t.hpp>
