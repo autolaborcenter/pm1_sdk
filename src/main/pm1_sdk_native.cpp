@@ -328,27 +328,19 @@ get_rudder(double &rudder) noexcept {
 handler_t
 STD_CALL
 autolabor::pm1::native::
-get_odometry_c(double *s, double *sa,
+get_odometry_c(double *stamp,
+               double *s, double *sa,
                double *x, double *y, double *theta) noexcept {
-    return get_odometry(*s, *sa,
+    return get_odometry(*stamp, *s, *sa,
                         *x, *y, *theta);
 }
 
 handler_t
 STD_CALL
 autolabor::pm1::native::
-get_odometry(double &s, double &a,
+get_odometry(double &stamp,
+             double &s, double &a,
              double &x, double &y, double &theta) noexcept {
-    double _;
-    return get_odometry_stamped(_, s, a, x, y, theta);
-}
-
-handler_t
-STD_CALL
-autolabor::pm1::native::
-get_odometry_stamped(double &stamp,
-                     double &s, double &a,
-                     double &x, double &y, double &theta) noexcept {
     handler_t id = ++task_id;
     try {
         chassis_ptr.read<void>([&](ptr_t ptr) {

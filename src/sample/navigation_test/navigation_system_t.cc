@@ -49,10 +49,10 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
         while (true) {
             double       time_stamp;
             odometry_t<> odometry{};
-            native::get_odometry_stamped(time_stamp,
-                                         odometry.s, odometry.a,
-                                         odometry.x, odometry.y, odometry.theta);
-    
+            native::get_odometry(time_stamp,
+                                 odometry.s, odometry.a,
+                                 odometry.x, odometry.y, odometry.theta);
+            
             decltype(now()) _time_stamp{};
             _time_stamp += std::chrono::duration_cast<std::chrono::milliseconds>(seconds_duration(time_stamp));
             matcher.push_back_helper({_time_stamp, Eigen::Vector3d{odometry.x, odometry.y, odometry.theta}});
@@ -91,9 +91,9 @@ autolabor::pm1::navigation_system_t::navigation_system_t(
 autolabor::odometry_t<> autolabor::pm1::navigation_system_t::locate() {
     double       _;
     odometry_t<> odometry{};
-    native::get_odometry_stamped(_,
-                                 odometry.s, odometry.a,
-                                 odometry.x, odometry.y, odometry.theta);
+    native::get_odometry(_,
+                         odometry.s, odometry.a,
+                         odometry.x, odometry.y, odometry.theta);
     return particle_filter(odometry);
 }
 
