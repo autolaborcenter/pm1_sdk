@@ -29,6 +29,8 @@ namespace path_follower {
             local_begin,
             local_end;
     
+        double d = 0, i = 0;
+    
     public:
         double speed = 0.1;
         
@@ -83,7 +85,7 @@ namespace path_follower {
          * @param y     机器人位置 y
          * @param theta 机器人方向
          */
-        result_t operator()(double x, double y, double theta) {
+        result_t operator()(double x, double y, double theta, double rudder) {
             auto end_ignore = local_end;
             auto result     = sensor({x, y}, theta, local_begin, end_ignore);
             
@@ -91,9 +93,24 @@ namespace path_follower {
             if (result.local_count == 0)
                 return {NAN, NAN};
             // 正常情况
-            if (result.tip_order == 255)
-                return {std::max(0.06, speed - 20 * result.local_size),
-                        std::clamp(-M_PI / 10 * result.error, -M_PI / 2.0, M_PI / 2.0)};
+            if (result.tip_order == 255) {
+                i += result.error;
+                if (std::abs(result.error) < 0.01 || result.error * d < 0)
+                    i = 0;
+        
+                auto dd = result.error - d;
+                d = result.error;
+        
+                std::cout << rudder << ' '
+                          << result.error << ' '
+                          << 5 * dd << ' '
+                          << 0.02 * i << std::endl;
+                return {std::max(.0, speed - std::abs(result.error) / 30),
+                        std::clamp(M_PI / 12 * (result.error + 5 * dd + 0.02 * i),
+                                   -M_PI / 2.0,
+                                   +M_PI / 2.0)};
+            }
+            
             
             auto direction = local_begin + result.tip_order;
             // 到达路径终点

@@ -243,6 +243,8 @@ chassis::chassis(const std::string &port_name)
         
                 const auto last  = _rudder;
                 const auto value = RAD_OF(get_data_value<short>(result.message), default_rudder_k);
+                if (value < -M_PI / 2 || M_PI / 2 < value)
+                    return;
                 _rudder = {_now, {value, value - last.value.position / duration_seconds(_now - last.time)}};
                 
                 if (std::isnan(target.rudder) || now() - request_time > control_timeout)

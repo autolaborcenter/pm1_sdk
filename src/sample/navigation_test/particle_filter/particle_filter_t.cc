@@ -46,14 +46,6 @@ update(const odometry_t<> &state,
     
     // 计算控制量
     auto delta = state - match_save;
-    plot << duration_seconds(now() - origin) << ' '
-         << state.x << ' '
-         << state.y << ' '
-         << measure[0] << ' '
-         << measure[1] << ' '
-         << Eigen::Vector2d{delta.x, delta.y}.norm() << ' '
-         << (measure - measure_save).norm() << std::endl;
-    
     match_save   = state;
     measure_save = measure;
     
@@ -105,7 +97,23 @@ update(const odometry_t<> &state,
     
     // 重采样
     weight = weights.cbegin();
-    for (auto &item : states) if (*weight++ < 0.2) item = {0, 0, e_x, e_y, spreader(engine)};
+    size_t    t = 0;
+    for (auto &item : states)
+        if (*weight++ < 0.2) {
+            ++t;
+            item = {0, 0, e_x, e_y, spreader(engine)};
+        }
+    
+    plot << duration_seconds(now() - origin) << ' '
+         << state.x << ' '
+         << state.y << ' '
+         << measure[0] << ' '
+         << measure[1] << ' '
+         << Eigen::Vector2d{delta.x, delta.y}.norm() << ' '
+         << (measure - measure_save).norm() << ' '
+         << t << ' '
+         << sum << ' '
+         << d_theta << std::endl;
     
     // 计算位姿
     return d_theta < d_range
