@@ -38,12 +38,6 @@ autolabor::odometry_t<>
 autolabor::particle_filter_t::
 update(const odometry_t<> &state,
        const Eigen::Vector2d &measure) {
-    // 追踪丢失，重新初始化
-    if (states.empty()) {
-        initialize(state, measure);
-        return ODOMETRY_INIT;
-    }
-    
     // 计算控制量
     auto delta = state - match_save;
     match_save   = state;
