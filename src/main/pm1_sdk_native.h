@@ -190,6 +190,16 @@ namespace autolabor {
                           double spatium,
                           double angle,
                           double &progress) noexcept;
+    
+            /**
+             * 按里程度量约束行驶（指针版）
+             */
+            DLL_EXPORT handler_t STD_CALL
+            drive_spatial_c(double v,
+                            double w,
+                            double spatium,
+                            double angle,
+                            double *progress) noexcept;
             
             /**
              * 按时间约束行驶

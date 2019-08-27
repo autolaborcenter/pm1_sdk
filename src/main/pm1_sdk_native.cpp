@@ -613,6 +613,17 @@ drive_spatial(double v,
 handler_t
 STD_CALL
 autolabor::pm1::native::
+drive_spatial_c(double v,
+                double w,
+                double spatium,
+                double angle,
+                double *progress) noexcept {
+    return drive_spatial(v, w, spatium, angle, *progress);
+}
+
+handler_t
+STD_CALL
+autolabor::pm1::native::
 drive_timing(double v,
              double w,
              double time,
