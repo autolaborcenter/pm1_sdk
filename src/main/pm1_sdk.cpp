@@ -39,7 +39,7 @@ autolabor::pm1::initialize(const std::string &port,
     auto   error   = std::string(native::get_error_info(handler));
     native::remove_error_info(handler);
     
-    return {error, std::string(native::get_current_port())};
+    return {error, std::string(native::get_connected_port())};
 }
 
 autolabor::pm1::result<void>

@@ -91,7 +91,7 @@ std::string current_port;
 const char *
 STD_CALL
 autolabor::pm1::native::
-get_current_port() noexcept {
+get_connected_port() noexcept {
     return current_port.c_str();
 }
 

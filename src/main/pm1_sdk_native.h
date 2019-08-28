@@ -19,19 +19,19 @@ namespace autolabor {
             using handler_t = unsigned int;
             
             /**
-             * 获取错误信息
+             * 从错误管理器获取错误信息
              */
             DLL_EXPORT const char *STD_CALL
             get_error_info(handler_t) noexcept;
             
             /**
-             * 移除错误信息
+             * 从错误管理器移除错误信息
              */
             DLL_EXPORT void STD_CALL
             remove_error_info(handler_t) noexcept;
             
             /**
-             * 清除错误信息
+             * 从错误管理器清除所有错误信息
              */
             DLL_EXPORT void STD_CALL
             clear_error_info() noexcept;
@@ -40,7 +40,7 @@ namespace autolabor {
              * 获取当前打开的串口名字
              */
             DLL_EXPORT const char *STD_CALL
-            get_current_port() noexcept;
+            get_connected_port() noexcept;
     
             /**
              * 初始化（指针版）
@@ -63,19 +63,19 @@ namespace autolabor {
             shutdown() noexcept;
             
             /**
-             * 获取默认参数
+             * 获取参数默认值
              */
             DLL_EXPORT double STD_CALL
             get_default_parameter(handler_t id) noexcept;
     
             /**
-             * 获取参数（指针版）
+             * 获取参数当前值（指针版）
              */
             DLL_EXPORT handler_t STD_CALL
             get_parameter_c(handler_t id, double *value) noexcept;
             
             /**
-             * 获取参数
+             * 获取参数当前值
              */
             DLL_EXPORT handler_t STD_CALL
             get_parameter(handler_t id, double &value) noexcept;
@@ -87,7 +87,7 @@ namespace autolabor {
             set_parameter(handler_t id, double value) noexcept;
             
             /**
-             * 重置参数
+             * 重置参数值到默认值
              */
             DLL_EXPORT handler_t STD_CALL
             reset_parameter(handler_t id) noexcept;
@@ -99,13 +99,13 @@ namespace autolabor {
             get_battery_percent(double &battery_percent) noexcept;
             
             /**
-             * 获取后轮转角（指针版）
+             * 获取后轮方向角（指针版）
              */
             DLL_EXPORT handler_t STD_CALL
             get_rudder_c(double *rudder) noexcept;
     
             /**
-             * 获取后轮转角
+             * 获取后轮方向角
              */
             DLL_EXPORT handler_t STD_CALL
             get_rudder(double &rudder) noexcept;
