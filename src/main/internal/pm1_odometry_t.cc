@@ -6,7 +6,6 @@
 
 #include <cmath>
 #include <limits>
-#include <filesystem>
 
 extern "C" {
 #include "control_model/motor_map.h"
@@ -14,12 +13,7 @@ extern "C" {
 
 autolabor::pm1::pm1_odometry_t::pm1_odometry_t()
     : wheels_seq(0),
-      origin(now()) {
-    std::error_code _;
-    
-    std::filesystem::remove("odometry1.txt", _);
-    std::filesystem::remove("odometry2.txt", _);
-}
+      origin(now()) {}
 
 void
 autolabor::pm1::pm1_odometry_t::ask(serial_port &port) {

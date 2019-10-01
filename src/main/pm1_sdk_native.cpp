@@ -86,13 +86,13 @@ clear_error_info() noexcept {
     exceptions.clear();
 }
 
-std::string current_port;
+std::string connected_port;
 
 const char *
 STD_CALL
 autolabor::pm1::native::
 get_connected_port() noexcept {
-    return current_port.c_str();
+    return connected_port.c_str();
 }
 
 double
@@ -259,13 +259,13 @@ initialize_c(const char *port,
             *progress = static_cast<double>(i - list.begin()) / list.size();
             try {
                 auto ptr = std::make_shared<chassis>(*i);
-                
+    
                 chassis_ptr(ptr);
                 builder.str("");
-                odometry_mark = ptr->odometry().value;
-                current_port  = *i;
-                pause_flag    = false;
-                cancel_flag   = false;
+                odometry_mark  = ptr->odometry().value;
+                connected_port = *i;
+                pause_flag     = false;
+                cancel_flag    = false;
                 break;
             }
             catch (std::exception &e) {
@@ -298,7 +298,7 @@ shutdown() noexcept {
     handler_t id = ++task_id;
     if (!chassis_ptr(nullptr))
         exceptions.set(id, "null chassis pointer");
-    current_port.clear();
+    connected_port.clear();
     return id;
 }
 
