@@ -3,8 +3,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(../main)
 
-add_subdirectory(navigation_test)
-add_subdirectory(faselase_test)
 add_subdirectory(test_sample)
 
 # test
