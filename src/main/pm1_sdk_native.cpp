@@ -258,8 +258,12 @@ initialize_c(const char *port,
         for (auto i = list.begin();;) {
             *progress = static_cast<double>(i - list.begin()) / list.size();
             try {
+                #ifdef __GNUC__
+                const static std::string except = "/dev/ttyS";
+                if (i->substr(0, except.size()) == except)throw std::logic_error("pass ttyS.");
+                #endif
                 auto ptr = std::make_shared<chassis>(*i);
-    
+                
                 chassis_ptr(ptr);
                 builder.str("");
                 odometry_mark  = ptr->odometry().value;
