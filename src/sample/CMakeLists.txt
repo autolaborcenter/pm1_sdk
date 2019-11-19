@@ -6,5 +6,5 @@ include_directories(../main)
 add_subdirectory(test_sample)
 
 # test
-add_executable(pm1_sdk_sample user_sample/initialization.cpp)
+add_executable(pm1_sdk_sample api_sample/get_odometry.cpp)
 target_link_libraries(pm1_sdk_sample pm1_sdk)

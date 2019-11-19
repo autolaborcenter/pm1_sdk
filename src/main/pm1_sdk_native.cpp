@@ -260,7 +260,7 @@ initialize_c(const char *port,
             try {
                 #ifdef __GNUC__
                 const static std::string except = "/dev/ttyS";
-                if (i->substr(0, except.size()) == except)throw std::logic_error("pass ttyS.");
+                if (list.size() == 1 && i->substr(0, except.size()) == except) throw std::logic_error("skip ttyS.");
                 #endif
                 auto ptr = std::make_shared<chassis>(*i);
                 

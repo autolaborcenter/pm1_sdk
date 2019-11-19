@@ -97,7 +97,8 @@ autolabor::pm1::lock() {
     return on_native(native::set_enabled(false));
 }
 
-autolabor::pm1::result<void> autolabor::pm1::unlock() {
+autolabor::pm1::result<void>
+autolabor::pm1::unlock() {
     return on_native(native::set_enabled(true));
 }
 
