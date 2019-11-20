@@ -62,8 +62,8 @@ namespace autolabor {
             using uptime_tx      = typename dialog<unit, 0x88>::tx;
             using uptime_rx      = typename dialog<unit, 0x88>::rx;
             // 紧急停止
-            using emergency_stop = typename dialog<unit, 0xff>::tx;
-            using release_stop   = typename dialog<unit, 0xff>::rx;
+            using emergency_stop = typename dialog<unit, 0xff>::sgn;
+            using release_stop   = typename dialog<unit, 0xff>::msg;
         };
         
         /** 整车控制器包信息协议 */
@@ -72,21 +72,24 @@ namespace autolabor {
         public:
             constexpr static uint8_t type_id    = 0x10;
             constexpr static uint8_t node_index = _node_index;
-            
+    
             // 电池
-            using battery_percent_tx  = typename dialog<vcu, 0x1>::tx;
-            using battery_percent_rx  = typename dialog<vcu, 0x1>::rx;
-            using battery_time_tx     = typename dialog<vcu, 0x2>::tx;
-            using battery_time_rx     = typename dialog<vcu, 0x2>::rx;
-            using battery_quantity_tx = typename dialog<vcu, 0x3>::tx;
-            using battery_quantity_rx = typename dialog<vcu, 0x3>::rx;
-            using battery_voltage_tx  = typename dialog<vcu, 0x4>::tx;
-            using battery_voltage_rx  = typename dialog<vcu, 0x4>::rx;
-            using battery_current_tx  = typename dialog<vcu, 0x5>::tx;
-            using battery_current_rx  = typename dialog<vcu, 0x5>::rx;
+            using battery_percent_tx  = typename dialog<vcu, 1>::tx;
+            using battery_percent_rx  = typename dialog<vcu, 1>::rx;
+            using battery_time_tx     = typename dialog<vcu, 2>::tx;
+            using battery_time_rx     = typename dialog<vcu, 2>::rx;
+            using battery_quantity_tx = typename dialog<vcu, 3>::tx;
+            using battery_quantity_rx = typename dialog<vcu, 3>::rx;
+            using battery_voltage_tx  = typename dialog<vcu, 4>::tx;
+            using battery_voltage_rx  = typename dialog<vcu, 4>::rx;
+            using battery_current_tx  = typename dialog<vcu, 5>::tx;
+            using battery_current_rx  = typename dialog<vcu, 5>::rx;
+            // 手柄
+            using control_pad_tx      = typename dialog<vcu, 6>::tx;
+            using control_pad_rx      = typename dialog<vcu, 6>::rx;
             // 急停开关
-            using power_switch_tx     = typename dialog<vcu, 0x5>::tx;
-            using power_switch_rx     = typename dialog<vcu, 0x5>::rx;
+            using power_switch_tx     = typename dialog<vcu, 7>::tx;
+            using power_switch_rx     = typename dialog<vcu, 7>::rx;
         };
         
         /** 动力控制器包信息协议 */
@@ -104,7 +107,7 @@ namespace autolabor {
             using current_position_tx = typename dialog<ecu, 0x6>::tx;
             using current_position_rx = typename dialog<ecu, 0x6>::rx;
             // 编码器清零
-            using clear               = typename dialog<ecu, 0x7>::sgn;
+            using encoder_reset       = typename dialog<ecu, 0x7>::sgn;
             // 超时时间
             using timeout             = typename dialog<ecu, 0xa>::msg;
         };
@@ -122,12 +125,12 @@ namespace autolabor {
             // 当前角度
             using current_position_tx = typename dialog<tcu, 0x3>::tx;
             using current_position_rx = typename dialog<tcu, 0x3>::rx;
-            // 目标角度增量
+            // 目标角速度
             using target_speed        = typename dialog<tcu, 0x4>::msg;
             // 当前速度
             using current_speed_tx    = typename dialog<tcu, 0x5>::tx;
             using current_speed_rx    = typename dialog<tcu, 0x5>::rx;
-            // 编码器复位
+            // 编码器清零
             using encoder_reset       = typename dialog<tcu, 0x6>::sgn;
             // 超时时间
             using timeout             = typename dialog<tcu, 0x7>::msg;
